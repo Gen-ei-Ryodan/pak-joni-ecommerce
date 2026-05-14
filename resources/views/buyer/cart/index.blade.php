@@ -21,22 +21,12 @@
                 </div>
             @endif
 
-            @if ($errors->any())
-                <div class="panel" style="padding:10px 12px;margin-bottom:12px;border-color:rgba(255,77,77,0.35);background:rgba(255,77,77,0.08);">
-                    <div style="display:grid;gap:6px;">
-                        @foreach ($errors->all() as $error)
-                            <div>{{ $error }}</div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
                 <div style="font-size:18px;font-weight:600;">Cart</div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     @if($cart->items->isNotEmpty())
                         <a class="btn btn-primary" href="{{ route('buyer.checkout.address') }}">Checkout</a>
-                        <form method="post" action="{{ route('buyer.cart.clear') }}" onsubmit="return confirm('Kosongkan cart?')">
+                        <form method="post" action="{{ route('buyer.cart.clear') }}" onsubmit="return confirm('Clear cart?')">
                             @csrf
                             @method('delete')
                             <button class="btn btn-danger" type="submit">Clear Cart</button>
@@ -67,7 +57,7 @@
                                         <a href="{{ route('buyer.parts.show', $it->variant->part->slug) }}">{{ $it->variant->part->name }}</a>
                                         <div class="muted" style="margin-top:6px;">{{ $it->variant->sku }}</div>
                                         <div style="margin-top:4px;font-size:11px;{{ $it->variant->stock < 10 ? 'color:#f87171;' : 'color:var(--muted);' }}">
-                                            Stok: {{ $it->variant->stock }}
+                                            Stock: {{ $it->variant->stock }}
                                         </div>
                                     </td>
                                     <td style="padding:10px;color:var(--muted);">{{ $it->variant->name }}</td>

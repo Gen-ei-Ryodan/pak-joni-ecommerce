@@ -41,6 +41,10 @@
                         <a class="text-link" href="{{ route('auth.password.request') }}">Forgot password?</a>
                     @endif
                 </div>
+                <div style="margin-top:14px;text-align:center;border-top:1px solid var(--line);padding-top:14px;">
+                    <span class="muted" style="font-size:13px;">Don't have an account?</span>
+                    <a class="text-link" href="{{ route('auth.register') }}" style="margin-left:4px;">Register</a>
+                </div>
             </form>
         </div>
     </div>

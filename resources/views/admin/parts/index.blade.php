@@ -7,7 +7,7 @@
 
     <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
         <div style="font-size:16px;font-weight:600;">Parts</div>
-        <a class="btn btn-primary" href="{{ route('admin.parts.create') }}">Tambah Part</a>
+        <a class="btn btn-primary" href="{{ route('admin.parts.create') }}">Add Part</a>
     </div>
 
     <div style="height:12px;"></div>
@@ -64,7 +64,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" style="padding:12px;color:var(--muted);">Belum ada data.</td>
+                            <td colspan="6" style="padding:12px;color:var(--muted);">No data yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

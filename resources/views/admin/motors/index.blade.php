@@ -7,7 +7,7 @@
 
     <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
         <div style="font-size:16px;font-weight:600;">Motor</div>
-        <a class="btn btn-primary" href="{{ route('admin.motors.create') }}">Tambah Motor</a>
+        <a class="btn btn-primary" href="{{ route('admin.motors.create') }}">Add Motor</a>
     </div>
 
     <div style="height:12px;"></div>
@@ -56,7 +56,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" style="padding:12px;color:var(--muted);">Belum ada data.</td>
+                            <td colspan="5" style="padding:12px;color:var(--muted);">No data yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

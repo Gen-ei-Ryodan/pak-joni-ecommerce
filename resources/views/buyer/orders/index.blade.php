@@ -20,9 +20,9 @@
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
                 <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;flex:1;min-width:0;">
-                    <input name="search" value="{{ $search }}" placeholder="Cari invoice..." style="flex:1;min-width:180px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
+                    <input name="search" value="{{ $search }}" placeholder="Search invoice..." style="flex:1;min-width:180px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
                     <select name="status" style="border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);min-width:140px;">
-                        <option value="">Semua Status</option>
+                        <option value="">All Status</option>
                         @foreach(\App\Models\Order::STATUSES as $s)
                             <option value="{{ $s }}" @selected($status === $s)>{{ ucfirst($s) }}</option>
                         @endforeach
@@ -39,9 +39,9 @@
                         <thead>
                             <tr style="text-align:left;color:var(--muted);font-size:12px;">
                                 <th style="padding:10px;">Invoice</th>
-                                <th style="padding:10px;">Tanggal</th>
+                                <th style="padding:10px;">Date</th>
                                 <th style="padding:10px;">Status</th>
-                                <th style="padding:10px;">Pembayaran</th>
+                                <th style="padding:10px;">Payment</th>
                                 <th style="padding:10px;">Total</th>
                                 <th style="padding:10px;">Action</th>
                             </tr>
@@ -64,7 +64,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" style="padding:12px;color:var(--muted);">Belum ada order.</td>
+                                    <td colspan="6" style="padding:12px;color:var(--muted);">No orders yet.</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -7,8 +7,8 @@
 
     <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center;">
         <div>
-            <div style="font-size:16px;font-weight:600;">Dashboard Admin</div>
-            <div class="muted" style="margin-top:6px;">Halo, {{ auth()->user()->name }}</div>
+            <div style="font-size:16px;font-weight:600;">Admin Dashboard</div>
+            <div class="muted" style="margin-top:6px;">Hi, {{ auth()->user()->name }}</div>
         </div>
     </div>
 
@@ -82,5 +82,5 @@
     </div>
 
     <div style="height:12px;"></div>
-    <a class="btn" href="{{ route('admin.orders.index') }}">Lihat Semua Orders</a>
+    <a class="btn" href="{{ route('admin.orders.index') }}">View All Orders</a>
 @endsection

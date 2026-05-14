@@ -12,9 +12,9 @@
     <div style="height:12px;"></div>
 
     <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;">
-        <input name="q" value="{{ $q }}" placeholder="Cari invoice..." style="flex:1;min-width:180px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
+        <input name="q" value="{{ $q }}" placeholder="Search invoice..." style="flex:1;min-width:180px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
         <select name="status" style="border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);min-width:140px;">
-            <option value="">Semua Status</option>
+            <option value="">All Status</option>
             @foreach(\App\Models\Order::STATUSES as $s)
                 <option value="{{ $s }}" @selected($status === $s)>{{ $s }}</option>
             @endforeach
@@ -34,7 +34,7 @@
                         <th style="padding:10px;">Status</th>
                         <th style="padding:10px;">Payment</th>
                         <th style="padding:10px;">Total</th>
-                        <th style="padding:10px;">Tanggal</th>
+                        <th style="padding:10px;">Date</th>
                         <th style="padding:10px;">Action</th>
                     </tr>
                 </thead>
@@ -57,7 +57,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" style="padding:12px;color:var(--muted);">Belum ada data.</td>
+                            <td colspan="7" style="padding:12px;color:var(--muted);">No data yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -24,7 +24,7 @@
                 <span class="badge {{ $order->paymentStatusBadge() }}" style="margin-left:4px;">Payment: {{ $order->payment_status }}</span>
             </div>
         </div>
-        <a class="btn" href="{{ route('admin.orders.index') }}">Kembali</a>
+        <a class="btn" href="{{ route('admin.orders.index') }}">Back</a>
     </div>
 
     <div style="height:14px;"></div>
@@ -32,23 +32,23 @@
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;" class="order-detail-grid">
         <div>
             <div class="panel" style="padding:16px;">
-                <div style="font-weight:600;margin-bottom:10px;">Informasi Order</div>
+                <div style="font-weight:600;margin-bottom:10px;">Order Information</div>
                 <div style="display:grid;gap:8px;color:var(--muted);">
                     <div>Invoice: <span style="color:var(--text);font-family:var(--mono);">{{ $order->order_no }}</span></div>
-                    <div>Tanggal: <span style="color:var(--text);">{{ $order->created_at->format('d M Y H:i') }}</span></div>
+                    <div>Date: <span style="color:var(--text);">{{ $order->created_at->format('d M Y H:i') }}</span></div>
                     <div>Status: <span class="badge {{ $order->statusBadge() }}">{{ $order->statusLabel() }}</span></div>
-                    <div>Pembayaran: <span class="badge {{ $order->paymentStatusBadge() }}">{{ $order->payment_status }}</span></div>
+                    <div>Payment: <span class="badge {{ $order->paymentStatusBadge() }}">{{ $order->payment_status }}</span></div>
                     @if($order->payment_method)
-                        <div>Metode: <span style="color:var(--text);">{{ $order->payment_method }}</span></div>
+                        <div>Method: <span style="color:var(--text);">{{ $order->payment_method }}</span></div>
                     @endif
                     @if($order->paid_at)
-                        <div>Dibayar: <span style="color:var(--text);">{{ $order->paid_at->format('d M Y H:i') }}</span></div>
+                        <div>Paid at: <span style="color:var(--text);">{{ $order->paid_at->format('d M Y H:i') }}</span></div>
                     @endif
                 </div>
 
                 <div style="height:12px;"></div>
 
-                <div style="font-weight:600;margin-bottom:10px;">Alamat Pengiriman</div>
+                <div style="font-weight:600;margin-bottom:10px;">Shipping Address</div>
                 <div class="muted" style="line-height:1.8;">
                     @php($addr = $order->address_snapshot)
                     <div><span style="color:var(--text);">{{ $addr['recipient_name'] ?? '-' }}</span></div>
@@ -59,22 +59,22 @@
 
                 @if($order->shipping_courier)
                     <div style="height:8px;"></div>
-                    <div>Kurir: <span style="color:var(--text);">{{ $order->shipping_courier }}</span></div>
+                    <div>Courier: <span style="color:var(--text);">{{ $order->shipping_courier }}</span></div>
                     @if($order->shipping_receipt)
-                        <div>Resi: <span style="color:var(--text);font-family:var(--mono);">{{ $order->shipping_receipt }}</span></div>
+                        <div>Receipt: <span style="color:var(--text);font-family:var(--mono);">{{ $order->shipping_receipt }}</span></div>
                     @endif
                 @endif
 
                 <div style="height:12px;"></div>
 
-                <div style="font-weight:600;margin-bottom:10px;">Rincian Biaya</div>
+                <div style="font-weight:600;margin-bottom:10px;">Cost Breakdown</div>
                 <div style="display:grid;gap:6px;" class="muted">
                     <div style="display:flex;justify-content:space-between;">
                         <span>Subtotal</span>
                         <span style="color:var(--text);">Rp {{ number_format((float) $order->subtotal, 0, ',', '.') }}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;">
-                        <span>Ongkir</span>
+                        <span>Shipping</span>
                         <span style="color:var(--text);">Rp {{ number_format((float) $order->shipping_cost, 0, ',', '.') }}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;font-weight:600;border-top:1px solid var(--line);padding-top:6px;">
@@ -93,10 +93,10 @@
                         <thead>
                             <tr style="text-align:left;color:var(--muted);font-size:12px;">
                                 <th style="padding:10px;">SKU</th>
-                                <th style="padding:10px;">Nama</th>
+                                <th style="padding:10px;">Name</th>
                                 <th style="padding:10px;">Variant</th>
                                 <th style="padding:10px;">Qty</th>
-                                <th style="padding:10px;">Harga</th>
+                                <th style="padding:10px;">Price</th>
                                 <th style="padding:10px;">Total</th>
                             </tr>
                         </thead>
@@ -119,18 +119,18 @@
             <div style="height:14px;"></div>
 
             <div class="panel" style="padding:16px;">
-                <div style="font-weight:600;margin-bottom:12px;">Timeline Order</div>
+                <div style="font-weight:600;margin-bottom:12px;">Order Timeline</div>
                 @php
                     $timeline = [
-                        ['label' => 'Pesanan Dibuat', 'time' => $order->created_at, 'done' => true],
-                        ['label' => 'Menunggu Pembayaran', 'time' => $order->created_at, 'done' => $order->status !== 'unpaid' || $order->payment_status === 'paid'],
-                        ['label' => 'Pembayaran Berhasil', 'time' => $order->paid_at, 'done' => in_array($order->status, ['paid','processing','shipped','completed'])],
-                        ['label' => 'Sedang Diproses', 'time' => $order->status === 'processing' ? $order->updated_at : null, 'done' => in_array($order->status, ['processing','shipped','completed'])],
-                        ['label' => 'Sedang Dikirim', 'time' => $order->shipped_at, 'done' => in_array($order->status, ['shipped','completed'])],
-                        ['label' => 'Pesanan Selesai', 'time' => $order->completed_at, 'done' => $order->status === 'completed'],
+                        ['label' => 'Order Created', 'time' => $order->created_at, 'done' => true],
+                        ['label' => 'Awaiting Payment', 'time' => $order->created_at, 'done' => $order->status !== 'unpaid' || $order->payment_status === 'paid'],
+                        ['label' => 'Payment Successful', 'time' => $order->paid_at, 'done' => in_array($order->status, ['paid','processing','shipped','completed'])],
+                        ['label' => 'Processing', 'time' => $order->status === 'processing' ? $order->updated_at : null, 'done' => in_array($order->status, ['processing','shipped','completed'])],
+                        ['label' => 'Shipped', 'time' => $order->shipped_at, 'done' => in_array($order->status, ['shipped','completed'])],
+                        ['label' => 'Completed', 'time' => $order->completed_at, 'done' => $order->status === 'completed'],
                     ];
                     if ($order->status === 'cancelled') {
-                        $timeline[] = ['label' => 'Dibatalkan', 'time' => $order->cancelled_at, 'done' => true];
+                        $timeline[] = ['label' => 'Cancelled', 'time' => $order->cancelled_at, 'done' => true];
                     }
                 @endphp
                 <div style="display:grid;gap:0;">
@@ -183,13 +183,13 @@
                             @method('put')
                             <input type="hidden" name="action" value="ship">
                             <div>
-                                <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:4px;">Kurir</label>
+                                <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:4px;">Courier</label>
                                 <input name="courier" required placeholder="JNE / J&T / SiCepat..."
                                     style="width:100%;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
                             </div>
                             <div>
-                                <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:4px;">Resi</label>
-                                <input name="receipt" required placeholder="No. resi..."
+                                <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:4px;">Receipt No.</label>
+                                <input name="receipt" required placeholder="Tracking number..."
                                     style="width:100%;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
                             </div>
                             <button class="btn btn-primary" type="submit" style="width:100%;">Mark as Shipped</button>
@@ -206,7 +206,7 @@
                     @endif
 
                     @if($order->canTransitionTo('cancelled'))
-                        <form method="post" action="{{ route('admin.orders.update', $order) }}" onsubmit="return confirm('Batalkan order ini?')">
+                        <form method="post" action="{{ route('admin.orders.update', $order) }}" onsubmit="return confirm('Cancel this order?')">
                             @csrf
                             @method('put')
                             <input type="hidden" name="action" value="cancel">
