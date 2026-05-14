@@ -58,6 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/cart/items/{cartItem}', [BuyerCartController::class, 'update'])->name('buyer.cart.update');
     Route::delete('/cart/items/{cartItem}', [BuyerCartController::class, 'destroy'])->name('buyer.cart.destroy');
     Route::delete('/cart', [BuyerCartController::class, 'clear'])->name('buyer.cart.clear');
+    Route::post('/cart/checkout-selected', [BuyerCartController::class, 'checkoutSelected'])->name('buyer.cart.checkoutSelected');
 
     Route::get('/account/addresses', [BuyerAddressController::class, 'index'])->name('buyer.addresses.index');
     Route::get('/account/addresses/create', [BuyerAddressController::class, 'create'])->name('buyer.addresses.create');

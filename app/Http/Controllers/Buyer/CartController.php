@@ -121,6 +121,32 @@ class CartController extends Controller
         return redirect('/cart')->with('status', 'Cart dikosongkan.');
     }
 
+    public function checkoutSelected(Request $request)
+    {
+        $validated = $request->validate([
+            'selected_ids' => ['required', 'string'],
+        ]);
+
+        $ids = explode(',', $validated['selected_ids']);
+        $ids = array_map('intval', $ids);
+        $ids = array_filter($ids, fn ($id) => $id > 0);
+
+        if (empty($ids)) {
+            return back()->withErrors(['select' => 'Pilih minimal satu item.']);
+        }
+
+        $cart = $this->cart($request);
+        $validIds = $cart->items()->whereIn('id', $ids)->pluck('id')->toArray();
+
+        if (empty($validIds)) {
+            return back()->withErrors(['select' => 'Item tidak valid.']);
+        }
+
+        $request->session()->put('checkout.selected_ids', $validIds);
+
+        return redirect('/checkout');
+    }
+
     private function cart(Request $request): Cart
     {
         return Cart::firstOrCreate(['user_id' => $request->user()->id]);

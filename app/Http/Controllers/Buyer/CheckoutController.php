@@ -21,7 +21,7 @@ class CheckoutController extends Controller
 
     public function address(Request $request)
     {
-        $cart = $this->cart($request)->load(['items.variant.part']);
+        $cart = $this->loadSelectedCart($request);
 
         if ($cart->items->isEmpty()) {
             return redirect('/cart')->with('status', 'Cart masih kosong.');
@@ -58,7 +58,7 @@ class CheckoutController extends Controller
 
     public function shipping(Request $request)
     {
-        $cart = $this->cart($request)->load(['items.variant.part']);
+        $cart = $this->loadSelectedCart($request);
 
         if ($cart->items->isEmpty()) {
             return redirect('/cart')->with('status', 'Cart masih kosong.');
@@ -96,7 +96,7 @@ class CheckoutController extends Controller
 
     public function payment(Request $request)
     {
-        $cart = $this->cart($request)->load(['items.variant.part']);
+        $cart = $this->loadSelectedCart($request);
 
         if ($cart->items->isEmpty()) {
             return redirect('/cart')->with('status', 'Cart masih kosong.');
@@ -124,7 +124,7 @@ class CheckoutController extends Controller
 
     public function placeOrder(Request $request)
     {
-        $cart = $this->cart($request)->load(['items.variant.part']);
+        $cart = $this->loadSelectedCart($request);
 
         if ($cart->items->isEmpty()) {
             return redirect('/cart')->with('status', 'Cart masih kosong.');
@@ -199,7 +199,12 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            $cart->items()->delete();
+            $selectedIds = $request->session()->get('checkout.selected_ids', []);
+            if (! empty($selectedIds)) {
+                $cart->items()->whereIn('id', $selectedIds)->delete();
+            } else {
+                $cart->items()->delete();
+            }
             $request->session()->forget('checkout');
 
             return redirect('/checkout/finish/'.$order->id);
@@ -218,6 +223,18 @@ class CheckoutController extends Controller
     private function cart(Request $request): Cart
     {
         return Cart::firstOrCreate(['user_id' => $request->user()->id]);
+    }
+
+    private function loadSelectedCart(Request $request): Cart
+    {
+        $cart = $this->cart($request)->load(['items.variant.part']);
+        $selectedIds = $request->session()->get('checkout.selected_ids', []);
+
+        if (! empty($selectedIds)) {
+            $cart->items = $cart->items->filter(fn ($it) => in_array($it->id, $selectedIds));
+        }
+
+        return $cart;
     }
 
     private function newOrderNo(): string
