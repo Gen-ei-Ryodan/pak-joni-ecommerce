@@ -1,0 +1,37 @@
+body {
+  font-family: var(--font);
+  background: radial-gradient(1000px 600px at 20% 0%, rgba(217, 180, 111, 0.08), transparent 60%),
+    radial-gradient(900px 500px at 85% 20%, rgba(217, 180, 111, 0.06), transparent 55%),
+    var(--bg);
+  color: var(--text);
+}
+
+.container {
+  width: min(var(--container), calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(16, 20, 26, 0.96), rgba(16, 20, 26, 0.8));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.section {
+  padding: 40px 0;
+}
+
+.muted {
+  color: var(--muted);
+}

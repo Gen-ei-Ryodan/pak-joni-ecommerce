@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Http\Controllers\Buyer;
+
+use App\Http\Controllers\Controller;
+use App\Models\Banner;
+use App\Models\Motor;
+use App\Models\Part;
+use Illuminate\Http\Request;
+
+class PageController extends Controller
+{
+    public function home()
+    {
+        $banners = Banner::query()->where('is_active', true)->orderBy('sort_order')->get();
+
+        return view('buyer.home', compact('banners'));
+    }
+
+    public function about()
+    {
+        return view('buyer.about');
+    }
+
+    public function products(Request $request)
+    {
+        $motors = Motor::query()
+            ->where('status', 'published')
+            ->orderByDesc('id')
+            ->limit(6)
+            ->get();
+
+        $parts = Part::query()
+            ->with(['category', 'defaultVariant'])
+            ->where('status', 'active')
+            ->orderByDesc('id')
+            ->limit(9)
+            ->get();
+
+        return view('buyer.products', compact('motors', 'parts'));
+    }
+}

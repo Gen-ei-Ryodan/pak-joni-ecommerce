@@ -1,0 +1,65 @@
+.dash {
+  padding: 22px 0 46px;
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+}
+
+.sidebar {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(16, 20, 26, 0.7);
+  padding: 14px;
+  height: fit-content;
+}
+
+.sidebar a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--muted);
+}
+
+.sidebar a:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.content {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(16, 20, 26, 0.7);
+  padding: 18px;
+}
+
+.kpi {
+  display: grid;
+  gap: 10px;
+}
+
+.kpi-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.kpi-title {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.kpi-value {
+  margin-top: 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .dash-grid {
+    grid-template-columns: 1fr;
+  }
+}
