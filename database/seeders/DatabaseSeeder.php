@@ -130,7 +130,7 @@ class DatabaseSeeder extends Seeder
             $cat = PartCategory::create([
                 'group' => $group,
                 'name' => $name,
-                'slug' => Str::slug($name) . '-' . ($i + 1),
+                'slug' => Str::slug($name).'-'.($i + 1),
                 'sort_order' => $i + 1,
             ]);
             $this->partCategoryIds[] = $cat->id;
@@ -151,7 +151,7 @@ class DatabaseSeeder extends Seeder
                 'name' => $name,
                 'slug' => Str::slug($name),
                 'year' => $year,
-                'thumbnail_path' => "storage/products/produk" . ($i + 1) . ".jpeg",
+                'thumbnail_path' => "storage/products/produk".($i + 1).".jpeg",
                 'short_description' => $desc,
                 'status' => 'published',
             ]);
@@ -170,11 +170,11 @@ class DatabaseSeeder extends Seeder
 
         foreach ($parts as $i => [$name, $catId, $price, $desc]) {
             $part = Part::create([
-                'sku' => 'SKU-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                'sku' => 'SKU-'.str_pad($i + 1, 4, '0', STR_PAD_LEFT),
                 'name' => $name,
-                'slug' => Str::slug($name) . '-' . ($i + 1),
+                'slug' => Str::slug($name).'-'.($i + 1),
                 'part_category_id' => $catId,
-                'thumbnail_path' => "storage/products/produk" . ($i + 1) . ".jpeg",
+                'thumbnail_path' => "storage/products/produk".($i + 1).".jpeg",
                 'short_description' => $desc,
                 'base_price' => $price,
                 'status' => 'active',
@@ -195,7 +195,7 @@ class DatabaseSeeder extends Seeder
         foreach ($variants as $i => [$partIdx, $name, $price, $stock, $default]) {
             $variant = PartVariant::create([
                 'part_id' => $this->partIds[$partIdx],
-                'sku' => 'VAR-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                'sku' => 'VAR-'.str_pad($i + 1, 4, '0', STR_PAD_LEFT),
                 'name' => $name,
                 'price' => $price,
                 'stock' => $stock,
@@ -210,7 +210,7 @@ class DatabaseSeeder extends Seeder
         for ($i = 0; $i < 4; $i++) {
             PartImage::create([
                 'part_id' => $this->partIds[$i],
-                'path' => "storage/products/produk" . ($i + 1) . ".jpeg",
+                'path' => "storage/products/produk".($i + 1).".jpeg",
                 'sort_order' => 1,
             ]);
         }
@@ -221,7 +221,7 @@ class DatabaseSeeder extends Seeder
         for ($i = 0; $i < 4; $i++) {
             MotorImage::create([
                 'motor_id' => $this->motorIds[$i],
-                'path' => "storage/products/produk" . ($i + 1) . ".jpeg",
+                'path' => "storage/products/produk".($i + 1).".jpeg",
                 'sort_order' => 1,
             ]);
         }
@@ -258,7 +258,7 @@ class DatabaseSeeder extends Seeder
                 'user_id' => $this->userId[$userIdx],
                 'label' => $label,
                 'recipient_name' => User::find($this->userId[$userIdx])->name,
-                'phone' => '0812' . str_pad(mt_rand(1000000, 9999999), 7, '0', STR_PAD_LEFT),
+                'phone' => '0812'.str_pad(mt_rand(1000000, 9999999), 7, '0', STR_PAD_LEFT),
                 'address_line1' => $line1,
                 'city' => $city,
                 'province' => $province,
@@ -312,25 +312,115 @@ class DatabaseSeeder extends Seeder
 
     private function createOrders(): void
     {
-        $statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
+        $orderNos = [
+            'PJ'.now()->format('ymd').'AAAAAA',
+            'PJ'.now()->format('ymd').'BBBBBB',
+            'PJ'.now()->format('ymd').'CCCCCC',
+            'PJ'.now()->format('ymd').'DDDDDD',
+            'PJ'.now()->format('ymd').'EEEEEE',
+            'PJ'.now()->format('ymd').'FFFFFF',
+            'PJ'.now()->format('ymd').'GGGGGG',
+            'PJ'.now()->format('ymd').'HHHHHH',
+            'PJ'.now()->format('ymd').'IIIIII',
+            'PJ'.now()->format('ymd').'JJJJJJ',
+        ];
+
+        $statusList = [
+            'paid', 'processing', 'shipped', 'completed', 'completed',
+            'shipped', 'unpaid', 'processing', 'paid', 'completed',
+        ];
+
+        $paymentStatusList = [
+            'paid', 'paid', 'paid', 'paid', 'paid',
+            'paid', 'pending', 'paid', 'paid', 'paid',
+        ];
+
+        $paidAtList = [
+            now()->subDays(5),
+            now()->subDays(4),
+            now()->subDays(3),
+            now()->subDays(6),
+            now()->subDays(7),
+            now()->subDays(2),
+            null, // unpaid
+            now()->subDay(),
+            now()->subDays(3),
+            now()->subDays(8),
+        ];
+
+        $shippedAtList = [
+            null, null,
+            now()->subDays(2),
+            now()->subDays(4),
+            now()->subDays(5),
+            now()->subDay(),
+            null, null, null,
+            now()->subDays(6),
+        ];
+
+        $completedAtList = [
+            null, null, null,
+            now()->subDays(3),
+            now()->subDays(4),
+            null, null, null, null,
+            now()->subDays(5),
+        ];
+
+        $shippingData = [
+            ['JNE', 'REG'],
+            ['J&T', 'Express'],
+            ['SiCepat', 'REG'],
+            ['JNE', 'YES'],
+            ['J&T', 'Economy'],
+            ['SiCepat', 'Halu'],
+            ['JNE', 'REG'],
+            ['J&T', 'Express'],
+            ['SiCepat', 'REG'],
+            ['JNE', 'YES'],
+        ];
+
+        $receiptList = [
+            null, null,
+            'JNE'.now()->format('Ymd').'001',
+            'JNT'.now()->format('Ymd').'002',
+            'SIC'.now()->format('Ymd').'003',
+            'JNE'.now()->format('Ymd').'004',
+            null, null, null,
+            'JNT'.now()->format('Ymd').'005',
+        ];
 
         foreach ($this->userId as $i => $uid) {
-            $status = $statuses[$i % count($statuses)];
+            $subtotal = 100000 + ($i * 50000);
+            $shippingCost = 25000;
+            $total = $subtotal + $shippingCost;
 
-            Order::create([
+            $order = Order::create([
                 'user_id' => $uid,
-                'order_no' => 'INV/' . now()->format('Ymd') . '/' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
-                'status' => $status,
-                'subtotal' => 100000 + ($i * 50000),
-                'shipping_cost' => 25000,
-                'total' => 125000 + ($i * 50000),
+                'order_no' => $orderNos[$i],
+                'status' => $statusList[$i],
+                'payment_status' => $paymentStatusList[$i],
+                'payment_method' => $paymentStatusList[$i] === 'paid' ? 'midtrans_simulation' : null,
+                'subtotal' => $subtotal,
+                'shipping_cost' => $shippingCost,
+                'total' => $total,
+                'paid_at' => $paidAtList[$i],
+                'shipped_at' => $shippedAtList[$i],
+                'completed_at' => $completedAtList[$i],
+                'shipping_courier' => $shippingData[$i][0],
+                'shipping_receipt' => $receiptList[$i],
                 'address_snapshot' => [
+                    'label' => $i === 0 ? 'Rumah' : 'Address',
                     'recipient_name' => User::find($uid)->name,
-                    'phone' => '0812' . str_pad(mt_rand(1000000, 9999999), 7, '0', STR_PAD_LEFT),
-                    'address' => 'Jl. Contoh No. ' . ($i + 1),
+                    'phone' => '0812'.str_pad(mt_rand(1000000, 9999999), 7, '0', STR_PAD_LEFT),
+                    'address_line1' => 'Jl. Contoh No. '.($i + 1),
                     'city' => 'Jakarta',
                     'province' => 'DKI Jakarta',
                     'postal_code' => '10110',
+                ],
+                'shipping_snapshot' => [
+                    'courier' => $shippingData[$i][0],
+                    'service' => $shippingData[$i][1],
+                    'shipping_cost' => $shippingCost,
                 ],
             ]);
         }
@@ -344,6 +434,9 @@ class DatabaseSeeder extends Seeder
             $part = Part::find($this->partIds[$partIdx]);
             $variant = PartVariant::where('part_id', $part->id)->first();
 
+            $qty = $i + 1;
+            $price = $variant?->price ?? $part->base_price;
+
             OrderItem::create([
                 'order_id' => $orderId,
                 'part_id' => $part->id,
@@ -351,27 +444,38 @@ class DatabaseSeeder extends Seeder
                 'sku' => $part->sku,
                 'name' => $part->name,
                 'variant_name' => $variant?->name,
-                'price' => $variant?->price ?? $part->base_price,
-                'quantity' => 1,
-                'line_total' => $variant?->price ?? $part->base_price,
+                'price' => $price,
+                'quantity' => $qty,
+                'line_total' => $price * $qty,
             ]);
         }
     }
 
     private function createPayments(): void
     {
-        $statuses = [
-            'pending', 'settlement', 'pending', 'settlement', 'settlement',
-            'settlement', 'pending', 'settlement', 'settlement', 'settlement',
+        $methodList = [
+            'bank_transfer', 'bank_transfer', 'bank_transfer', 'bank_transfer', 'bank_transfer',
+            'bank_transfer', null, 'bank_transfer', 'bank_transfer', 'bank_transfer',
         ];
 
-        foreach ($statuses as $i => $status) {
+        $bankList = [
+            'BCA', 'BCA', 'Mandiri', 'Mandiri', 'BNI',
+            'BCA', null, 'BNI', 'Mandiri', 'BCA',
+        ];
+
+        for ($i = 0; $i < 10; $i++) {
+            $status = $i === 6 ? 'pending' : 'settlement';
+
             Payment::create([
                 'order_id' => $i + 1,
-                'provider' => 'midtrans',
-                'provider_reference' => 'TRX-' . str_pad($i + 1, 6, '0', STR_PAD_LEFT),
+                'provider' => 'midtrans_simulation',
+                'provider_reference' => 'TRX-'.str_pad($i + 1, 6, '0', STR_PAD_LEFT),
                 'status' => $status,
-                'payload' => ['payment_method' => 'bank_transfer', 'bank' => 'BCA'],
+                'payload' => [
+                    'payment_method' => $methodList[$i],
+                    'bank' => $bankList[$i],
+                    'simulated' => true,
+                ],
             ]);
         }
     }
@@ -379,8 +483,8 @@ class DatabaseSeeder extends Seeder
     private function createShipments(): void
     {
         $statuses = [
-            'pending', 'pending', 'pending', 'shipped', 'delivered',
-            'delivered', 'pending', 'shipped', 'delivered', 'delivered',
+            'pending', 'pending', 'shipped', 'delivered', 'delivered',
+            'shipped', 'pending', 'pending', 'pending', 'delivered',
         ];
 
         $couriers = ['JNE', 'J&T', 'SiCepat', 'JNE', 'J&T', 'SiCepat', 'JNE', 'J&T', 'SiCepat', 'JNE'];
@@ -391,7 +495,7 @@ class DatabaseSeeder extends Seeder
                 'provider' => 'biteship',
                 'courier' => $couriers[$i],
                 'service' => 'REG',
-                'tracking_number' => $status !== 'pending' ? 'TRK' . str_pad($i + 1, 10, '0', STR_PAD_LEFT) : null,
+                'tracking_number' => $status !== 'pending' ? 'TRK'.str_pad($i + 1, 10, '0', STR_PAD_LEFT) : null,
                 'status' => $status,
                 'payload' => ['estimated_delivery' => now()->addDays(3)->toDateString()],
             ]);
