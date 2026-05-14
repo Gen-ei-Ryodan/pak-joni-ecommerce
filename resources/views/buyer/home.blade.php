@@ -3,31 +3,41 @@
 @section('title', 'Home')
 
 @section('content')
-    <section class="hero">
-        <div class="hero-bg"></div>
-        <div class="hero-content">
-            <h1 class="hero-title">Premium Sparepart Untuk Motor Anda</h1>
-            <p class="hero-subtitle">
-                Motor sebagai visual catalog. Part sebagai produk utama penjualan. Full custom UI, cepat, dan responsif.
-            </p>
-            <div class="hero-actions">
-                <a class="btn btn-primary" href="{{ route('buyer.products') }}">Lihat Produk</a>
-                <a class="btn" href="{{ route('buyer.motors.index') }}">Catalog Motor</a>
+    @if (!empty($banners) && $banners->count())
+        <section class="banner-slider">
+            <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                <div class="carousel-inner">
+                    @foreach ($banners as $index => $banner)
+                        <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                            <div class="banner-slide" style="background-image: url('{{ asset($banner->image_path) }}'); background-size: cover; background-position: center; height: 100vh;"></div>
+                        </div>
+                    @endforeach
+                </div>
+                @if($banners->count() > 1)
+                    <button class="carousel-control-prev" type="button" data-target="#bannerCarousel" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true">&#10094;</span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-target="#bannerCarousel" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true">&#10095;</span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                @endif
             </div>
-        </div>
-    </section>
+        </section>
+    @endif
 
     @if (!empty($banners) && $banners->count())
-        <section class="section">
+        <section class="section py-5">
             <div class="container">
-                <div class="section-title">Highlights</div>
+                <div class="section-title h3 mb-4">Highlights</div>
                 <div class="grid grid-3">
                     @foreach ($banners->take(3) as $banner)
                         <a class="card" href="{{ $banner->link_url ?: route('buyer.products') }}">
                             <div class="card-media" style="background-image:url('{{ asset($banner->image_path) }}');background-size:cover;background-position:center;"></div>
                             <div class="card-body">
                                 <div class="card-title">{{ $banner->title }}</div>
-                                <div class="card-meta">Klik untuk lihat detail.</div>
+                                <div class="card-meta">Click for details.</div>
                             </div>
                         </a>
                     @endforeach

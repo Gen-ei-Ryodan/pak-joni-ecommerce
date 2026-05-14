@@ -27,14 +27,14 @@ class PageController extends Controller
         $motors = Motor::query()
             ->where('status', 'published')
             ->orderByDesc('id')
-            ->limit(6)
+            ->limit(4)
             ->get();
 
         $parts = Part::query()
             ->with(['category', 'defaultVariant'])
             ->where('status', 'active')
             ->orderByDesc('id')
-            ->limit(9)
+            ->limit(4)
             ->get();
 
         return view('buyer.products', compact('motors', 'parts'));

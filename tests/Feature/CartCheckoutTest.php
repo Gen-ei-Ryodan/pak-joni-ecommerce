@@ -80,7 +80,8 @@ class CartCheckoutTest extends TestCase
 
         $this->assertDatabaseHas('orders', [
             'user_id' => $user->id,
-            'status' => 'pending',
+            'status' => 'unpaid',
+            'payment_status' => 'pending',
         ]);
 
         $variant->refresh();

@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/items', [BuyerCartController::class, 'store'])->name('buyer.cart.store');
     Route::patch('/cart/items/{cartItem}', [BuyerCartController::class, 'update'])->name('buyer.cart.update');
     Route::delete('/cart/items/{cartItem}', [BuyerCartController::class, 'destroy'])->name('buyer.cart.destroy');
+    Route::delete('/cart', [BuyerCartController::class, 'clear'])->name('buyer.cart.clear');
 
     Route::get('/account/addresses', [BuyerAddressController::class, 'index'])->name('buyer.addresses.index');
     Route::get('/account/addresses/create', [BuyerAddressController::class, 'create'])->name('buyer.addresses.create');
@@ -75,6 +76,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/orders', [BuyerOrderController::class, 'index'])->name('buyer.orders.index');
     Route::get('/orders/{order}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
+    Route::post('/orders/{order}/simulate-payment', [BuyerOrderController::class, 'simulatePayment'])->name('buyer.orders.simulatePayment');
 });
 
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->group(function () {

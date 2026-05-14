@@ -32,12 +32,12 @@
                 <div class="panel" style="padding:14px;">
                     <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
                         <div style="font-weight:600;">Pilih Alamat</div>
-                        <a class="btn" href="{{ route('buyer.addresses.create') }}">Tambah Alamat</a>
+                        <a class="btn" href="{{ route('buyer.addresses.create') }}">Add Address</a>
                     </div>
                     <div style="height:10px;"></div>
 
                     @if ($addresses->isEmpty())
-                        <div class="muted">Belum ada alamat. Tambahkan alamat dulu.</div>
+                        <div class="muted">No addresses yet. Please add an address first.</div>
                     @else
                         <form method="post" action="{{ route('buyer.checkout.setAddress') }}" style="display:grid;gap:10px;">
                             @csrf
@@ -66,7 +66,7 @@
                 </div>
 
                 <div class="panel" style="padding:14px;">
-                    <div style="font-weight:600;">Ringkasan</div>
+                    <div style="font-weight:600;">Summary</div>
                     <div style="height:10px;"></div>
 
                     <div class="muted" style="display:grid;gap:8px;">

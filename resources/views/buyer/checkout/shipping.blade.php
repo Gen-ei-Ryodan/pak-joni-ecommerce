@@ -40,7 +40,7 @@
 
                     <div style="height:14px;"></div>
 
-                    <div style="font-weight:600;">Pilih Shipping</div>
+                    <div style="font-weight:600;">Select Shipping</div>
                     <div style="height:10px;"></div>
 
                     <form method="post" action="{{ route('buyer.checkout.setShipping') }}" style="display:grid;gap:12px;max-width:520px;">

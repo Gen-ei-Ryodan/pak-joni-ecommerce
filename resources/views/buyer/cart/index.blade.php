@@ -23,7 +23,16 @@
 
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
                 <div style="font-size:18px;font-weight:600;">Cart</div>
-                <a class="btn btn-primary" href="{{ route('buyer.checkout.address') }}">Checkout</a>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    @if($cart->items->isNotEmpty())
+                        <a class="btn btn-primary" href="{{ route('buyer.checkout.address') }}">Checkout</a>
+                        <form method="post" action="{{ route('buyer.cart.clear') }}" onsubmit="return confirm('Kosongkan cart?')">
+                            @csrf
+                            @method('delete')
+                            <button class="btn btn-danger" type="submit">Clear Cart</button>
+                        </form>
+                    @endif
+                </div>
             </div>
 
             <div style="height:14px;"></div>
@@ -47,6 +56,9 @@
                                     <td style="padding:10px;">
                                         <a href="{{ route('buyer.parts.show', $it->variant->part->slug) }}">{{ $it->variant->part->name }}</a>
                                         <div class="muted" style="margin-top:6px;">{{ $it->variant->sku }}</div>
+                                        <div style="margin-top:4px;font-size:11px;{{ $it->variant->stock < 10 ? 'color:#f87171;' : 'color:var(--muted);' }}">
+                                            Stok: {{ $it->variant->stock }}
+                                        </div>
                                     </td>
                                     <td style="padding:10px;color:var(--muted);">{{ $it->variant->name }}</td>
                                     <td style="padding:10px;">{{ number_format((float) $it->price_snapshot, 2, '.', ',') }}</td>
@@ -60,7 +72,7 @@
                                     </td>
                                     <td style="padding:10px;">{{ number_format((float) $it->price_snapshot * (int) $it->quantity, 2, '.', ',') }}</td>
                                     <td style="padding:10px;">
-                                        <form method="post" action="{{ route('buyer.cart.destroy', $it) }}" onsubmit="return confirm('Hapus item?')">
+                                        <form method="post" action="{{ route('buyer.cart.destroy', $it) }}" onsubmit="return confirm('Remove item?')">
                                             @csrf
                                             @method('delete')
                                             <button class="btn btn-danger" type="submit">Remove</button>
@@ -69,7 +81,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" style="padding:12px;color:var(--muted);">Cart kosong.</td>
+                                    <td colspan="6" style="padding:12px;color:var(--muted);">Cart is empty.</td>
                                 </tr>
                             @endforelse
                         </tbody>

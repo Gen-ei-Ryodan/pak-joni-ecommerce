@@ -31,31 +31,41 @@
                     <nav class="nav-links">
                         <a href="{{ route('buyer.home') }}">Home</a>
                         <a href="{{ route('buyer.about') }}">About</a>
-                        <a href="{{ route('buyer.products') }}">Produk</a>
+                        <a href="{{ route('buyer.products') }}">Products</a>
                     </nav>
 
                     <div class="nav-cta">
                         @auth
-                            <a class="btn" href="{{ route('buyer.cart.index') }}">Cart</a>
-                            <a class="btn" href="{{ route('buyer.wishlist.index') }}">Wishlist</a>
-                            <a class="btn" href="{{ url('/dashboard') }}">Dashboard</a>
-                            <form method="post" action="{{ url('/logout') }}">
+                            @php($cartCount = auth()->user()->cart?->items()->count() ?? 0)
+                            <a class="btn-logout cart-link" href="{{ route('buyer.cart.index') }}">Cart
+                                @if($cartCount > 0)
+                                    <span class="cart-badge">{{ $cartCount }}</span>
+                                @endif
+                            </a>
+                            <a class="btn-logout" href="{{ route('buyer.wishlist.index') }}">Wishlist</a>
+                            <a class="btn-logout" href="{{ url('/dashboard') }}">Dashboard</a>
+                            <form method="post" action="{{ url('/logout') }}" style="display:inline;">
                                 @csrf
-                                <button class="btn btn-danger" type="submit">Logout</button>
+                                <button class="btn-logout" type="submit">Logout</button>
                             </form>
                         @else
-                            @if (Route::has('auth.login'))
-                                <a class="btn" href="{{ route('auth.login') }}">Login</a>
-                            @endif
-                            @if (Route::has('auth.register'))
-                                <a class="btn btn-primary" href="{{ route('auth.register') }}">Register</a>
-                            @endif
+                            <a class="btn-login" href="{{ route('auth.login') }}">Login</a>
                         @endauth
                     </div>
                 </div>
             </header>
 
             <main>
+                @if (session('status'))
+                    <div class="section" style="padding-bottom:0;">
+                        <div class="container">
+                            <div class="panel" style="padding:10px 12px;border-color:rgba(217,180,111,0.35);background:rgba(217,180,111,0.08);">
+                                {{ session('status') }}
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 @yield('content')
             </main>
 

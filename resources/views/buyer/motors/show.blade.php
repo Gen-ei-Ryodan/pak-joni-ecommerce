@@ -37,25 +37,24 @@
                     <div style="font-weight:600;">Parts</div>
                     <div style="height:10px;"></div>
 
+                    @if ($parts->isEmpty())
+                        <div class="muted">No parts for this motorcycle yet.</div>
+                    @else
                     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        <button class="btn btn-primary" type="button" data-tab-btn="part">Part</button>
-                        <button class="btn" type="button" data-tab-btn="refitting">Refitting Part</button>
-                        <button class="btn" type="button" data-tab-btn="wearing">Wearing Part</button>
+                        @foreach ($parts->keys() as $idx => $groupKey)
+                            <button class="btn {{ $idx === 0 ? 'btn-primary' : '' }}" type="button" data-tab-btn="{{ $groupKey }}">{{ ucfirst($groupKey) }}</button>
+                        @endforeach
                     </div>
 
                     <div style="height:12px;"></div>
 
-                    @foreach (['part' => 'Part', 'refitting' => 'Refitting', 'wearing' => 'Wearing'] as $groupKey => $label)
-                        <div data-tab-panel="{{ $groupKey }}" style="{{ $groupKey === 'part' ? '' : 'display:none;' }}">
-                            <div class="muted" style="font-size:13px;margin-bottom:10px;">Kategori: {{ $categories[$groupKey]->pluck('name')->join(', ') }}</div>
+                    @foreach ($parts as $groupKey => $groupParts)
+                        @php($catList = $categories[$groupKey] ?? collect())
+                        <div data-tab-panel="{{ $groupKey }}" style="{{ $loop->first ? '' : 'display:none;' }}">
+                            <div class="muted" style="font-size:13px;margin-bottom:10px;">Kategori: {{ $catList->pluck('name')->join(', ') }}</div>
 
-                            @php($groupParts = $parts[$groupKey] ?? collect())
-
-                            @if ($groupParts->isEmpty())
-                                <div class="muted">Belum ada part untuk motor ini.</div>
-                            @else
-                                <div style="display:grid;gap:10px;">
-                                    @foreach ($groupParts as $p)
+                            <div style="display:grid;gap:10px;">
+                                @foreach ($groupParts as $p)
                                         <a class="card" href="{{ route('buyer.parts.show', $p->slug) }}" style="display:flex;gap:12px;align-items:center;">
                                             <div class="card-media" style="width:130px;flex:0 0 130px;aspect-ratio:4/3;background-image:url('{{ $p->thumbnail_path ? asset($p->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
                                             <div class="card-body" style="flex:1;">
@@ -66,9 +65,9 @@
                                         </a>
                                     @endforeach
                                 </div>
-                            @endif
                         </div>
                     @endforeach
+                    @endif
                 </div>
             </div>
         </div>

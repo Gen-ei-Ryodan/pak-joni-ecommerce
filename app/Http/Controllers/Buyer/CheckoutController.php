@@ -8,12 +8,17 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PartVariant;
+use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
+    public function __construct(
+        private PaymentService $paymentService,
+    ) {}
+
     public function address(Request $request)
     {
         $cart = $this->cart($request)->load(['items.variant.part']);
@@ -151,7 +156,8 @@ class CheckoutController extends Controller
             $order = Order::create([
                 'user_id' => $request->user()->id,
                 'order_no' => $this->newOrderNo(),
-                'status' => 'pending',
+                'status' => 'unpaid',
+                'payment_status' => 'pending',
                 'subtotal' => $subtotal,
                 'shipping_cost' => $shippingCost,
                 'total' => $total,
@@ -172,6 +178,8 @@ class CheckoutController extends Controller
                     'shipping_cost' => $shippingCost,
                 ],
             ]);
+
+            $this->paymentService->createPayment($order);
 
             foreach ($cart->items as $it) {
                 $variant = PartVariant::lockForUpdate()->with('part')->findOrFail($it->part_variant_id);
@@ -224,4 +232,3 @@ class CheckoutController extends Controller
         return $no;
     }
 }
-

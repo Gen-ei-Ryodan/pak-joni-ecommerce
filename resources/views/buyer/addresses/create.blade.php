@@ -1,6 +1,6 @@
 @extends('layouts.buyer')
 
-@section('title', 'Tambah Alamat')
+@section('title', 'Add Address')
 
 @section('content')
     <section class="section">
@@ -16,8 +16,8 @@
             @endif
 
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
-                <div style="font-size:18px;font-weight:600;">Tambah Alamat</div>
-                <a class="btn" href="{{ route('buyer.addresses.index') }}">Kembali</a>
+                <div style="font-size:18px;font-weight:600;">Add Address</div>
+                <a class="btn" href="{{ route('buyer.addresses.index') }}">Back</a>
             </div>
 
             <div style="height:12px;"></div>
@@ -26,7 +26,7 @@
                 @csrf
                 @include('buyer.addresses._form', ['address' => null])
                 <div style="height:14px;"></div>
-                <button class="btn btn-primary" type="submit">Simpan</button>
+                <button class="btn btn-primary" type="submit">Save</button>
             </form>
         </div>
     </section>

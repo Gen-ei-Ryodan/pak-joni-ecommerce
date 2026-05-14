@@ -26,13 +26,14 @@
                         <span>{{ config('app.name') }}</span>
                     </a>
 
+                    <nav class="nav-links">
+                        <a href="{{ route('buyer.home') }}">Home</a>
+                        <a href="{{ route('buyer.about') }}">About</a>
+                        <a href="{{ route('buyer.products') }}">Products</a>
+                    </nav>
+
                     <div class="nav-cta">
-                        @if (Route::has('auth.login'))
-                            <a class="btn" href="{{ route('auth.login') }}">Login</a>
-                        @endif
-                        @if (Route::has('auth.register'))
-                            <a class="btn btn-primary" href="{{ route('auth.register') }}">Register</a>
-                        @endif
+                        <a class="btn-login" href="{{ route('auth.login') }}">Login</a>
                     </div>
                 </div>
             </header>

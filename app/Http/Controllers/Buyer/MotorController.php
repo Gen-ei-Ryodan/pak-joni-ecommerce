@@ -17,7 +17,7 @@ class MotorController extends Controller
             ->where('status', 'published')
             ->when($q !== '', fn ($query) => $query->where('name', 'like', '%'.$q.'%'))
             ->orderByDesc('id')
-            ->paginate(12)
+            ->paginate(4)
             ->withQueryString();
 
         return view('buyer.motors.index', compact('motors', 'q'));

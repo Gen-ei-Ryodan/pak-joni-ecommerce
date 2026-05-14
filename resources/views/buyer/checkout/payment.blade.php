@@ -56,7 +56,7 @@
                 </div>
 
                 <div class="panel" style="padding:14px;">
-                    <div style="font-weight:600;">Ringkasan</div>
+                    <div style="font-weight:600;">Summary</div>
                     <div style="height:10px;"></div>
 
                     <div class="muted" style="display:grid;gap:8px;">
@@ -67,7 +67,7 @@
 
                     <div style="height:14px;"></div>
 
-                    <div style="font-weight:600;">Alamat</div>
+                    <div style="font-weight:600;">Address</div>
                     <div style="height:8px;"></div>
                     <div class="muted" style="line-height:1.8;">
                         {{ $address->recipient_name }} — {{ $address->phone }}<br>

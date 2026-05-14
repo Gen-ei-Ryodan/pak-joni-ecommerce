@@ -1,12 +1,12 @@
 @extends('layouts.buyer')
 
-@section('title', 'Produk')
+@section('title', 'Products')
 
 @section('content')
     <section class="section">
         <div class="container">
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
-                <div style="font-size:18px;font-weight:600;">Produk</div>
+                <div style="font-size:18px;font-weight:600;">Products</div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <a class="btn" href="{{ route('buyer.motors.index') }}">Motor</a>
                     <a class="btn btn-primary" href="{{ route('buyer.parts.index') }}">Parts</a>
@@ -26,7 +26,7 @@
                         </div>
                     </a>
                 @empty
-                    <div class="muted">Belum ada motor.</div>
+                    <div class="muted">No motorcycles yet.</div>
                 @endforelse
             </div>
 
@@ -46,7 +46,7 @@
                         </div>
                     </a>
                 @empty
-                    <div class="muted">Belum ada part.</div>
+                    <div class="muted">No parts yet.</div>
                 @endforelse
             </div>
         </div>

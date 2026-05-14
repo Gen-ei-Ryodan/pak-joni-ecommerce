@@ -7,7 +7,7 @@
         <div class="container">
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
                 <div style="font-size:18px;font-weight:600;">Motor Catalog</div>
-                <a class="btn" href="{{ route('buyer.products') }}">Produk</a>
+                <a class="btn" href="{{ route('buyer.products') }}">Products</a>
             </div>
 
             <div style="height:12px;"></div>
@@ -29,7 +29,7 @@
                         </div>
                     </a>
                 @empty
-                    <div class="muted">Belum ada motor.</div>
+                    <div class="muted">No motorcycles yet.</div>
                 @endforelse
             </div>
 

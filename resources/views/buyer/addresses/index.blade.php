@@ -23,7 +23,7 @@
 
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
                 <div style="font-size:18px;font-weight:600;">Addresses</div>
-                <a class="btn btn-primary" href="{{ route('buyer.addresses.create') }}">Tambah Alamat</a>
+                <a class="btn btn-primary" href="{{ route('buyer.addresses.create') }}">Add Address</a>
             </div>
 
             <div style="height:14px;"></div>
@@ -56,7 +56,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="muted">Belum ada alamat.</div>
+                    <div class="muted">No addresses yet.</div>
                 @endforelse
             </div>
         </div>

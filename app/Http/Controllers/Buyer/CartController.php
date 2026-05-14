@@ -28,17 +28,31 @@ class CartController extends Controller
         ]);
 
         $variant = PartVariant::query()->with('part')->findOrFail((int) $validated['variant_id']);
+        $qty = (int) $validated['quantity'];
 
-        return DB::transaction(function () use ($request, $validated, $variant) {
+        if ($variant->stock < 1) {
+            return back()->withErrors(['stock' => 'Stok habis.']);
+        }
+
+        return DB::transaction(function () use ($request, $variant, $qty) {
             $cart = $this->cart($request);
 
             $item = CartItem::query()->where('cart_id', $cart->id)->where('part_variant_id', $variant->id)->first();
-            $qty = (int) $validated['quantity'];
 
             if ($item) {
-                $item->quantity = min(99, $item->quantity + $qty);
+                $newQty = $item->quantity + $qty;
+
+                if ($newQty > $variant->stock) {
+                    return back()->withErrors(['stock' => 'Qty melebihi stok tersedia ('.$variant->stock.').']);
+                }
+
+                $item->quantity = $newQty;
                 $item->save();
             } else {
+                if ($qty > $variant->stock) {
+                    return back()->withErrors(['stock' => 'Qty melebihi stok tersedia ('.$variant->stock.').']);
+                }
+
                 CartItem::create([
                     'cart_id' => $cart->id,
                     'part_variant_id' => $variant->id,
@@ -61,7 +75,14 @@ class CartController extends Controller
             abort(403);
         }
 
-        $cartItem->quantity = (int) $validated['quantity'];
+        $variant = PartVariant::query()->findOrFail($cartItem->part_variant_id);
+        $qty = (int) $validated['quantity'];
+
+        if ($qty > $variant->stock) {
+            return back()->withErrors(['stock' => 'Qty melebihi stok tersedia ('.$variant->stock.').']);
+        }
+
+        $cartItem->quantity = $qty;
         $cartItem->save();
 
         return redirect('/cart')->with('status', 'Qty diupdate.');
@@ -78,9 +99,16 @@ class CartController extends Controller
         return redirect('/cart')->with('status', 'Item dihapus dari cart.');
     }
 
+    public function clear(Request $request)
+    {
+        $cart = $this->cart($request);
+        $cart->items()->delete();
+
+        return redirect('/cart')->with('status', 'Cart dikosongkan.');
+    }
+
     private function cart(Request $request): Cart
     {
         return Cart::firstOrCreate(['user_id' => $request->user()->id]);
     }
 }
-

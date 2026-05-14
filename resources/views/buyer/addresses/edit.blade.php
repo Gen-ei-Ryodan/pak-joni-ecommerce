@@ -1,6 +1,6 @@
 @extends('layouts.buyer')
 
-@section('title', 'Edit Alamat')
+@section('title', 'Edit Address')
 
 @section('content')
     <section class="section">
@@ -16,8 +16,8 @@
             @endif
 
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
-                <div style="font-size:18px;font-weight:600;">Edit Alamat</div>
-                <a class="btn" href="{{ route('buyer.addresses.index') }}">Kembali</a>
+                <div style="font-size:18px;font-weight:600;">Edit Address</div>
+                <a class="btn" href="{{ route('buyer.addresses.index') }}">Back</a>
             </div>
 
             <div style="height:12px;"></div>

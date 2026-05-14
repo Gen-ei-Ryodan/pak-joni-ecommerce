@@ -6,7 +6,7 @@
     <div class="auth-wrap">
         <div class="auth-card">
             <div class="auth-title">New Password</div>
-            <div class="auth-subtitle">Buat password baru untuk akun kamu.</div>
+            <div class="auth-subtitle">Create a new password for your account.</div>
 
             @if ($errors->any())
                 <div class="alert alert-danger">
@@ -29,19 +29,19 @@
                 </div>
 
                 <div class="field">
-                    <label for="password">Password Baru</label>
+                    <label for="password">New Password</label>
                     <input id="password" name="password" type="password" autocomplete="new-password" required>
                 </div>
 
                 <div class="field">
-                    <label for="password_confirmation">Ulangi Password Baru</label>
+                    <label for="password_confirmation">Confirm New Password</label>
                     <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required>
                 </div>
 
                 <div class="form-actions">
-                    <button class="btn btn-primary" type="submit">Simpan Password</button>
+                    <button class="btn btn-primary" type="submit">Save Password</button>
                     @if (Route::has('auth.login'))
-                        <a class="text-link" href="{{ route('auth.login') }}">Kembali</a>
+                        <a class="text-link" href="{{ route('auth.login') }}">Back</a>
                     @endif
                 </div>
             </form>
