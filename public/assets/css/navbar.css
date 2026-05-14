@@ -131,3 +131,108 @@
   border-radius: 999px;
   line-height: 1;
 }
+
+.user-dropdown-wrap {
+  position: relative;
+}
+
+.user-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-dropdown-trigger:hover {
+  border-color: var(--muted);
+}
+
+.user-dropdown-trigger::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--muted);
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.user-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: rgba(16, 20, 26, 0.98);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 6px;
+  display: none;
+  z-index: 60;
+}
+
+.user-dropdown-wrap:hover .user-dropdown-menu,
+.user-dropdown-menu:hover {
+  display: block;
+}
+
+.user-dropdown-menu a,
+.user-dropdown-menu form button {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.user-dropdown-menu a:hover,
+.user-dropdown-menu form button:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.user-dropdown-menu form button {
+  color: #f87171;
+}
+
+.user-dropdown-menu form button:hover {
+  color: #ef4444;
+}
+
+.nav-cart-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.nav-cart-icon:hover {
+  border-color: var(--muted);
+}

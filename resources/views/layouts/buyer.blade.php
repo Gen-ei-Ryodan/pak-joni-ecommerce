@@ -37,17 +37,26 @@
                     <div class="nav-cta">
                         @auth
                             @php($cartCount = auth()->user()->cart?->items()->count() ?? 0)
-                            <a class="btn-logout cart-link" href="{{ route('buyer.cart.index') }}">Cart
+                            <a class="nav-cart-icon" href="{{ route('buyer.cart.index') }}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                                </svg>
                                 @if($cartCount > 0)
                                     <span class="cart-badge">{{ $cartCount }}</span>
                                 @endif
                             </a>
-                            <a class="btn-logout" href="{{ route('buyer.wishlist.index') }}">Wishlist</a>
-                            <a class="btn-logout" href="{{ url('/dashboard') }}">Dashboard</a>
-                            <form method="post" action="{{ url('/logout') }}" style="display:inline;">
-                                @csrf
-                                <button class="btn-logout" type="submit">Logout</button>
-                            </form>
+                            <div class="user-dropdown-wrap">
+                                <a class="user-dropdown-trigger" href="{{ url('/dashboard') }}">{{ auth()->user()->name }}</a>
+                                <div class="user-dropdown-menu">
+                                    <a href="{{ route('buyer.wishlist.index') }}">Wishlist</a>
+                                    <a href="{{ route('buyer.orders.index') }}">My Orders</a>
+                                    <form method="post" action="{{ url('/logout') }}">
+                                        @csrf
+                                        <button type="submit">Logout</button>
+                                    </form>
+                                </div>
+                            </div>
                         @else
                             <a class="btn-login" href="{{ route('auth.login') }}">Login</a>
                         @endauth
@@ -56,16 +65,6 @@
             </header>
 
             <main>
-                @if (session('status'))
-                    <div class="section" style="padding-bottom:0;">
-                        <div class="container">
-                            <div class="panel" style="padding:10px 12px;border-color:rgba(217,180,111,0.35);background:rgba(217,180,111,0.08);">
-                                {{ session('status') }}
-                            </div>
-                        </div>
-                    </div>
-                @endif
-
                 @yield('content')
             </main>
 
