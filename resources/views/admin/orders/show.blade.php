@@ -120,19 +120,6 @@
 
             <div class="panel" style="padding:16px;">
                 <div style="font-weight:600;margin-bottom:12px;">Order Timeline</div>
-                @php
-                    $timeline = [
-                        ['label' => 'Order Created', 'time' => $order->created_at, 'done' => true],
-                        ['label' => 'Awaiting Payment', 'time' => $order->created_at, 'done' => $order->status !== 'unpaid' || $order->payment_status === 'paid'],
-                        ['label' => 'Payment Successful', 'time' => $order->paid_at, 'done' => in_array($order->status, ['paid','processing','shipped','completed'])],
-                        ['label' => 'Processing', 'time' => $order->status === 'processing' ? $order->updated_at : null, 'done' => in_array($order->status, ['processing','shipped','completed'])],
-                        ['label' => 'Shipped', 'time' => $order->shipped_at, 'done' => in_array($order->status, ['shipped','completed'])],
-                        ['label' => 'Completed', 'time' => $order->completed_at, 'done' => $order->status === 'completed'],
-                    ];
-                    if ($order->status === 'cancelled') {
-                        $timeline[] = ['label' => 'Cancelled', 'time' => $order->cancelled_at, 'done' => true];
-                    }
-                @endphp
                 <div style="display:grid;gap:0;">
                     @foreach($timeline as $t)
                         <div style="display:flex;gap:12px;align-items:flex-start;">
