@@ -31,10 +31,12 @@ class CartController extends Controller
         $qty = (int) $validated['quantity'];
 
         if ($variant->stock < 1) {
-            return back()->withErrors(['stock' => 'Stok habis.']);
+            return $request->expectsJson()
+                ? response()->json(['success' => false, 'message' => 'Out of stock.'], 422)
+                : back()->withErrors(['stock' => 'Out of stock.']);
         }
 
-        return DB::transaction(function () use ($request, $variant, $qty) {
+        $result = DB::transaction(function () use ($request, $variant, $qty) {
             $cart = $this->cart($request);
 
             $item = CartItem::query()->where('cart_id', $cart->id)->where('part_variant_id', $variant->id)->first();
@@ -43,14 +45,14 @@ class CartController extends Controller
                 $newQty = $item->quantity + $qty;
 
                 if ($newQty > $variant->stock) {
-                    return back()->withErrors(['stock' => 'Qty melebihi stok tersedia ('.$variant->stock.').']);
+                    return ['success' => false, 'message' => 'Qty exceeds available stock ('.$variant->stock.').'];
                 }
 
                 $item->quantity = $newQty;
                 $item->save();
             } else {
                 if ($qty > $variant->stock) {
-                    return back()->withErrors(['stock' => 'Qty melebihi stok tersedia ('.$variant->stock.').']);
+                    return ['success' => false, 'message' => 'Qty exceeds available stock ('.$variant->stock.').'];
                 }
 
                 CartItem::create([
@@ -61,8 +63,20 @@ class CartController extends Controller
                 ]);
             }
 
-            return redirect('/cart')->with('status', 'Item masuk ke cart.');
+            $cartCount = $cart->items()->count();
+
+            return ['success' => true, 'message' => 'Item added to cart.', 'cartCount' => $cartCount];
         });
+
+        if ($request->expectsJson()) {
+            return response()->json($result);
+        }
+
+        if ($result['success']) {
+            return redirect('/cart')->with('status', $result['message']);
+        }
+
+        return back()->withErrors(['stock' => $result['message']]);
     }
 
     public function update(Request $request, CartItem $cartItem)

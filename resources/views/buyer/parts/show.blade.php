@@ -70,40 +70,42 @@
                     @endif
                 </div>
 
-                <div class="panel" style="padding:14px;">
-                    <div style="display:grid;gap:12px;">
-                        <div>
-                            <div style="font-weight:600;">Pilih Variant</div>
-                            <div style="height:8px;"></div>
-                            <select class="select" style="width:100%;" data-variant-select>
-                                @foreach ($part->variants as $v)
-                                    <option value="{{ $v->id }}" data-price="{{ $v->price }}" data-stock="{{ $v->stock }}" @selected($v->is_default)>
-                                        {{ $v->name }} — {{ number_format((float) $v->price, 2, '.', ',') }} (stock: {{ $v->stock }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="price" data-price-view></div>
-                        </div>
+                        <div class="panel" style="padding:14px;">
+                            <div id="cart-notification" style="display:none;padding:10px 12px;margin-bottom:12px;border-radius:12px;border:1px solid rgba(217,180,111,0.35);background:rgba(217,180,111,0.08);"></div>
 
-                        <form method="post" action="{{ route('buyer.cart.store') }}" style="display:grid;gap:12px;" data-add-to-cart>
-                            @csrf
-                            <input type="hidden" name="variant_id" data-variant-id>
-                            <div class="field">
-                                <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:6px;">Qty</label>
-                                <input class="input" style="width:100%;min-width:0;" name="quantity" type="number" value="1" min="1" max="99" required data-qty-input>
-                                <div style="margin-top:4px;font-size:11px;color:#f87171;display:none;" data-stock-warning></div>
+                            <div style="display:grid;gap:12px;">
+                                <div>
+                                    <div style="font-weight:600;">Pilih Variant</div>
+                                    <div style="height:8px;"></div>
+                                    <select class="select" style="width:100%;" data-variant-select>
+                                        @foreach ($part->variants as $v)
+                                            <option value="{{ $v->id }}" data-price="{{ $v->price }}" data-stock="{{ $v->stock }}" @selected($v->is_default)>
+                                                {{ $v->name }} — {{ number_format((float) $v->price, 2, '.', ',') }} (stock: {{ $v->stock }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="price" data-price-view></div>
+                                </div>
+
+                                <form style="display:grid;gap:12px;" data-add-to-cart>
+                                    @csrf
+                                    <input type="hidden" name="variant_id" data-variant-id>
+                                    <div class="field">
+                                        <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:6px;">Qty</label>
+                                        <input class="input" style="width:100%;min-width:0;" name="quantity" type="number" value="1" min="1" max="99" required data-qty-input>
+                                        <div style="margin-top:4px;font-size:11px;color:#f87171;display:none;" data-stock-warning></div>
+                                    </div>
+                                    <button class="btn btn-primary" type="submit">Add to Cart</button>
+                                </form>
+
+                                <form method="post" action="{{ route('buyer.wishlist.toggle', $part) }}">
+                                    @csrf
+                                    <button class="btn" type="submit">Toggle Wishlist</button>
+                                </form>
+
+                                <a class="btn" href="{{ route('buyer.cart.index') }}">Go to Cart</a>
                             </div>
-                            <button class="btn btn-primary" type="submit">Add to Cart</button>
-                        </form>
-
-                        <form method="post" action="{{ route('buyer.wishlist.toggle', $part) }}">
-                            @csrf
-                            <button class="btn" type="submit">Toggle Wishlist</button>
-                        </form>
-
-                        <a class="btn" href="{{ route('buyer.cart.index') }}">Go to Cart</a>
-                    </div>
-                </div>
+                        </div>
             </div>
         </div>
     </section>
@@ -116,28 +118,34 @@
             const priceView = document.querySelector('[data-price-view]');
             const qtyInput = document.querySelector('[data-qty-input]');
             const stockWarning = document.querySelector('[data-stock-warning]');
-            if (!select || !idInput || !priceView) return;
+            const form = document.querySelector('[data-add-to-cart]');
+            const notif = document.getElementById('cart-notification');
+            const thumb = document.querySelector('.panel:first-child img');
+            const cartIcon = document.querySelector('.nav-cart-icon');
 
             function sync() {
+                if (!select || !idInput || !priceView) return;
                 const opt = select.options[select.selectedIndex];
                 idInput.value = opt.value;
                 const price = opt.getAttribute('data-price') || '0';
                 const stock = parseInt(opt.getAttribute('data-stock') || '0');
-                priceView.textContent = `Price: ${price} | Stock: ${stock}`;
+                priceView.textContent = 'Price: ' + price + ' | Stock: ' + stock;
 
                 if (qtyInput) {
                     qtyInput.max = Math.min(99, stock);
                     const qty = parseInt(qtyInput.value) || 1;
                     if (qty > stock) {
                         stockWarning.style.display = '';
-                        stockWarning.textContent = 'Stok hanya tersedia ' + stock;
+                        stockWarning.textContent = 'Stock only ' + stock + ' available';
                     } else {
                         stockWarning.style.display = 'none';
                     }
                 }
             }
 
-            select.addEventListener('change', sync);
+            if (select) {
+                select.addEventListener('change', sync);
+            }
 
             if (qtyInput) {
                 qtyInput.addEventListener('input', function () {
@@ -146,10 +154,118 @@
                     const qty = parseInt(this.value) || 1;
                     if (qty > stock) {
                         stockWarning.style.display = '';
-                        stockWarning.textContent = 'Stok hanya tersedia ' + stock;
+                        stockWarning.textContent = 'Stock only ' + stock + ' available';
                     } else {
                         stockWarning.style.display = 'none';
                     }
+                });
+            }
+
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    const fd = new FormData(this);
+                    const qty = parseInt(fd.get('quantity')) || 1;
+                    const opt = select ? select.options[select.selectedIndex] : null;
+                    const stock = opt ? parseInt(opt.getAttribute('data-stock') || '0') : 0;
+
+                    if (qty > stock) {
+                        if (stockWarning) {
+                            stockWarning.style.display = '';
+                            stockWarning.textContent = 'Stock only ' + stock + ' available';
+                        }
+                        return;
+                    }
+
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Adding...';
+
+                    fetch('{{ route('buyer.cart.store') }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                            'Accept': 'application/json',
+                        },
+                        body: fd,
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Add to Cart';
+
+                        if (data.success) {
+                            if (notif) {
+                                notif.textContent = data.message || 'Item added to cart.';
+                                notif.style.display = '';
+                                setTimeout(function () { notif.style.display = 'none'; }, 3000);
+                            }
+
+                            if (data.cartCount !== undefined) {
+                                var badge = document.querySelector('.cart-badge');
+                                if (data.cartCount > 0) {
+                                    if (badge) {
+                                        badge.textContent = data.cartCount;
+                                    } else {
+                                        var newBadge = document.createElement('span');
+                                        newBadge.className = 'cart-badge';
+                                        newBadge.textContent = data.cartCount;
+                                        if (cartIcon) cartIcon.appendChild(newBadge);
+                                    }
+                                } else {
+                                    if (badge) badge.remove();
+                                }
+                            }
+
+                            if (thumb && cartIcon) {
+                                var clone = thumb.cloneNode(true);
+                                var rect = thumb.getBoundingClientRect();
+                                var cartRect = cartIcon.getBoundingClientRect();
+
+                                clone.style.cssText = 'position:fixed;z-index:9999;width:80px;height:60px;object-fit:cover;border-radius:8px;pointer-events:none;transition:all 0.6s cubic-bezier(.25,.46,.45,.94);';
+                                clone.style.left = rect.left + 'px';
+                                clone.style.top = rect.top + 'px';
+                                document.body.appendChild(clone);
+
+                                requestAnimationFrame(function () {
+                                    clone.style.left = cartRect.left + (cartRect.width / 2) - 40 + 'px';
+                                    clone.style.top = cartRect.top + (cartRect.height / 2) - 30 + 'px';
+                                    clone.style.transform = 'scale(0.3)';
+                                    clone.style.opacity = '0.3';
+                                });
+
+                                setTimeout(function () { clone.remove(); }, 700);
+                            }
+                        } else {
+                            if (notif) {
+                                notif.textContent = data.message || 'Failed to add item.';
+                                notif.style.borderColor = 'rgba(255,77,77,0.35)';
+                                notif.style.background = 'rgba(255,77,77,0.08)';
+                                notif.style.display = '';
+                                setTimeout(function () {
+                                    notif.style.display = 'none';
+                                    notif.style.borderColor = 'rgba(217,180,111,0.35)';
+                                    notif.style.background = 'rgba(217,180,111,0.08)';
+                                }, 3000);
+                            }
+                        }
+                    })
+                    .catch(function () {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Add to Cart';
+                        if (notif) {
+                            notif.textContent = 'Something went wrong.';
+                            notif.style.borderColor = 'rgba(255,77,77,0.35)';
+                            notif.style.background = 'rgba(255,77,77,0.08)';
+                            notif.style.display = '';
+                            setTimeout(function () {
+                                notif.style.display = 'none';
+                                notif.style.borderColor = 'rgba(217,180,111,0.35)';
+                                notif.style.background = 'rgba(217,180,111,0.08)';
+                            }, 3000);
+                        }
+                    });
                 });
             }
 
