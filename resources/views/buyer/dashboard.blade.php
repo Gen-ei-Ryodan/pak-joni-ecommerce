@@ -12,7 +12,7 @@
             <aside class="sidebar">
                 <a href="{{ url('/dashboard') }}">Dashboard</a>
                 <a href="{{ route('buyer.addresses.index') }}">Addresses</a>
-                <a href="{{ route('buyer.orders.index') }}">Orders</a>
+                <a href="{{ route('buyer.orders.index') }}">My Orders</a>
                 <a href="{{ route('buyer.wishlist.index') }}">Wishlist</a>
                 <a href="{{ route('buyer.cart.index') }}">Cart</a>
             </aside>

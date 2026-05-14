@@ -98,7 +98,9 @@
 }
 
 .carousel-control-prev,
-.carousel-control-next {
+.carousel-control-next,
+.carousel-prev,
+.carousel-next {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -116,21 +118,45 @@
 }
 
 .carousel-control-prev:hover,
-.carousel-control-next:hover {
+.carousel-control-next:hover,
+.carousel-prev:hover,
+.carousel-next:hover {
   background: rgba(255,255,255,0.35);
 }
 
-.carousel-control-prev {
+.carousel-control-prev,
+.carousel-prev {
   left: 16px;
 }
 
-.carousel-control-next {
+.carousel-control-next,
+.carousel-next {
   right: 16px;
 }
 
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
-  display: inline-block;
+.carousel-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.carousel-dots button {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.4);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease;
+}
+
+.carousel-dots button.active {
+  background: rgba(255,255,255,0.9);
 }
 
 .visually-hidden {

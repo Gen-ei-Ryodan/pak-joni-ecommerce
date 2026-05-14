@@ -4,26 +4,23 @@
 
 @section('content')
     @if (!empty($banners) && $banners->count())
-        <section class="banner-slider">
-            <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
-                <div class="carousel-inner">
-                    @foreach ($banners as $index => $banner)
-                        <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                            <div class="banner-slide" style="background-image: url('{{ asset($banner->image_path) }}'); background-size: cover; background-position: center; height: 100vh;"></div>
-                        </div>
+        <section class="banner-slider" data-carousel>
+            <div class="carousel-container" data-carousel-track>
+                @foreach ($banners as $index => $banner)
+                    <div class="carousel-slide" data-carousel-slide style="{{ $index === 0 ? '' : 'display:none;' }}">
+                        <div class="banner-slide" style="background-image: url('{{ asset($banner->image_path) }}'); background-size: cover; background-position: center; min-height: 70vh;"></div>
+                    </div>
+                @endforeach
+            </div>
+            @if($banners->count() > 1)
+                <button class="carousel-prev" type="button" data-carousel-prev aria-label="Previous">&#10094;</button>
+                <button class="carousel-next" type="button" data-carousel-next aria-label="Next">&#10095;</button>
+                <div class="carousel-dots" data-carousel-dots>
+                    @foreach ($banners as $index => $b)
+                        <button type="button" data-carousel-dot="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}"></button>
                     @endforeach
                 </div>
-                @if($banners->count() > 1)
-                    <button class="carousel-control-prev" type="button" data-target="#bannerCarousel" data-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true">&#10094;</span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-target="#bannerCarousel" data-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true">&#10095;</span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
-                @endif
-            </div>
+            @endif
         </section>
     @endif
 
@@ -46,3 +43,50 @@
         </section>
     @endif
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            const carousel = document.querySelector('[data-carousel]');
+            if (!carousel) return;
+
+            const slides = Array.from(carousel.querySelectorAll('[data-carousel-slide]'));
+            const dots = Array.from(carousel.querySelectorAll('[data-carousel-dot]'));
+            const prevBtn = carousel.querySelector('[data-carousel-prev]');
+            const nextBtn = carousel.querySelector('[data-carousel-next]');
+
+            let current = 0;
+            let timer = null;
+
+            function show(idx) {
+                slides.forEach((s, i) => { s.style.display = i === idx ? '' : 'none'; });
+                dots.forEach((d, i) => { d.classList.toggle('active', i === idx); });
+                current = idx;
+            }
+
+            function next() { show((current + 1) % slides.length); }
+            function prev() { show((current - 1 + slides.length) % slides.length); }
+
+            function startAuto() {
+                stopAuto();
+                timer = setInterval(next, 5000);
+            }
+
+            function stopAuto() {
+                if (timer) { clearInterval(timer); timer = null; }
+            }
+
+            if (prevBtn) prevBtn.addEventListener('click', () => { prev(); startAuto(); });
+            if (nextBtn) nextBtn.addEventListener('click', () => { next(); startAuto(); });
+            dots.forEach(d => {
+                d.addEventListener('click', () => { show(parseInt(d.dataset.carouselDot)); startAuto(); });
+            });
+
+            carousel.addEventListener('mouseenter', stopAuto);
+            carousel.addEventListener('mouseleave', startAuto);
+
+            show(0);
+            startAuto();
+        })();
+    </script>
+@endpush

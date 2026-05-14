@@ -85,12 +85,13 @@
                             <div class="price" data-price-view></div>
                         </div>
 
-                        <form method="post" action="{{ route('buyer.cart.store') }}" style="display:grid;gap:12px;">
+                        <form method="post" action="{{ route('buyer.cart.store') }}" style="display:grid;gap:12px;" data-add-to-cart>
                             @csrf
                             <input type="hidden" name="variant_id" data-variant-id>
                             <div class="field">
                                 <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:6px;">Qty</label>
-                                <input class="input" style="width:100%;min-width:0;" name="quantity" type="number" value="1" min="1" max="99" required>
+                                <input class="input" style="width:100%;min-width:0;" name="quantity" type="number" value="1" min="1" max="99" required data-qty-input>
+                                <div style="margin-top:4px;font-size:11px;color:#f87171;display:none;" data-stock-warning></div>
                             </div>
                             <button class="btn btn-primary" type="submit">Add to Cart</button>
                         </form>
@@ -113,17 +114,45 @@
             const select = document.querySelector('[data-variant-select]');
             const idInput = document.querySelector('[data-variant-id]');
             const priceView = document.querySelector('[data-price-view]');
+            const qtyInput = document.querySelector('[data-qty-input]');
+            const stockWarning = document.querySelector('[data-stock-warning]');
             if (!select || !idInput || !priceView) return;
 
             function sync() {
                 const opt = select.options[select.selectedIndex];
                 idInput.value = opt.value;
                 const price = opt.getAttribute('data-price') || '0';
-                const stock = opt.getAttribute('data-stock') || '0';
+                const stock = parseInt(opt.getAttribute('data-stock') || '0');
                 priceView.textContent = `Price: ${price} | Stock: ${stock}`;
+
+                if (qtyInput) {
+                    qtyInput.max = Math.min(99, stock);
+                    const qty = parseInt(qtyInput.value) || 1;
+                    if (qty > stock) {
+                        stockWarning.style.display = '';
+                        stockWarning.textContent = 'Stok hanya tersedia ' + stock;
+                    } else {
+                        stockWarning.style.display = 'none';
+                    }
+                }
             }
 
             select.addEventListener('change', sync);
+
+            if (qtyInput) {
+                qtyInput.addEventListener('input', function () {
+                    const opt = select.options[select.selectedIndex];
+                    const stock = parseInt(opt.getAttribute('data-stock') || '0');
+                    const qty = parseInt(this.value) || 1;
+                    if (qty > stock) {
+                        stockWarning.style.display = '';
+                        stockWarning.textContent = 'Stok hanya tersedia ' + stock;
+                    } else {
+                        stockWarning.style.display = 'none';
+                    }
+                });
+            }
+
             sync();
         })();
     </script>

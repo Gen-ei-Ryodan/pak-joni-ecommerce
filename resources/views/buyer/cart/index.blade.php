@@ -5,6 +5,16 @@
 @section('content')
     <section class="section">
         <div class="container">
+            @if ($errors->any())
+                <div class="panel" style="padding:10px 12px;margin-bottom:12px;border-color:rgba(255,77,77,0.35);background:rgba(255,77,77,0.08);">
+                    <div style="display:grid;gap:6px;">
+                        @foreach ($errors->all() as $error)
+                            <div>{{ $error }}</div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             @if (session('status'))
                 <div class="panel" style="padding:10px 12px;margin-bottom:12px;border-color:rgba(217,180,111,0.35);background:rgba(217,180,111,0.08);">
                     {{ session('status') }}

@@ -74,9 +74,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/place', [BuyerCheckoutController::class, 'placeOrder'])->name('buyer.checkout.place');
     Route::get('/checkout/finish/{order}', [BuyerCheckoutController::class, 'finish'])->name('buyer.checkout.finish');
 
-    Route::get('/orders', [BuyerOrderController::class, 'index'])->name('buyer.orders.index');
-    Route::get('/orders/{order}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
-    Route::post('/orders/{order}/simulate-payment', [BuyerOrderController::class, 'simulatePayment'])->name('buyer.orders.simulatePayment');
+    Route::get('/my/orders', [BuyerOrderController::class, 'index'])->name('buyer.orders.index');
+    Route::get('/my/orders/{order:order_no}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
+    Route::post('/my/orders/{order:order_no}/simulate-payment', [BuyerOrderController::class, 'simulatePayment'])->name('buyer.orders.simulatePayment');
 });
 
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
