@@ -30,7 +30,13 @@ class PartController extends Controller
 
         $categories = PartCategory::query()->orderBy('group')->orderBy('sort_order')->orderBy('name')->get();
 
-        return view('buyer.parts.index', compact('parts', 'categories', 'q', 'category'));
+        $selectedCategoryName = '';
+        if ($category) {
+            $cat = PartCategory::where('slug', $category)->first();
+            $selectedCategoryName = $cat ? ($cat->group.' — '.$cat->name) : '';
+        }
+
+        return view('buyer.parts.index', compact('parts', 'categories', 'q', 'category', 'selectedCategoryName'));
     }
 
     public function show(Part $part)
