@@ -35,7 +35,7 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['items', 'shipment', 'payment']);
+        $order->load(['items.part', 'items.variant.part', 'shipment', 'payment']);
 
         $timeline = $this->buildTimeline($order);
 

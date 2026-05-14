@@ -2,142 +2,173 @@
 
 @section('title', 'Order Detail')
 
+@push('head')
+    <link rel="stylesheet" href="{{ asset('assets/css/order-detail.css') }}">
+@endpush
+
 @section('dashboard-content')
-    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
-        <div>
-            <div style="font-size:16px;font-weight:600;">Order {{ $order->order_no }}</div>
-            <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
-                <span class="badge {{ $order->statusBadge() }}">{{ $order->statusLabel() }}</span>
-                <span class="badge {{ $order->paymentStatusBadge() }}">Payment: {{ $order->payment_status }}</span>
-            </div>
-        </div>
-        <a class="btn" href="{{ route('buyer.orders.index') }}">Back</a>
-    </div>
-
-    <div style="height:14px;"></div>
-
     @if($order->status === 'unpaid' && $order->payment_status === 'pending')
-        <div class="panel" style="padding:14px;margin-bottom:14px;border-color:rgba(234,179,8,0.35);background:rgba(234,179,8,0.06);">
-            <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
-                <div>
-                    <div style="font-weight:600;">Awaiting Payment</div>
-                    <div class="muted" style="margin-top:4px;font-size:13px;">Simulate payment for testing.</div>
-                </div>
-                <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
-                    @csrf
-                    <button class="btn btn-primary" type="submit">Simulate Payment</button>
-                </form>
+        <div class="payment-banner">
+            <div>
+                <div style="font-weight:600;font-size:14px;">Awaiting Payment</div>
+                <div class="muted" style="margin-top:4px;font-size:13px;">Complete your payment to process this order.</div>
             </div>
+            <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
+                @csrf
+                <button class="btn btn-primary" type="submit" style="flex-shrink:0;">Pay Now</button>
+            </form>
         </div>
     @endif
 
-    <div class="panel" style="padding:16px;">
-        <div style="font-weight:600;margin-bottom:10px;">Order Information</div>
-        <div style="display:grid;gap:8px;color:var(--muted);">
-            <div>Invoice: <span style="color:var(--text);font-family:var(--mono);">{{ $order->order_no }}</span></div>
-            <div>Date: <span style="color:var(--text);">{{ $order->created_at->format('d M Y H:i') }}</span></div>
-            <div>Status: <span class="badge {{ $order->statusBadge() }}">{{ $order->statusLabel() }}</span></div>
-            <div>Payment: <span class="badge {{ $order->paymentStatusBadge() }}">{{ $order->payment_status }}</span></div>
-            @if($order->payment_method)
-                <div>Method: <span style="color:var(--text);">{{ $order->payment_method }}</span></div>
-            @endif
-            @if($order->paid_at)
-                <div>Paid at: <span style="color:var(--text);">{{ $order->paid_at->format('d M Y H:i') }}</span></div>
-            @endif
-        </div>
-
-        <div style="height:12px;"></div>
-
-        <div style="font-weight:600;margin-bottom:10px;">Shipping Address</div>
-        <div class="muted" style="line-height:1.8;">
-            @php($addr = $order->address_snapshot)
-            <div><span style="color:var(--text);">{{ $addr['recipient_name'] ?? '-' }}</span></div>
-            <div>{{ $addr['phone'] ?? '-' }}</div>
-            <div>{{ $addr['address_line1'] ?? '-' }}{{ !empty($addr['address_line2']) ? ', '.$addr['address_line2'] : '' }}</div>
-            <div>{{ $addr['city'] ?? '-' }}, {{ $addr['province'] ?? '-' }} {{ $addr['postal_code'] ?? '' }}</div>
-        </div>
-
-        @if($order->shipping_courier)
-            <div style="height:8px;"></div>
-            <div>Courier: <span style="color:var(--text);">{{ $order->shipping_courier }}</span></div>
-            @if($order->shipping_receipt)
-                <div>Receipt: <span style="color:var(--text);font-family:var(--mono);">{{ $order->shipping_receipt }}</span></div>
-            @endif
-        @endif
-
-        <div style="height:12px;"></div>
-
-        <div style="font-weight:600;margin-bottom:10px;">Cost Breakdown</div>
-        <div class="muted" style="display:grid;gap:6px;">
-            <div style="display:flex;justify-content:space-between;">
-                <span>Subtotal</span>
-                <span style="color:var(--text);">Rp {{ number_format((float) $order->subtotal, 0, ',', '.') }}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;">
-                <span>Shipping</span>
-                <span style="color:var(--text);">Rp {{ number_format((float) $order->shipping_cost, 0, ',', '.') }}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-weight:600;border-top:1px solid var(--line);padding-top:6px;">
-                <span>Total</span>
-                <span style="color:var(--text);">Rp {{ number_format((float) $order->total, 0, ',', '.') }}</span>
-            </div>
-        </div>
-    </div>
-
-    <div style="height:14px;"></div>
-
-    <div class="panel" style="padding:16px;">
-        <div style="font-weight:600;margin-bottom:10px;">Item</div>
-        <div style="overflow:auto;">
-            <table style="width:100%;border-collapse:collapse;min-width:650px;">
-                <thead>
-                    <tr style="text-align:left;color:var(--muted);font-size:12px;">
-                        <th style="padding:10px;">Product</th>
-                        <th style="padding:10px;">Variant</th>
-                        <th style="padding:10px;">Price</th>
-                        <th style="padding:10px;">Qty</th>
-                        <th style="padding:10px;">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($order->items as $it)
-                        <tr style="border-top:1px solid var(--line);">
-                            <td style="padding:10px;">
-                                <div>{{ $it->name }}</div>
-                                <div class="muted" style="margin-top:4px;font-size:11px;">{{ $it->sku }}</div>
-                            </td>
-                            <td style="padding:10px;color:var(--muted);">{{ $it->variant_name ?? '-' }}</td>
-                            <td style="padding:10px;">Rp {{ number_format((float) $it->price, 0, ',', '.') }}</td>
-                            <td style="padding:10px;">{{ $it->quantity }}</td>
-                            <td style="padding:10px;">Rp {{ number_format((float) $it->line_total, 0, ',', '.') }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div style="height:14px;"></div>
-
-    <div class="panel" style="padding:16px;">
-        <div style="font-weight:600;margin-bottom:12px;">Order Timeline</div>
-        <div style="display:grid;gap:0;">
-            @foreach($timeline as $t)
-                <div style="display:flex;gap:12px;align-items:flex-start;">
-                    <div style="display:flex;flex-direction:column;align-items:center;">
-                        <div style="width:12px;height:12px;border-radius:50%;{{ $t['done'] ? 'background:#4ade80;' : 'background:var(--line);' }}"></div>
-                        @if(!$loop->last)
-                            <div style="width:2px;flex:1;min-height:20px;{{ $t['done'] ? 'background:#4ade80;' : 'background:var(--line);' }}"></div>
-                        @endif
+    <div class="order-detail-grid">
+        {{-- LEFT COLUMN --}}
+        <div style="display:grid;gap:20px;">
+            {{-- Header --}}
+            <div class="order-header">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+                    <div>
+                        <div class="order-id">{{ $order->order_no }}</div>
+                        <div class="order-meta">
+                            <div class="order-meta-item">
+                                <span class="order-meta-label">Date</span>
+                                <span>{{ $order->created_at->format('d M Y, H:i') }}</span>
+                            </div>
+                            @if($order->paid_at)
+                                <div class="order-meta-item">
+                                    <span class="order-meta-label">Paid</span>
+                                    <span>{{ $order->paid_at->format('d M Y, H:i') }}</span>
+                                </div>
+                            @endif
+                            <div class="order-meta-item">
+                                <span class="order-meta-label">Payment</span>
+                                <span class="badge {{ $order->paymentStatusBadge() }}">{{ $order->payment_status }}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div style="padding-bottom:16px;">
-                        <div style="{{ $t['done'] ? 'color:var(--text);' : 'color:var(--muted);' }}">{{ $t['label'] }}</div>
-                        @if($t['time'])
-                            <div class="muted" style="font-size:11px;">{{ $t['time']->format('d M Y H:i') }}</div>
-                        @endif
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <span class="badge {{ $order->statusBadge() }}" style="font-size:13px;padding:6px 16px;">{{ $order->statusLabel() }}</span>
+                        <a class="btn" href="{{ route('buyer.orders.index') }}" style="flex-shrink:0;">Back</a>
                     </div>
                 </div>
-            @endforeach
+            </div>
+
+            {{-- Shipping Address --}}
+            <div class="shipping-card">
+                <div class="card-title-sm">Shipping Address</div>
+                @php($addr = $order->address_snapshot)
+                <div class="shipping-name">{{ $addr['recipient_name'] ?? '-' }}</div>
+                <div class="shipping-detail">
+                    {{ $addr['phone'] ?? '-' }}<br>
+                    {{ $addr['address_line1'] ?? '-' }}{{ !empty($addr['address_line2']) ? ', '.$addr['address_line2'] : '' }}<br>
+                    {{ $addr['city'] ?? '-' }}, {{ $addr['province'] ?? '-' }} {{ $addr['postal_code'] ?? '' }}
+                </div>
+                @if($order->shipping_courier)
+                    <div class="shipping-courier-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                        {{ $order->shipping_courier }}
+                        @if($order->shipping_receipt)
+                            — {{ $order->shipping_receipt }}
+                        @endif
+                    </div>
+                @endif
+            </div>
+
+            {{-- Items --}}
+            <div class="sidebar-card">
+                <div class="card-title-sm">Items ({{ $order->items->count() }})</div>
+                <div>
+                    @foreach ($order->items as $it)
+                        <div class="item-card-modern">
+                            <div class="item-thumb">
+                                @if($it->part && $it->part->thumbnail_path)
+                                    <img src="{{ asset($it->part->thumbnail_path) }}" alt="">
+                                @elseif($it->variant && $it->variant->part && $it->variant->part->thumbnail_path)
+                                    <img src="{{ asset($it->variant->part->thumbnail_path) }}" alt="">
+                                @endif
+                            </div>
+                            <div class="item-info">
+                                <div class="item-name">{{ $it->name }}</div>
+                                <div class="item-variant">{{ $it->variant_name ?? '-' }}</div>
+                                <div class="item-sku">{{ $it->sku }}</div>
+                            </div>
+                            <div style="text-align:center;flex-shrink:0;">
+                                <div class="item-qty-badge">{{ $it->quantity }}</div>
+                            </div>
+                            <div class="item-pricing">
+                                <div class="item-price">Rp {{ number_format((float) $it->price, 0, ',', '.') }}</div>
+                                <div class="item-subtotal">Rp {{ number_format((float) $it->line_total, 0, ',', '.') }}</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        {{-- RIGHT SIDEBAR --}}
+        <div class="sidebar-sticky">
+            {{-- Timeline --}}
+            <div class="sidebar-card">
+                <div class="card-title-sm">Order Timeline</div>
+                <div class="timeline-modern">
+                    @php($hasCurrent = false)
+                    @foreach($timeline as $i => $t)
+                        @php($isCurrent = !$hasCurrent && !$t['done'] && $i > 0)
+                        @php($hasCurrent = $hasCurrent || $isCurrent)
+                        <div class="timeline-step">
+                            <div class="timeline-indicator">
+                                <div class="timeline-dot {{ $t['done'] ? 'done' : ($isCurrent ? 'current' : '') }}"></div>
+                                @if(!$loop->last)
+                                    <div class="timeline-line {{ $t['done'] ? 'done' : 'pending' }}"></div>
+                                @endif
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-label {{ !$t['done'] ? 'pending' : '' }}">{{ $t['label'] }}</div>
+                                @if($t['time'])
+                                    <div class="timeline-time">{{ $t['time']->format('d M Y, H:i') }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Payment Summary --}}
+            <div class="sidebar-card">
+                <div class="card-title-sm">Payment Summary</div>
+                <div class="summary-row">
+                    <span style="color:var(--muted);">Subtotal</span>
+                    <span>Rp {{ number_format((float) $order->subtotal, 0, ',', '.') }}</span>
+                </div>
+                <div class="summary-row">
+                    <span style="color:var(--muted);">Shipping</span>
+                    <span>Rp {{ number_format((float) $order->shipping_cost, 0, ',', '.') }}</span>
+                </div>
+                <div class="summary-total">
+                    <span>Total</span>
+                    <span style="color:var(--accent);">Rp {{ number_format((float) $order->total, 0, ',', '.') }}</span>
+                </div>
+            </div>
+
+            {{-- Action Buttons --}}
+            <div class="sidebar-card" style="display:grid;gap:8px;">
+                @if($order->status === 'unpaid' && $order->payment_status === 'pending')
+                    <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
+                        @csrf
+                        <button class="action-btn-primary" type="submit">Pay Now</button>
+                    </form>
+                    <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Continue Shopping</a>
+                @elseif(in_array($order->status, ['paid', 'processing', 'shipped']))
+                    <a class="action-btn-secondary" href="{{ route('buyer.orders.index') }}">Track Order</a>
+                    <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Shop Again</a>
+                @elseif($order->status === 'completed')
+                    <a class="action-btn-primary" href="{{ route('buyer.parts.index') }}">Buy Again</a>
+                    <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Browse More</a>
+                @elseif($order->status === 'cancelled')
+                    <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Browse Parts</a>
+                @else
+                    <a class="action-btn-secondary" href="{{ route('buyer.orders.index') }}">Back to Orders</a>
+                @endif
+            </div>
         </div>
     </div>
 @endsection
