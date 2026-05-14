@@ -3,29 +3,33 @@
 @section('title', 'Order Created')
 
 @section('content')
-    <section class="section">
-        <div class="container">
-            <div class="panel" style="padding:16px;">
-                <div style="font-size:18px;font-weight:600;">Order Created</div>
-                <div style="height:10px;"></div>
-                <div class="muted" style="line-height:1.8;">
-                    Invoice: <span style="font-family:var(--mono);">{{ $order->order_no }}</span><br>
-                    Status: <span class="badge {{ $order->statusBadge() }}">{{ $order->statusLabel() }}</span><br>
-                    Payment: <span class="badge {{ $order->paymentStatusBadge() }}">{{ $order->payment_status }}</span>
+    <section class="section" style="min-height:70vh;display:flex;align-items:center;">
+        <div class="container" style="max-width:420px;">
+            <div class="panel" style="padding:32px 24px;text-align:center;">
+                <div style="width:64px;height:64px;border-radius:50%;background:rgba(74,222,128,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                 </div>
 
-                <div style="height:4px;"></div>
-                <div class="muted" style="line-height:1.8;">
-                    Total: <span style="font-family:var(--mono);">Rp {{ number_format((float) $order->total, 0, ',', '.') }}</span>
+                <div style="height:20px;"></div>
+
+                <div style="font-size:20px;font-weight:700;">Congratulations!</div>
+                <div class="muted" style="margin-top:8px;line-height:1.6;font-size:14px;">
+                    Your order has been placed successfully.<br>
+                    Please check your order for updates.
                 </div>
 
-                <div style="height:14px;"></div>
+                <div style="height:20px;"></div>
 
-                <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <a class="btn btn-primary" href="{{ route('buyer.orders.show', $order) }}">View Order</a>
-                    <a class="btn" href="{{ route('buyer.orders.index') }}">My Orders</a>
-                    <a class="btn" href="{{ route('buyer.parts.index') }}">Continue Shopping</a>
+                <div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:14px;border:1px solid var(--line);">
+                    <div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Invoice Number</div>
+                    <div style="font-family:var(--mono);font-size:15px;font-weight:600;margin-top:6px;">{{ $order->order_no }}</div>
                 </div>
+
+                <div style="height:20px;"></div>
+
+                <a class="btn btn-primary" href="{{ route('buyer.orders.show', $order) }}" style="width:100%;">Check My Order</a>
             </div>
         </div>
     </section>

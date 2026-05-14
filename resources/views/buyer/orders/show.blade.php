@@ -122,14 +122,21 @@
     <div class="panel" style="padding:16px;">
         <div style="font-weight:600;margin-bottom:12px;">Order Timeline</div>
         @php
-            $timeline = [
-                ['label' => 'Order Created', 'time' => $order->created_at, 'done' => true],
-                ['label' => 'Awaiting Payment', 'time' => $order->created_at, 'done' => $order->status !== 'unpaid' || $order->payment_status === 'paid'],
-                ['label' => 'Payment Successful', 'time' => $order->paid_at, 'done' => in_array($order->status, ['paid','processing','shipped','completed'])],
-                ['label' => 'Processing', 'time' => $order->status === 'processing' ? $order->updated_at : null, 'done' => in_array($order->status, ['processing','shipped','completed'])],
-                ['label' => 'Shipped', 'time' => $order->shipped_at, 'done' => in_array($order->status, ['shipped','completed'])],
-                ['label' => 'Completed', 'time' => $order->completed_at, 'done' => $order->status === 'completed'],
-            ];
+            $tlCreated = $order->created_at;
+            $tlStatus = $order->status;
+            $tlPayment = $order->payment_status;
+            $tlPaid = $order->paid_at;
+            $tlShipped = $order->shipped_at;
+            $tlCompleted = $order->completed_at;
+            $tlUpdated = $order->updated_at;
+
+            $timeline = [];
+            $timeline[] = ['label' => 'Order Created', 'time' => $tlCreated, 'done' => true];
+            $timeline[] = ['label' => 'Awaiting Payment', 'time' => $tlCreated, 'done' => $tlStatus !== 'unpaid' || $tlPayment === 'paid'];
+            $timeline[] = ['label' => 'Payment Successful', 'time' => $tlPaid, 'done' => in_array($tlStatus, ['paid','processing','shipped','completed'])];
+            $timeline[] = ['label' => 'Processing', 'time' => $tlStatus === 'processing' ? $tlUpdated : null, 'done' => in_array($tlStatus, ['processing','shipped','completed'])];
+            $timeline[] = ['label' => 'Shipped', 'time' => $tlShipped, 'done' => in_array($tlStatus, ['shipped','completed'])];
+            $timeline[] = ['label' => 'Completed', 'time' => $tlCompleted, 'done' => $tlStatus === 'completed'];
         @endphp
         <div style="display:grid;gap:0;">
             @foreach($timeline as $t)
