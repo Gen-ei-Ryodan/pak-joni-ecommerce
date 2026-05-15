@@ -53,7 +53,6 @@ class PartController extends Controller
         $validated = $request->validate([
             'sku' => ['required', 'string', 'max:64', 'unique:parts,sku'],
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'unique:parts,slug'],
             'part_category_id' => ['required', 'exists:part_categories,id'],
             'status' => ['required', 'in:active,inactive'],
             'base_price' => ['required', 'numeric', 'min:0'],
@@ -73,7 +72,7 @@ class PartController extends Controller
             'variants.*.is_default' => ['nullable', 'boolean'],
         ]);
 
-        $slug = $validated['slug'] ?? Str::slug($validated['name']);
+        $slug = Str::slug($validated['name']);
         $variants = $this->normalizeVariants(collect($validated['variants']));
 
         return DB::transaction(function () use ($request, $image, $validated, $slug, $variants) {
@@ -138,7 +137,6 @@ class PartController extends Controller
         $validated = $request->validate([
             'sku' => ['required', 'string', 'max:64', 'unique:parts,sku,'.$part->id],
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'unique:parts,slug,'.$part->id],
             'part_category_id' => ['required', 'exists:part_categories,id'],
             'status' => ['required', 'in:active,inactive'],
             'base_price' => ['required', 'numeric', 'min:0'],
@@ -161,7 +159,7 @@ class PartController extends Controller
             'variants.*.is_default' => ['nullable', 'boolean'],
         ]);
 
-        $slug = $validated['slug'] ?? Str::slug($validated['name']);
+        $slug = Str::slug($validated['name']);
         $variants = $this->normalizeVariants(collect($validated['variants']));
 
         return DB::transaction(function () use ($request, $part, $image, $validated, $slug, $variants) {

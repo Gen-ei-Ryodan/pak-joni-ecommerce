@@ -5,12 +5,6 @@
             style="width:100%;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
     </div>
 
-    <div class="field">
-        <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:6px;">Slug (optional)</label>
-        <input name="slug" value="{{ old('slug', $motor->slug ?? '') }}"
-            style="width:100%;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
-    </div>
-
     <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
         <div class="field">
             <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:6px;">Year</label>

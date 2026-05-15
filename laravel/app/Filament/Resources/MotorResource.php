@@ -77,10 +77,6 @@ class MotorResource extends Resource
                     ->required()
                     ->maxLength(255),
 
-                Forms\Components\TextInput::make('slug')
-                    ->maxLength(255)
-                    ->unique(ignoreRecord: true),
-
                 Forms\Components\TextInput::make('year')
                     ->numeric()
                     ->minValue(1900)
