@@ -34,17 +34,13 @@ class PartCategoryController extends Controller
         $validated = $request->validate([
             'group' => ['required', 'in:part,refitting,wearing'],
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'unique:part_categories,slug'],
-            'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
         ]);
-
-        $slug = $validated['slug'] ?? Str::slug($validated['name']);
 
         PartCategory::create([
             'group' => $validated['group'],
             'name' => $validated['name'],
-            'slug' => $slug,
-            'sort_order' => $validated['sort_order'] ?? 0,
+            'slug' => Str::slug($validated['name']),
+            'sort_order' => 0,
         ]);
 
         return redirect()->route('admin.part-categories.index')->with('status', 'Category berhasil dibuat.');
@@ -60,17 +56,13 @@ class PartCategoryController extends Controller
         $validated = $request->validate([
             'group' => ['required', 'in:part,refitting,wearing'],
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'unique:part_categories,slug,'.$partCategory->id],
-            'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
         ]);
-
-        $slug = $validated['slug'] ?? Str::slug($validated['name']);
 
         $partCategory->fill([
             'group' => $validated['group'],
             'name' => $validated['name'],
-            'slug' => $slug,
-            'sort_order' => $validated['sort_order'] ?? 0,
+            'slug' => Str::slug($validated['name']),
+            'sort_order' => 0,
         ])->save();
 
         return redirect()->route('admin.part-categories.edit', $partCategory)->with('status', 'Category berhasil diupdate.');

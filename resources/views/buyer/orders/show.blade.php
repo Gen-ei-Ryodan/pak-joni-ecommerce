@@ -157,7 +157,13 @@
                         <button class="action-btn-primary" type="submit">Pay Now</button>
                     </form>
                     <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Continue Shopping</a>
-                @elseif(in_array($order->status, ['paid', 'processing', 'shipped']))
+                @elseif($order->status === 'shipped')
+                    <form method="post" action="{{ route('buyer.orders.confirmReceived', $order) }}" onsubmit="return confirm('Konfirmasi barang sudah diterima?')">
+                        @csrf
+                        <button class="action-btn-primary" type="submit">Barang Sudah Diterima</button>
+                    </form>
+                    <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Shop Again</a>
+                @elseif(in_array($order->status, ['paid', 'processing']))
                     <a class="action-btn-secondary" href="{{ route('buyer.orders.index') }}">Track Order</a>
                     <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Shop Again</a>
                 @elseif($order->status === 'completed')

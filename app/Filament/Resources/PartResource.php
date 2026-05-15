@@ -121,10 +121,6 @@ class PartResource extends Resource
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\TextInput::make('slug')
-                            ->maxLength(255)
-                            ->unique(ignoreRecord: true),
-
                         Forms\Components\Select::make('part_category_id')
                             ->label('Category')
                             ->relationship('category', 'name')

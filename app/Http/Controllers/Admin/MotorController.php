@@ -35,7 +35,6 @@ class MotorController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'unique:motors,slug'],
             'year' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'status' => ['required', 'in:published,draft'],
             'short_description' => ['nullable', 'string', 'max:500'],
@@ -45,12 +44,10 @@ class MotorController extends Controller
             'gallery.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        $slug = $validated['slug'] ?? Str::slug($validated['name']);
-
-        return DB::transaction(function () use ($request, $image, $validated, $slug) {
+        return DB::transaction(function () use ($request, $image, $validated) {
             $motor = Motor::create([
                 'name' => $validated['name'],
-                'slug' => $slug,
+                'slug' => Str::slug($validated['name']),
                 'year' => $validated['year'] ?? null,
                 'status' => $validated['status'],
                 'short_description' => $validated['short_description'] ?? null,
@@ -89,7 +86,6 @@ class MotorController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'unique:motors,slug,'.$motor->id],
             'year' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'status' => ['required', 'in:published,draft'],
             'short_description' => ['nullable', 'string', 'max:500'],
@@ -100,8 +96,7 @@ class MotorController extends Controller
             'delete_images' => ['nullable', 'array'],
             'delete_images.*' => ['integer'],
         ]);
-
-        $slug = $validated['slug'] ?? Str::slug($validated['name']);
+        $slug = Str::slug($validated['name']);
 
         return DB::transaction(function () use ($request, $motor, $image, $validated, $slug) {
             $motor->fill([

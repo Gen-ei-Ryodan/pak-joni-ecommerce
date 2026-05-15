@@ -26,8 +26,6 @@
                     <tr style="text-align:left;color:var(--muted);font-size:12px;">
                         <th style="padding:10px;">Group</th>
                         <th style="padding:10px;">Name</th>
-                        <th style="padding:10px;">Slug</th>
-                        <th style="padding:10px;">Sort</th>
                         <th style="padding:10px;">Action</th>
                     </tr>
                 </thead>
@@ -36,8 +34,6 @@
                         <tr style="border-top:1px solid var(--line);">
                             <td style="padding:10px;">{{ $cat->group }}</td>
                             <td style="padding:10px;">{{ $cat->name }}</td>
-                            <td style="padding:10px;color:var(--muted);">{{ $cat->slug }}</td>
-                            <td style="padding:10px;">{{ $cat->sort_order }}</td>
                             <td style="padding:10px;display:flex;gap:8px;align-items:center;">
                                 <a class="btn" href="{{ route('admin.part-categories.edit', $cat) }}">Edit</a>
                                 <form method="post" action="{{ route('admin.part-categories.destroy', $cat) }}" onsubmit="return confirm('Delete category?')">
@@ -49,7 +45,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" style="padding:12px;color:var(--muted);">No data yet.</td>
+                            <td colspan="3" style="padding:12px;color:var(--muted);">No data yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

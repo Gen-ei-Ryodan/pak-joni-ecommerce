@@ -39,13 +39,6 @@ class PartCategoryResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('slug')
-                    ->searchable(),
-
-                Tables\Columns\TextColumn::make('sort_order')
-                    ->numeric()
-                    ->sortable(),
-
                 Tables\Columns\TextColumn::make('parts_count')
                     ->label('Parts')
                     ->counts('parts'),
@@ -74,13 +67,6 @@ class PartCategoryResource extends Resource
                     ->required()
                     ->maxLength(255),
 
-                Forms\Components\TextInput::make('slug')
-                    ->maxLength(255)
-                    ->unique(ignoreRecord: true),
-
-                Forms\Components\TextInput::make('sort_order')
-                    ->numeric()
-                    ->default(0),
             ]);
     }
 

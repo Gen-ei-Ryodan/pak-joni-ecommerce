@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\OrderService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 
@@ -11,6 +12,7 @@ class OrderController extends Controller
 {
     public function __construct(
         private PaymentService $paymentService,
+        private OrderService $orderService,
     ) {}
 
     public function index(Request $request)
@@ -55,6 +57,21 @@ class OrderController extends Controller
         $this->paymentService->simulateSuccessPayment($order);
 
         return redirect()->route('buyer.orders.show', $order)->with('status', 'Pembayaran berhasil disimulasikan.');
+    }
+
+    public function confirmReceived(Request $request, Order $order)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        if ($order->status !== 'shipped') {
+            return back()->withErrors(['confirm' => 'Pesanan tidak dalam status dikirim.']);
+        }
+
+        $this->orderService->markAsCompleted($order);
+
+        return redirect()->route('buyer.orders.show', $order)->with('status', 'Pesanan telah dikonfirmasi diterima.');
     }
 
     private function buildTimeline(Order $order): array
