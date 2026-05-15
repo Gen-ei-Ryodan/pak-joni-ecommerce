@@ -20,6 +20,8 @@ class Shipment extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['order_id', 'provider', 'courier', 'service', 'tracking_number', 'status', 'payload'];
+
     protected function casts(): array
     {
         return [

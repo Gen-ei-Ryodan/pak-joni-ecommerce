@@ -33,6 +33,8 @@ class Order extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['user_id', 'order_no', 'status', 'payment_status', 'payment_method', 'payment_provider', 'payment_reference', 'paid_at', 'subtotal', 'shipping_cost', 'total', 'address_snapshot', 'shipping_snapshot', 'shipping_courier', 'shipping_receipt', 'shipped_at', 'completed_at', 'cancelled_at'];
+
     public const STATUSES = ['unpaid', 'paid', 'processing', 'shipped', 'completed', 'cancelled'];
 
     public const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'expired'];

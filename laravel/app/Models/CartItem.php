@@ -12,6 +12,8 @@ class CartItem extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['cart_id', 'part_variant_id', 'quantity', 'price_snapshot'];
+
     protected function casts(): array
     {
         return [

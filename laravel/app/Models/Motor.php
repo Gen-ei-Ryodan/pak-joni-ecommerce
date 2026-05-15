@@ -21,6 +21,8 @@ class Motor extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['name', 'slug', 'year', 'thumbnail_path', 'short_description', 'description', 'status'];
+
     public function images(): HasMany
     {
         return $this->hasMany(MotorImage::class)->orderBy('sort_order');
