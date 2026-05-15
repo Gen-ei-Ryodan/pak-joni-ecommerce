@@ -1,19 +1,7 @@
 <?php
 
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
+require __DIR__.'/laravel/vendor/autoload.php';
 
-define('LARAVEL_START', microtime(true));
+$app = require_once __DIR__.'/laravel/bootstrap/app.php';
 
-$laravelBase = __DIR__.'/laravel';
-
-if (file_exists($maintenance = $laravelBase.'/storage/framework/maintenance.php')) {
-    require $maintenance;
-}
-
-require $laravelBase.'/vendor/autoload.php';
-
-/** @var Application $app */
-$app = require_once $laravelBase.'/bootstrap/app.php';
-
-$app->handleRequest(Request::capture());
+$app->handleRequest(Illuminate\Http\Request::capture());
