@@ -12,6 +12,8 @@ class PartImage extends Model
 {
     use HasFactory;
 
+        protected $fillable = ['part_id', 'path', 'sort_order'];
+
     public function part(): BelongsTo
     {
         return $this->belongsTo(Part::class);

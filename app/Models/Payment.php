@@ -12,6 +12,8 @@ class Payment extends Model
 {
     use HasFactory;
 
+        protected $fillable = ['order_id', 'provider', 'provider_reference', 'status', 'payload'];
+
     protected function casts(): array
     {
         return [

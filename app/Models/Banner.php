@@ -11,6 +11,8 @@ class Banner extends Model
 {
     use HasFactory;
 
+        protected $fillable = ['title', 'image_path', 'link_url', 'is_active', 'sort_order'];
+
     protected function casts(): array
     {
         return [
