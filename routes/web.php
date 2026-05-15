@@ -1,11 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\MotorController;
-use App\Http\Controllers\Admin\OrderController as AdminOrderController;
-use App\Http\Controllers\Admin\PartCategoryController;
-use App\Http\Controllers\Admin\PartController;
-use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -57,6 +51,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/items', [BuyerCartController::class, 'store'])->name('buyer.cart.store');
     Route::patch('/cart/items/{cartItem}', [BuyerCartController::class, 'update'])->name('buyer.cart.update');
     Route::delete('/cart/items/{cartItem}', [BuyerCartController::class, 'destroy'])->name('buyer.cart.destroy');
+    Route::delete('/cart', [BuyerCartController::class, 'clear'])->name('buyer.cart.clear');
+    Route::post('/cart/checkout-selected', [BuyerCartController::class, 'checkoutSelected'])->name('buyer.cart.checkoutSelected');
 
     Route::get('/account/addresses', [BuyerAddressController::class, 'index'])->name('buyer.addresses.index');
     Route::get('/account/addresses/create', [BuyerAddressController::class, 'create'])->name('buyer.addresses.create');
@@ -73,15 +69,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/place', [BuyerCheckoutController::class, 'placeOrder'])->name('buyer.checkout.place');
     Route::get('/checkout/finish/{order}', [BuyerCheckoutController::class, 'finish'])->name('buyer.checkout.finish');
 
-    Route::get('/orders', [BuyerOrderController::class, 'index'])->name('buyer.orders.index');
-    Route::get('/orders/{order}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
-});
-
-Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
-    Route::get('/', AdminDashboardController::class)->name('admin.dashboard');
-    Route::resource('motors', MotorController::class)->except(['show']);
-    Route::resource('part-categories', PartCategoryController::class)->except(['show']);
-    Route::resource('parts', PartController::class)->except(['show']);
-    Route::resource('banners', BannerController::class)->except(['show']);
-    Route::resource('orders', AdminOrderController::class)->only(['index', 'show', 'update']);
+    Route::get('/my/orders', [BuyerOrderController::class, 'index'])->name('buyer.orders.index');
+    Route::get('/my/orders/{order:order_no}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
+    Route::post('/my/orders/{order:order_no}/simulate-payment', [BuyerOrderController::class, 'simulatePayment'])->name('buyer.orders.simulatePayment');
+    Route::post('/my/orders/{order:order_no}/confirm-received', [BuyerOrderController::class, 'confirmReceived'])->name('buyer.orders.confirmReceived');
 });
