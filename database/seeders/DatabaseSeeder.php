@@ -36,19 +36,14 @@ class DatabaseSeeder extends Seeder
 
     private function createAdmin(): void
     {
-        $adminEmail = env('ADMIN_EMAIL');
-        $adminPassword = env('ADMIN_PASSWORD');
-
-        if ($adminEmail && $adminPassword) {
-            User::updateOrCreate(
-                ['email' => $adminEmail],
-                [
-                    'role' => 'admin',
-                    'name' => env('ADMIN_NAME', 'Admin'),
-                    'password' => Hash::make($adminPassword),
-                ]
-            );
-        }
+        User::updateOrCreate(
+            ['email' => 'admin@jomoto.com'],
+            [
+                'role' => 'admin',
+                'name' => 'Admin',
+                'password' => Hash::make('password'),
+            ]
+        );
     }
 
     private function createBanners(): void
