@@ -2,22 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\Address;
 use App\Models\Banner;
-use App\Models\Cart;
-use App\Models\CartItem;
 use App\Models\Motor;
 use App\Models\MotorImage;
-use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Part;
 use App\Models\PartCategory;
 use App\Models\PartImage;
 use App\Models\PartVariant;
-use App\Models\Payment;
-use App\Models\Shipment;
 use App\Models\User;
-use App\Models\Wishlist;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -28,11 +20,10 @@ class DatabaseSeeder extends Seeder
     private array $motorIds = [];
     private array $partIds = [];
     private array $variantIds = [];
-    private array $userId = [];
 
     public function run(): void
     {
-        $this->createUsers();
+        $this->createAdmin();
         $this->createBanners();
         $this->createPartCategories();
         $this->createMotors();
@@ -41,17 +32,9 @@ class DatabaseSeeder extends Seeder
         $this->createPartImages();
         $this->createMotorImages();
         $this->attachMotorParts();
-        $this->createAddresses();
-        $this->createCarts();
-        $this->createCartItems();
-        $this->createWishlists();
-        $this->createOrders();
-        $this->createOrderItems();
-        $this->createPayments();
-        $this->createShipments();
     }
 
-    private function createUsers(): void
+    private function createAdmin(): void
     {
         $adminEmail = env('ADMIN_EMAIL');
         $adminPassword = env('ADMIN_PASSWORD');
@@ -65,29 +48,6 @@ class DatabaseSeeder extends Seeder
                     'password' => Hash::make($adminPassword),
                 ]
             );
-        }
-
-        $buyers = [
-            ['Budi Santoso', 'budi@example.com'],
-            ['Siti Rahmawati', 'siti@example.com'],
-            ['Ahmad Hidayat', 'ahmad@example.com'],
-            ['Dewi Lestari', 'dewi@example.com'],
-            ['Rudi Hermawan', 'rudi@example.com'],
-            ['Maya Anggraini', 'maya@example.com'],
-            ['Agus Wijaya', 'agus@example.com'],
-            ['Rina Marlina', 'rina@example.com'],
-            ['Doni Prasetyo', 'doni@example.com'],
-            ['Fitri Handayani', 'fitri@example.com'],
-        ];
-
-        foreach ($buyers as [$name, $email]) {
-            $user = User::factory()->create([
-                'role' => 'buyer',
-                'name' => $name,
-                'email' => $email,
-                'password' => Hash::make('password'),
-            ]);
-            $this->userId[] = $user->id;
         }
     }
 
@@ -235,270 +195,6 @@ class DatabaseSeeder extends Seeder
 
         foreach ($motorParts as [$motorIdx, $partIdx]) {
             Motor::find($this->motorIds[$motorIdx])->parts()->attach($this->partIds[$partIdx]);
-        }
-    }
-
-    private function createAddresses(): void
-    {
-        $addresses = [
-            [0, 'Rumah', 'Jl. Merdeka No. 10', 'Jakarta Pusat', 'DKI Jakarta', '10110'],
-            [1, 'Kantor', 'Jl. Sudirman Kav. 25', 'Jakarta Selatan', 'DKI Jakarta', '12190'],
-            [2, 'Rumah', 'Jl. Diponegoro No. 88', 'Bandung', 'Jawa Barat', '40115'],
-            [3, 'Rumah', 'Jl. Pemuda No. 45', 'Semarang', 'Jawa Tengah', '50132'],
-            [4, 'Rumah', 'Jl. Kaliurang KM 5', 'Sleman', 'DI Yogyakarta', '55281'],
-            [5, 'Rumah', 'Jl. Darmo Permai No. 12', 'Surabaya', 'Jawa Timur', '60115'],
-            [6, 'Rumah', 'Jl. Gajah Mada No. 7', 'Denpasar', 'Bali', '80231'],
-            [7, 'Rumah', 'Jl. Veteran No. 33', 'Medan', 'Sumatera Utara', '20131'],
-            [8, 'Kantor', 'Jl. Asia Afrika No. 1', 'Makassar', 'Sulawesi Selatan', '90111'],
-            [9, 'Rumah', 'Jl. Rajawali No. 5', 'Palembang', 'Sumatera Selatan', '30114'],
-        ];
-
-        foreach ($addresses as $i => [$userIdx, $label, $line1, $city, $province, $postal]) {
-            Address::create([
-                'user_id' => $this->userId[$userIdx],
-                'label' => $label,
-                'recipient_name' => User::find($this->userId[$userIdx])->name,
-                'phone' => '0812'.str_pad(mt_rand(1000000, 9999999), 7, '0', STR_PAD_LEFT),
-                'address_line1' => $line1,
-                'city' => $city,
-                'province' => $province,
-                'postal_code' => $postal,
-                'is_default' => true,
-            ]);
-        }
-    }
-
-    private function createCarts(): void
-    {
-        foreach ($this->userId as $uid) {
-            Cart::create(['user_id' => $uid]);
-        }
-    }
-
-    private function createCartItems(): void
-    {
-        $items = [
-            [0, 0, 2], [1, 1, 1], [2, 2, 3], [3, 3, 1],
-            [4, 0, 1], [5, 1, 2], [6, 2, 1], [7, 3, 2],
-        ];
-
-        foreach ($items as [$userIdx, $variantIdx, $qty]) {
-            $cart = Cart::where('user_id', $this->userId[$userIdx])->first();
-            $variant = PartVariant::find($this->variantIds[$variantIdx]);
-
-            CartItem::create([
-                'cart_id' => $cart->id,
-                'part_variant_id' => $variant->id,
-                'quantity' => $qty,
-                'price_snapshot' => $variant->price,
-            ]);
-        }
-    }
-
-    private function createWishlists(): void
-    {
-        $wishlists = [
-            [0, 0], [1, 1], [2, 2], [3, 3],
-            [4, 0], [5, 1], [6, 2], [7, 3],
-        ];
-
-        foreach ($wishlists as [$userIdx, $partIdx]) {
-            Wishlist::create([
-                'user_id' => $this->userId[$userIdx],
-                'part_id' => $this->partIds[$partIdx],
-            ]);
-        }
-    }
-
-    private function createOrders(): void
-    {
-        $orderNos = [
-            'PJ'.now()->format('ymd').'AAAAAA',
-            'PJ'.now()->format('ymd').'BBBBBB',
-            'PJ'.now()->format('ymd').'CCCCCC',
-            'PJ'.now()->format('ymd').'DDDDDD',
-            'PJ'.now()->format('ymd').'EEEEEE',
-            'PJ'.now()->format('ymd').'FFFFFF',
-            'PJ'.now()->format('ymd').'GGGGGG',
-            'PJ'.now()->format('ymd').'HHHHHH',
-            'PJ'.now()->format('ymd').'IIIIII',
-            'PJ'.now()->format('ymd').'JJJJJJ',
-        ];
-
-        $statusList = [
-            'paid', 'processing', 'shipped', 'completed', 'completed',
-            'shipped', 'unpaid', 'processing', 'paid', 'completed',
-        ];
-
-        $paymentStatusList = [
-            'paid', 'paid', 'paid', 'paid', 'paid',
-            'paid', 'pending', 'paid', 'paid', 'paid',
-        ];
-
-        $paidAtList = [
-            now()->subDays(5),
-            now()->subDays(4),
-            now()->subDays(3),
-            now()->subDays(6),
-            now()->subDays(7),
-            now()->subDays(2),
-            null, // unpaid
-            now()->subDay(),
-            now()->subDays(3),
-            now()->subDays(8),
-        ];
-
-        $shippedAtList = [
-            null, null,
-            now()->subDays(2),
-            now()->subDays(4),
-            now()->subDays(5),
-            now()->subDay(),
-            null, null, null,
-            now()->subDays(6),
-        ];
-
-        $completedAtList = [
-            null, null, null,
-            now()->subDays(3),
-            now()->subDays(4),
-            null, null, null, null,
-            now()->subDays(5),
-        ];
-
-        $shippingData = [
-            ['JNE', 'REG'],
-            ['J&T', 'Express'],
-            ['SiCepat', 'REG'],
-            ['JNE', 'YES'],
-            ['J&T', 'Economy'],
-            ['SiCepat', 'Halu'],
-            ['JNE', 'REG'],
-            ['J&T', 'Express'],
-            ['SiCepat', 'REG'],
-            ['JNE', 'YES'],
-        ];
-
-        $receiptList = [
-            null, null,
-            'JNE'.now()->format('Ymd').'001',
-            'JNT'.now()->format('Ymd').'002',
-            'SIC'.now()->format('Ymd').'003',
-            'JNE'.now()->format('Ymd').'004',
-            null, null, null,
-            'JNT'.now()->format('Ymd').'005',
-        ];
-
-        foreach ($this->userId as $i => $uid) {
-            $subtotal = 100000 + ($i * 50000);
-            $shippingCost = 25000;
-            $total = $subtotal + $shippingCost;
-
-            $order = Order::create([
-                'user_id' => $uid,
-                'order_no' => $orderNos[$i],
-                'status' => $statusList[$i],
-                'payment_status' => $paymentStatusList[$i],
-                'payment_method' => $paymentStatusList[$i] === 'paid' ? 'midtrans_simulation' : null,
-                'subtotal' => $subtotal,
-                'shipping_cost' => $shippingCost,
-                'total' => $total,
-                'paid_at' => $paidAtList[$i],
-                'shipped_at' => $shippedAtList[$i],
-                'completed_at' => $completedAtList[$i],
-                'shipping_courier' => $shippingData[$i][0],
-                'shipping_receipt' => $receiptList[$i],
-                'address_snapshot' => [
-                    'label' => $i === 0 ? 'Rumah' : 'Address',
-                    'recipient_name' => User::find($uid)->name,
-                    'phone' => '0812'.str_pad(mt_rand(1000000, 9999999), 7, '0', STR_PAD_LEFT),
-                    'address_line1' => 'Jl. Contoh No. '.($i + 1),
-                    'city' => 'Jakarta',
-                    'province' => 'DKI Jakarta',
-                    'postal_code' => '10110',
-                ],
-                'shipping_snapshot' => [
-                    'courier' => $shippingData[$i][0],
-                    'service' => $shippingData[$i][1],
-                    'shipping_cost' => $shippingCost,
-                ],
-            ]);
-        }
-    }
-
-    private function createOrderItems(): void
-    {
-        for ($i = 0; $i < 10; $i++) {
-            $orderId = $i + 1;
-            $partIdx = $i % 4;
-            $part = Part::find($this->partIds[$partIdx]);
-            $variant = PartVariant::where('part_id', $part->id)->first();
-
-            $qty = $i + 1;
-            $price = $variant?->price ?? $part->base_price;
-
-            OrderItem::create([
-                'order_id' => $orderId,
-                'part_id' => $part->id,
-                'part_variant_id' => $variant?->id,
-                'sku' => $part->sku,
-                'name' => $part->name,
-                'variant_name' => $variant?->name,
-                'price' => $price,
-                'quantity' => $qty,
-                'line_total' => $price * $qty,
-            ]);
-        }
-    }
-
-    private function createPayments(): void
-    {
-        $methodList = [
-            'bank_transfer', 'bank_transfer', 'bank_transfer', 'bank_transfer', 'bank_transfer',
-            'bank_transfer', null, 'bank_transfer', 'bank_transfer', 'bank_transfer',
-        ];
-
-        $bankList = [
-            'BCA', 'BCA', 'Mandiri', 'Mandiri', 'BNI',
-            'BCA', null, 'BNI', 'Mandiri', 'BCA',
-        ];
-
-        for ($i = 0; $i < 10; $i++) {
-            $status = $i === 6 ? 'pending' : 'settlement';
-
-            Payment::create([
-                'order_id' => $i + 1,
-                'provider' => 'midtrans_simulation',
-                'provider_reference' => 'TRX-'.str_pad($i + 1, 6, '0', STR_PAD_LEFT),
-                'status' => $status,
-                'payload' => [
-                    'payment_method' => $methodList[$i],
-                    'bank' => $bankList[$i],
-                    'simulated' => true,
-                ],
-            ]);
-        }
-    }
-
-    private function createShipments(): void
-    {
-        $statuses = [
-            'pending', 'pending', 'shipped', 'delivered', 'delivered',
-            'shipped', 'pending', 'pending', 'pending', 'delivered',
-        ];
-
-        $couriers = ['JNE', 'J&T', 'SiCepat', 'JNE', 'J&T', 'SiCepat', 'JNE', 'J&T', 'SiCepat', 'JNE'];
-
-        foreach ($statuses as $i => $status) {
-            Shipment::create([
-                'order_id' => $i + 1,
-                'provider' => 'biteship',
-                'courier' => $couriers[$i],
-                'service' => 'REG',
-                'tracking_number' => $status !== 'pending' ? 'TRK'.str_pad($i + 1, 10, '0', STR_PAD_LEFT) : null,
-                'status' => $status,
-                'payload' => ['estimated_delivery' => now()->addDays(3)->toDateString()],
-            ]);
         }
     }
 }
