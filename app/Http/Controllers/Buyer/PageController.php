@@ -14,7 +14,18 @@ class PageController extends Controller
     {
         $banners = Banner::query()->where('is_active', true)->orderBy('sort_order')->get();
 
-        return view('buyer.home', compact('banners'));
+        $motors = Motor::query()
+            ->where('status', 'active')
+            ->orderByDesc('id')
+            ->get();
+
+        $parts = Part::query()
+            ->with(['category', 'defaultVariant'])
+            ->where('status', 'active')
+            ->orderByDesc('id')
+            ->get();
+
+        return view('buyer.home', compact('banners', 'motors', 'parts'));
     }
 
     public function about()
@@ -25,16 +36,14 @@ class PageController extends Controller
     public function products(Request $request)
     {
         $motors = Motor::query()
-            ->where('status', 'published')
+            ->where('status', 'active')
             ->orderByDesc('id')
-            ->limit(4)
             ->get();
 
         $parts = Part::query()
             ->with(['category', 'defaultVariant'])
             ->where('status', 'active')
             ->orderByDesc('id')
-            ->limit(4)
             ->get();
 
         return view('buyer.products', compact('motors', 'parts'));

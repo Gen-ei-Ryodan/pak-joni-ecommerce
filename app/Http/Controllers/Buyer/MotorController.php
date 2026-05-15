@@ -14,10 +14,10 @@ class MotorController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $motors = Motor::query()
-            ->where('status', 'published')
+            ->where('status', 'active')
             ->when($q !== '', fn ($query) => $query->where('name', 'like', '%'.$q.'%'))
             ->orderByDesc('id')
-            ->paginate(4)
+            ->paginate(12)
             ->withQueryString();
 
         return view('buyer.motors.index', compact('motors', 'q'));

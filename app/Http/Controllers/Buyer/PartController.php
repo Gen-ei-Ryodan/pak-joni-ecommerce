@@ -25,7 +25,7 @@ class PartController extends Controller
             })
             ->when($category, fn ($query) => $query->whereHas('category', fn ($q2) => $q2->where('slug', $category)))
             ->orderByDesc('id')
-            ->paginate(4)
+            ->paginate(12)
             ->withQueryString();
 
         $categories = PartCategory::query()->orderBy('group')->orderBy('sort_order')->orderBy('name')->get();

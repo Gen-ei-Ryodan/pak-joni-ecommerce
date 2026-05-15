@@ -1,11 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\MotorController;
-use App\Http\Controllers\Admin\OrderController as AdminOrderController;
-use App\Http\Controllers\Admin\PartCategoryController;
-use App\Http\Controllers\Admin\PartController;
-use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -78,13 +72,4 @@ Route::middleware('auth')->group(function () {
     Route::get('/my/orders', [BuyerOrderController::class, 'index'])->name('buyer.orders.index');
     Route::get('/my/orders/{order:order_no}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
     Route::post('/my/orders/{order:order_no}/simulate-payment', [BuyerOrderController::class, 'simulatePayment'])->name('buyer.orders.simulatePayment');
-});
-
-Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
-    Route::get('/', AdminDashboardController::class)->name('admin.dashboard');
-    Route::resource('motors', MotorController::class)->except(['show']);
-    Route::resource('part-categories', PartCategoryController::class)->except(['show']);
-    Route::resource('parts', PartController::class)->except(['show']);
-    Route::resource('banners', BannerController::class)->except(['show']);
-    Route::resource('orders', AdminOrderController::class)->only(['index', 'show', 'update']);
 });

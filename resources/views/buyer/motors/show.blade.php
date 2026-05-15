@@ -1,3 +1,60 @@
+@push('head')
+<style>
+.gallery-main {
+    aspect-ratio: 1/1;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    overflow: hidden;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.gallery-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: opacity .15s ease;
+}
+.gallery-thumbs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+}
+.gallery-thumbs::-webkit-scrollbar {
+    height: 4px;
+}
+.gallery-thumbs::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 4px;
+}
+.gallery-thumb {
+    flex: 0 0 auto;
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .2s, opacity .2s;
+    background: #f0f0f0;
+}
+.gallery-thumb:hover {
+    opacity: .75;
+}
+.gallery-thumb.active {
+    border-color: #d9b46f;
+}
+.gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+</style>
+@endpush
+
 @extends('layouts.buyer')
 
 @section('title', $motor->name)
@@ -17,17 +74,28 @@
 
             <div style="display:grid;grid-template-columns:1fr 420px;gap:16px;">
                 <div class="panel" style="padding:12px;">
-                    <div style="aspect-ratio:16/10;border-radius:12px;border:1px solid var(--line);overflow:hidden;background:rgba(255,255,255,0.03);">
-                        @if ($motor->thumbnail_path)
-                            <img src="{{ asset($motor->thumbnail_path) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                    <div class="gallery-main">
+                        @php
+                            $allImages = collect();
+                            if ($motor->thumbnail_path) {
+                                $allImages->push(['url' => asset($motor->thumbnail_path), 'label' => 'Thumbnail']);
+                            }
+                            foreach ($motor->images as $img) {
+                                $allImages->push(['url' => asset($img->path), 'label' => 'Gallery']);
+                            }
+                        @endphp
+                        @if ($allImages->count())
+                            <img id="mainPreview" src="{{ $allImages->first()['url'] }}" alt="">
                         @endif
                     </div>
 
-                    @if ($motor->images->count())
+                    @if ($allImages->count() > 1)
                         <div style="height:10px;"></div>
-                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                            @foreach ($motor->images as $img)
-                                <img src="{{ asset($img->path) }}" alt="" style="width:120px;border-radius:12px;border:1px solid var(--line);">
+                        <div class="gallery-thumbs" id="galleryThumbs">
+                            @foreach ($allImages as $i => $item)
+                                <div class="gallery-thumb {{ $i === 0 ? 'active' : '' }}" data-index="{{ $i }}" data-src="{{ $item['url'] }}">
+                                    <img src="{{ $item['url'] }}" alt="">
+                                </div>
                             @endforeach
                         </div>
                     @endif
@@ -74,6 +142,26 @@
     </section>
 
 @push('scripts')
+    <script>
+        (function () {
+            var thumbs = document.querySelectorAll('.gallery-thumb');
+            var mainImg = document.getElementById('mainPreview');
+
+            if (thumbs.length && mainImg) {
+                thumbs.forEach(function (el) {
+                    el.addEventListener('click', function () {
+                        thumbs.forEach(function (t) { t.classList.remove('active'); });
+                        el.classList.add('active');
+                        mainImg.style.opacity = '0';
+                        setTimeout(function () {
+                            mainImg.src = el.getAttribute('data-src');
+                            mainImg.style.opacity = '1';
+                        }, 100);
+                    });
+                });
+            }
+        })();
+    </script>
     <script>
         (function () {
             const btns = document.querySelectorAll('[data-tab-btn]');

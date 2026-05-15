@@ -153,7 +153,7 @@ class DatabaseSeeder extends Seeder
                 'year' => $year,
                 'thumbnail_path' => "storage/products/produk".($i + 1).".jpeg",
                 'short_description' => $desc,
-                'status' => 'published',
+                'status' => 'active',
             ]);
             $this->motorIds[] = $motor->id;
         }
