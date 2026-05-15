@@ -12,6 +12,8 @@ class PartVariant extends Model
 {
     use HasFactory;
 
+        protected $fillable = ['part_id', 'sku', 'name', 'price', 'stock', 'is_default'];
+
     protected function casts(): array
     {
         return [

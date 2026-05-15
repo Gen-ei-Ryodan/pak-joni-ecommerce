@@ -12,6 +12,8 @@ class MotorImage extends Model
 {
     use HasFactory;
 
+        protected $fillable = ['motor_id', 'path', 'sort_order'];
+
     public function motor(): BelongsTo
     {
         return $this->belongsTo(Motor::class);
