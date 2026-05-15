@@ -15,6 +15,7 @@
 /.zed
 /auth.json
 /node_modules
+laravel/node_modules
 /build
 /hot
 /storage
