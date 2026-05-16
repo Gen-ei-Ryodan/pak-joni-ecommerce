@@ -34,6 +34,7 @@
                         <th style="padding:10px;">SKU</th>
                         <th style="padding:10px;">Name</th>
                         <th style="padding:10px;">Category</th>
+                        <th style="padding:10px;">Stock</th>
                         <th style="padding:10px;">Status</th>
                         <th style="padding:10px;">Action</th>
                     </tr>
@@ -51,6 +52,7 @@
                             <td style="padding:10px;">{{ $part->sku }}</td>
                             <td style="padding:10px;">{{ $part->name }}</td>
                             <td style="padding:10px;color:var(--muted);">{{ $part->category?->group }} — {{ $part->category?->name }}</td>
+                            <td style="padding:10px;">{{ $part->variants_sum_stock ?? 0 }}</td>
                             <td style="padding:10px;">{{ $part->status }}</td>
                             <td style="padding:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                                 <a class="btn" href="{{ route('buyer.parts.show', $part->slug) }}" target="_blank">Preview</a>

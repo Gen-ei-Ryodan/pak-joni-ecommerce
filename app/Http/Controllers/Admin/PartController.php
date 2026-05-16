@@ -24,6 +24,7 @@ class PartController extends Controller
 
         $parts = Part::query()
             ->with(['category'])
+            ->withSum('variants', 'stock')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($q2) use ($q) {
                     $q2->where('name', 'like', '%'.$q.'%')
