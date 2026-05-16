@@ -64,6 +64,11 @@ class PartResource extends Resource
                     ->money('IDR')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('total_stock')
+                    ->label('Stock')
+                    ->numeric()
+                    ->getStateUsing(fn ($record) => $record->totalStock()),
+
                 Tables\Columns\TextColumn::make('variants_count')
                     ->label('Variants')
                     ->counts('variants'),

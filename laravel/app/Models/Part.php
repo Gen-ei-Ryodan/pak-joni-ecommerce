@@ -59,4 +59,9 @@ class Part extends Model
     {
         return $this->belongsToMany(Motor::class)->withTimestamps();
     }
+
+    public function totalStock(): int
+    {
+        return (int) $this->variants()->sum('stock');
+    }
 }
