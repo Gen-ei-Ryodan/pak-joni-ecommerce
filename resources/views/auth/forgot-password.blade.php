@@ -6,7 +6,7 @@
     <div class="auth-wrap">
         <div class="auth-card">
             <div class="auth-title">Reset Password</div>
-            <div class="auth-subtitle">Masukkan email, kami kirim link reset password.</div>
+            <div class="auth-subtitle">Enter your email and we'll send you a reset link.</div>
 
             @if (session('status'))
                 <div class="alert alert-success">{{ session('status') }}</div>
@@ -31,9 +31,9 @@
                 </div>
 
                 <div class="form-actions">
-                    <button class="btn btn-primary" type="submit">Kirim Link</button>
+                    <button class="btn btn-primary" type="submit">Send Link</button>
                     @if (Route::has('auth.login'))
-                        <a class="text-link" href="{{ route('auth.login') }}">Kembali ke login</a>
+                        <a class="text-link" href="{{ route('auth.login') }}">Back to Login</a>
                     @endif
                 </div>
             </form>

@@ -5,36 +5,41 @@
 @section('content')
     <section class="section">
         <div class="container">
-            <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
-                <div style="font-size:18px;font-weight:600;">Motor Catalog</div>
-                <a class="btn" href="{{ route('buyer.products') }}">Produk</a>
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title-text">Motor Catalog</h2>
+                    <div class="section-line"></div>
+                </div>
+                <a class="btn btn-outline" href="{{ route('buyer.products') }}">Lihat Produk</a>
             </div>
 
-            <div style="height:12px;"></div>
-
-            <form method="get" class="filters">
-                <input class="input" name="q" value="{{ $q }}" placeholder="Search motor...">
-                <button class="btn" type="submit">Filter</button>
+            <form method="get" style="display:flex;gap:10px;margin-bottom:24px;">
+                <input class="form-input" name="q" value="{{ $q }}" placeholder="Cari motor..." style="flex:1;">
+                <button class="btn btn-accent" type="submit">Cari</button>
             </form>
-
-            <div style="height:14px;"></div>
 
             <div class="grid grid-3">
                 @forelse ($motors as $m)
                     <a class="card" href="{{ route('buyer.motors.show', $m->slug) }}">
-                        <div class="card-media" style="background-image:url('{{ $m->thumbnail_path ? asset($m->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
+                        <div class="card-media" style="background-image:url('{{ $m->thumbnail_path ? asset($m->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                         <div class="card-body">
+                            @if($m->brand)
+                                <div class="card-meta">{{ $m->brand->name }}</div>
+                            @endif
                             <div class="card-title">{{ $m->name }}</div>
-                            <div class="card-meta">{{ $m->year ?? '' }}</div>
+                            @if($m->price)
+                                <div class="price">Rp {{ number_format($m->price, 0, ',', '.') }}</div>
+                            @endif
                         </div>
                     </a>
                 @empty
-                    <div class="muted">Belum ada motor.</div>
+                    <div class="muted" style="text-align:center;grid-column:1/-1;padding:60px 0;">Tidak ada motor ditemukan.</div>
                 @endforelse
             </div>
 
-            <div style="height:12px;"></div>
-            {{ $motors->links() }}
+            <div style="margin-top:24px;">
+                {{ $motors->appends(['q' => $q])->links('pagination.simple-dark') }}
+            </div>
         </div>
     </section>
 @endsection

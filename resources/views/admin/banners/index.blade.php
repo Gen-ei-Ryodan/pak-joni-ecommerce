@@ -7,7 +7,7 @@
 
     <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
         <div style="font-size:16px;font-weight:600;">Banners</div>
-        <a class="btn btn-primary" href="{{ route('admin.banners.create') }}">Tambah Banner</a>
+        <a class="btn btn-primary" href="{{ route('admin.banners.create') }}">Add Banner</a>
     </div>
 
     <div style="height:14px;"></div>
@@ -35,7 +35,7 @@
                             <td style="padding:10px;">{{ $banner->sort_order }}</td>
                             <td style="padding:10px;display:flex;gap:8px;align-items:center;">
                                 <a class="btn" href="{{ route('admin.banners.edit', $banner) }}">Edit</a>
-                                <form method="post" action="{{ route('admin.banners.destroy', $banner) }}" onsubmit="return confirm('Hapus banner?')">
+                                <form method="post" action="{{ route('admin.banners.destroy', $banner) }}" onsubmit="return confirm('Delete banner?')">
                                     @csrf
                                     @method('delete')
                                     <button class="btn btn-danger" type="submit">Delete</button>
@@ -44,7 +44,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" style="padding:12px;color:var(--muted);">Belum ada data.</td>
+                            <td colspan="5" style="padding:12px;color:var(--muted);">No data yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

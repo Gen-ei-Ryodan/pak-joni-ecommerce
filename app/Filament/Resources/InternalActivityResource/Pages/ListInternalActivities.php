@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\InternalActivityResource\Pages; use App\Filament\Resources\InternalActivityResource; use Filament\Resources\Pages\ListRecords; class ListInternalActivities extends ListRecords { protected static string $resource = InternalActivityResource::class; }

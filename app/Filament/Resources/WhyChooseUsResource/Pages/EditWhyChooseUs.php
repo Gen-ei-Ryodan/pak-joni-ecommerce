@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\WhyChooseUsResource\Pages; use App\Filament\Resources\WhyChooseUsResource; use Filament\Resources\Pages\EditRecord; class EditWhyChooseUs extends EditRecord { protected static string $resource = WhyChooseUsResource::class; }

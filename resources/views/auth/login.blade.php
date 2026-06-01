@@ -6,7 +6,7 @@
     <div class="auth-wrap">
         <div class="auth-card">
             <div class="auth-title">Login</div>
-            <div class="auth-subtitle">Masuk untuk lanjut belanja dan melihat dashboard.</div>
+            <div class="auth-subtitle">Sign in to continue shopping and view your dashboard.</div>
 
             @if (session('status'))
                 <div class="alert alert-success">{{ session('status') }}</div>
@@ -38,8 +38,12 @@
                 <div class="form-actions">
                     <button class="btn btn-primary" type="submit">Login</button>
                     @if (Route::has('auth.password.request'))
-                        <a class="text-link" href="{{ route('auth.password.request') }}">Lupa password?</a>
+                        <a class="text-link" href="{{ route('auth.password.request') }}">Forgot password?</a>
                     @endif
+                </div>
+                <div style="margin-top:14px;text-align:center;border-top:1px solid var(--line);padding-top:14px;">
+                    <span class="muted" style="font-size:13px;">Don't have an account?</span>
+                    <a class="text-link" href="{{ route('auth.register') }}" style="margin-left:4px;">Register</a>
                 </div>
             </form>
         </div>

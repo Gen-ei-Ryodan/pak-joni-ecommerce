@@ -31,13 +31,13 @@
             <div style="display:grid;grid-template-columns:1fr 420px;gap:16px;">
                 <div class="panel" style="padding:14px;">
                     <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
-                        <div style="font-weight:600;">Pilih Alamat</div>
-                        <a class="btn" href="{{ route('buyer.addresses.create') }}">Tambah Alamat</a>
+                        <div style="font-weight:600;">Select Address</div>
+                        <a class="btn" href="{{ route('buyer.addresses.create') }}">Add Address</a>
                     </div>
                     <div style="height:10px;"></div>
 
                     @if ($addresses->isEmpty())
-                        <div class="muted">Belum ada alamat. Tambahkan alamat dulu.</div>
+                        <div class="muted">No addresses yet. Please add an address first.</div>
                     @else
                         <form method="post" action="{{ route('buyer.checkout.setAddress') }}" style="display:grid;gap:10px;">
                             @csrf
@@ -46,7 +46,7 @@
                                     <input type="radio" name="address_id" value="{{ $a->id }}" @checked($selectedAddressId === $a->id) required style="margin-top:4px;">
                                     <div>
                                         <div style="font-weight:600;">
-                                            {{ $a->label ?: 'Alamat' }}
+                                            {{ $a->label ?: 'Address' }}
                                             @if ($a->is_default)
                                                 <span class="muted" style="margin-left:10px;">(default)</span>
                                             @endif
@@ -60,13 +60,13 @@
                                 </label>
                             @endforeach
 
-                            <button class="btn btn-primary" type="submit">Lanjut Shipping</button>
+                            <button class="btn btn-primary" type="submit">Continue to Shipping</button>
                         </form>
                     @endif
                 </div>
 
                 <div class="panel" style="padding:14px;">
-                    <div style="font-weight:600;">Ringkasan</div>
+                    <div style="font-weight:600;">Summary</div>
                     <div style="height:10px;"></div>
 
                     <div class="muted" style="display:grid;gap:8px;">

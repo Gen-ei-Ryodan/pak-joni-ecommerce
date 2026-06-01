@@ -30,7 +30,7 @@
 
             <div style="display:grid;grid-template-columns:1fr 420px;gap:16px;">
                 <div class="panel" style="padding:14px;">
-                    <div style="font-weight:600;">Alamat</div>
+                    <div style="font-weight:600;">Address</div>
                     <div style="height:8px;"></div>
                     <div class="muted" style="line-height:1.8;">
                         {{ $address->recipient_name }} — {{ $address->phone }}<br>
@@ -40,7 +40,7 @@
 
                     <div style="height:14px;"></div>
 
-                    <div style="font-weight:600;">Pilih Shipping</div>
+                    <div style="font-weight:600;">Select Shipping</div>
                     <div style="height:10px;"></div>
 
                     <form method="post" action="{{ route('buyer.checkout.setShipping') }}" style="display:grid;gap:12px;max-width:520px;">
@@ -57,12 +57,12 @@
                             <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:6px;">Shipping Cost</label>
                             <input class="input" style="width:100%;min-width:0;" name="shipping_cost" type="number" step="0.01" value="{{ old('shipping_cost', $shippingSnapshot['shipping_cost'] ?? 0) }}" required>
                         </div>
-                        <button class="btn btn-primary" type="submit">Lanjut Payment</button>
+                        <button class="btn btn-primary" type="submit">Continue to Payment</button>
                     </form>
                 </div>
 
                 <div class="panel" style="padding:14px;">
-                    <div style="font-weight:600;">Ringkasan</div>
+                    <div style="font-weight:600;">Summary</div>
                     <div style="height:10px;"></div>
 
                     <div class="muted" style="display:grid;gap:8px;">

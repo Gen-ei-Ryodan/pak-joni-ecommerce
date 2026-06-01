@@ -7,7 +7,7 @@
 
     <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
         <div style="font-size:16px;font-weight:600;">Motor</div>
-        <a class="btn btn-primary" href="{{ route('admin.motors.create') }}">Tambah Motor</a>
+        <a class="btn btn-primary" href="{{ route('admin.motors.create') }}">Add Motor</a>
     </div>
 
     <div style="height:12px;"></div>
@@ -21,9 +21,10 @@
 
     <div class="panel" style="padding:10px;">
         <div style="overflow:auto;">
-            <table style="width:100%;border-collapse:collapse;min-width:720px;">
+            <table style="width:100%;border-collapse:collapse;min-width:860px;">
                 <thead>
                     <tr style="text-align:left;color:var(--muted);font-size:12px;">
+                        <th style="padding:10px;">Thumb</th>
                         <th style="padding:10px;">Name</th>
                         <th style="padding:10px;">Year</th>
                         <th style="padding:10px;">Status</th>
@@ -33,10 +34,18 @@
                 <tbody>
                     @forelse ($motors as $motor)
                         <tr style="border-top:1px solid var(--line);">
+                            <td style="padding:10px;">
+                                @if($motor->thumbnail_path)
+                                    <img src="{{ asset($motor->thumbnail_path) }}" alt="" style="width:80px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
+                                @else
+                                    <span class="muted">-</span>
+                                @endif
+                            </td>
                             <td style="padding:10px;">{{ $motor->name }}</td>
                             <td style="padding:10px;">{{ $motor->year ?? '-' }}</td>
                             <td style="padding:10px;">{{ $motor->status }}</td>
-                            <td style="padding:10px;display:flex;gap:8px;align-items:center;">
+                            <td style="padding:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                <a class="btn" href="{{ route('buyer.motors.show', $motor->slug) }}" target="_blank">Preview</a>
                                 <a class="btn" href="{{ route('admin.motors.edit', $motor) }}">Edit</a>
                                 <form method="post" action="{{ route('admin.motors.destroy', $motor) }}" onsubmit="return confirm('Hapus motor?')">
                                     @csrf
@@ -47,7 +56,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" style="padding:12px;color:var(--muted);">Belum ada data.</td>
+                            <td colspan="5" style="padding:12px;color:var(--muted);">No data yet.</td>
                         </tr>
                     @endforelse
                 </tbody>
