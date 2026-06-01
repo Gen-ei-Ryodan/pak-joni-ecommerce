@@ -15,6 +15,60 @@
     root.dataset.theme = savedTheme;
   }
 
+  const dropdowns = document.querySelectorAll('[data-dropdown-toggle]');
+  dropdowns.forEach(btn => {
+    const parent = btn.closest('.nav-dropdown');
+    if (!parent) return;
+
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const isOpen = parent.classList.contains('open');
+      document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+      if (!isOpen) {
+        parent.classList.add('open');
+      }
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.nav-dropdown')) {
+      document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+  });
+
+  const searchToggle = document.querySelector('[data-search-toggle]');
+  const searchOverlay = document.querySelector('[data-search-overlay]');
+  const searchClose = document.querySelector('[data-search-close]');
+  const searchInput = document.querySelector('.search-input');
+
+  if (searchToggle && searchOverlay) {
+    searchToggle.addEventListener('click', () => {
+      searchOverlay.style.display = 'flex';
+      if (searchInput) setTimeout(() => searchInput.focus(), 100);
+    });
+  }
+
+  if (searchClose && searchOverlay) {
+    searchClose.addEventListener('click', () => {
+      searchOverlay.style.display = 'none';
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && searchOverlay && searchOverlay.style.display === 'flex') {
+      searchOverlay.style.display = 'none';
+    }
+  });
+
+  const mobileToggle = document.querySelector('[data-mobile-toggle]');
+  const navMenu = document.querySelector('[data-nav-menu]');
+  if (mobileToggle && navMenu) {
+    mobileToggle.addEventListener('click', () => {
+      navMenu.classList.toggle('mobile-open');
+      mobileToggle.classList.toggle('active');
+    });
+  }
+
   const initCarousel = () => {
     const carousels = document.querySelectorAll('.carousel');
     carousels.forEach(carousel => {

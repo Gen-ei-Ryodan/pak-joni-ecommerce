@@ -1,60 +1,3 @@
-@push('head')
-<style>
-.gallery-main {
-    aspect-ratio: 1/1;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    overflow: hidden;
-    background: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.gallery-main img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transition: opacity .15s ease;
-}
-.gallery-thumbs {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    scrollbar-width: thin;
-}
-.gallery-thumbs::-webkit-scrollbar {
-    height: 4px;
-}
-.gallery-thumbs::-webkit-scrollbar-thumb {
-    background: var(--line);
-    border-radius: 4px;
-}
-.gallery-thumb {
-    flex: 0 0 auto;
-    width: 72px;
-    height: 72px;
-    border-radius: 10px;
-    border: 2px solid transparent;
-    overflow: hidden;
-    cursor: pointer;
-    transition: border-color .2s, opacity .2s;
-    background: #f0f0f0;
-}
-.gallery-thumb:hover {
-    opacity: .75;
-}
-.gallery-thumb.active {
-    border-color: #d9b46f;
-}
-.gallery-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-</style>
-@endpush
-
 @extends('layouts.buyer')
 
 @section('title', $motor->name)
@@ -62,124 +5,292 @@
 @section('content')
     <section class="section">
         <div class="container">
-            <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
-                <div>
-                    <div style="font-size:18px;font-weight:600;">{{ $motor->name }}</div>
-                    <div class="muted" style="margin-top:6px;">{{ $motor->year ?? '' }} {{ $motor->short_description ? '— '.$motor->short_description : '' }}</div>
+            <div class="motor-detail">
+                <div class="motor-gallery">
+                    @if($motor->images->count())
+                        <div class="gallery-main" style="background-image:url('{{ asset($motor->images->first()->path) }}');background-size:cover;background-position:center;"></div>
+                        @if($motor->images->count() > 1)
+                            <div class="gallery-thumbs">
+                                @foreach($motor->images as $img)
+                                    <button class="gallery-thumb {{ $loop->first ? 'active' : '' }}" style="background-image:url('{{ asset($img->path) }}');" onclick="document.querySelector('.gallery-main').style.backgroundImage='url({{ asset($img->path) }})';this.parentElement.querySelectorAll('.gallery-thumb').forEach(t=>t.classList.remove('active'));this.classList.add('active');"></button>
+                                @endforeach
+                            </div>
+                        @endif
+                    @else
+                        <div class="gallery-main" style="background:var(--panel);display:flex;align-items:center;justify-content:center;color:var(--muted);">No Image</div>
+                    @endif
                 </div>
-                <a class="btn" href="{{ route('buyer.motors.index') }}">Kembali</a>
+
+                <div class="motor-info">
+                    @if($motor->brand)
+                        <div class="motor-brand">{{ $motor->brand->name }}</div>
+                    @endif
+                    <h1 class="motor-name">{{ $motor->name }}</h1>
+                    @if($motor->price)
+                        <div class="motor-price">Rp {{ number_format($motor->price, 0, ',', '.') }}</div>
+                    @endif
+                    @if($motor->short_description)
+                        <p class="motor-short-desc">{{ $motor->short_description }}</p>
+                    @endif
+
+                    @if($motor->colors->count())
+                        <div class="motor-colors">
+                            <div class="motor-colors-label">Varian Warna:</div>
+                            <div class="motor-colors-list">
+                                @foreach($motor->colors as $color)
+                                    <div class="color-item">
+                                        <span class="color-dot" style="background:{{ $color->color_code ?: '#666' }};" title="{{ $color->name }}"></span>
+                                        <span class="color-name">{{ $color->name }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
 
-            <div style="height:16px;"></div>
-
-            <div style="display:grid;grid-template-columns:1fr 420px;gap:16px;">
-                <div class="panel" style="padding:12px;">
-                    <div class="gallery-main">
-                        @php
-                            $allImages = collect();
-                            if ($motor->thumbnail_path) {
-                                $allImages->push(['url' => asset($motor->thumbnail_path), 'label' => 'Thumbnail']);
-                            }
-                            foreach ($motor->images as $img) {
-                                $allImages->push(['url' => asset($img->path), 'label' => 'Gallery']);
-                            }
-                        @endphp
-                        @if ($allImages->count())
-                            <img id="mainPreview" src="{{ $allImages->first()['url'] }}" alt="">
-                        @endif
+            @if($motor->images360->count() >= 4)
+                <div class="motor-360-section">
+                    <h2 class="section-title-text" style="margin-bottom:20px;">Viewer 360&deg;</h2>
+                    <div class="viewer-360" data-360-viewer>
+                        <div class="viewer-360-canvas" data-360-canvas>
+                            <img src="{{ asset($motor->images360->first()->path) }}" alt="360 view" id="viewer360Img">
+                        </div>
+                        <div class="viewer-360-controls">
+                            <p class="viewer-hint">&#8592; Drag atau geser untuk memutar &rarr;</p>
+                        </div>
                     </div>
+                </div>
+            @endif
 
-                    @if ($allImages->count() > 1)
-                        <div style="height:10px;"></div>
-                        <div class="gallery-thumbs" id="galleryThumbs">
-                            @foreach ($allImages as $i => $item)
-                                <div class="gallery-thumb {{ $i === 0 ? 'active' : '' }}" data-index="{{ $i }}" data-src="{{ $item['url'] }}">
-                                    <img src="{{ $item['url'] }}" alt="">
+            @if($motor->specifications->count())
+                <div class="motor-specs-section" style="margin-top:40px;">
+                    <div style="max-width:700px;margin:0 auto;">
+                        <h2 class="section-title-text" style="margin-bottom:20px;text-align:center;">Spesifikasi</h2>
+                        <div class="spec-tabs">
+                            @foreach($specGroups as $group => $specs)
+                                <div class="spec-group">
+                                    <h3 class="spec-group-title" style="font-size:16px;font-weight:600;color:var(--accent);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--line);">{{ $group }}</h3>
+                                    <div class="spec-table">
+                                        @foreach($specs as $spec)
+                                            <div class="spec-row">
+                                                <div class="spec-key">{{ $spec->key }}</div>
+                                                <div class="spec-value">{{ $spec->value }}</div>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
-                    @endif
+                    </div>
                 </div>
+            @endif
 
-                <div class="panel" style="padding:14px;">
-                    <div style="font-weight:600;">Parts</div>
-                    <div style="height:10px;"></div>
+            @if($motor->description)
+                <div style="margin-top:40px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:30px;">
+                    <h2 class="section-title-text" style="margin-bottom:16px;">Deskripsi</h2>
+                    <div style="color:var(--muted);line-height:1.8;font-size:14px;">{!! $motor->description !!}</div>
+                </div>
+            @endif
 
-                    @if ($parts->isEmpty())
-                        <div class="muted">No parts for this motorcycle yet.</div>
-                    @else
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        @foreach ($parts->keys() as $idx => $groupKey)
-                            <button class="btn {{ $idx === 0 ? 'btn-primary' : '' }}" type="button" data-tab-btn="{{ $groupKey }}">{{ ucfirst($groupKey) }}</button>
+            @if(!empty($relatedMotors) && $relatedMotors->count())
+                <div style="margin-top:50px;">
+                    <div class="section-header">
+                        <h2 class="section-title-text">Produk Terkait</h2>
+                        <div class="section-line"></div>
+                    </div>
+                    <div class="grid grid-4">
+                        @foreach($relatedMotors as $rm)
+                            <a class="card" href="{{ route('buyer.motors.show', $rm->slug) }}">
+                                <div class="card-media" style="background-image:url('{{ $rm->thumbnail_path ? asset($rm->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
+                                <div class="card-body">
+                                    @if($rm->brand)
+                                        <div class="card-meta">{{ $rm->brand->name }}</div>
+                                    @endif
+                                    <div class="card-title">{{ $rm->name }}</div>
+                                </div>
+                            </a>
                         @endforeach
                     </div>
-
-                    <div style="height:12px;"></div>
-
-                    @foreach ($parts as $groupKey => $groupParts)
-                        @php($catList = $categories[$groupKey] ?? collect())
-                        <div data-tab-panel="{{ $groupKey }}" style="{{ $loop->first ? '' : 'display:none;' }}">
-                            <div class="muted" style="font-size:13px;margin-bottom:10px;">Kategori: {{ $catList->pluck('name')->join(', ') }}</div>
-
-                            <div style="display:grid;gap:10px;">
-                                @foreach ($groupParts as $p)
-                                        <a class="card" href="{{ route('buyer.parts.show', $p->slug) }}" style="display:flex;gap:12px;align-items:center;">
-                                            <div class="card-media" style="width:130px;flex:0 0 130px;aspect-ratio:4/3;background-image:url('{{ $p->thumbnail_path ? asset($p->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
-                                            <div class="card-body" style="flex:1;">
-                                                <div class="card-title">{{ $p->name }}</div>
-                                                <div class="card-meta">{{ $p->category?->name }}</div>
-                                                <div class="price">{{ $p->defaultVariant ? number_format((float) $p->defaultVariant->price, 2, '.', ',') : number_format((float) $p->base_price, 2, '.', ',') }}</div>
-                                            </div>
-                                        </a>
-                                    @endforeach
-                                </div>
-                        </div>
-                    @endforeach
-                    @endif
                 </div>
-            </div>
+            @endif
         </div>
     </section>
-
-@push('scripts')
-    <script>
-        (function () {
-            var thumbs = document.querySelectorAll('.gallery-thumb');
-            var mainImg = document.getElementById('mainPreview');
-
-            if (thumbs.length && mainImg) {
-                thumbs.forEach(function (el) {
-                    el.addEventListener('click', function () {
-                        thumbs.forEach(function (t) { t.classList.remove('active'); });
-                        el.classList.add('active');
-                        mainImg.style.opacity = '0';
-                        setTimeout(function () {
-                            mainImg.src = el.getAttribute('data-src');
-                            mainImg.style.opacity = '1';
-                        }, 100);
-                    });
-                });
-            }
-        })();
-    </script>
-    <script>
-        (function () {
-            const btns = document.querySelectorAll('[data-tab-btn]');
-            const panels = document.querySelectorAll('[data-tab-panel]');
-            if (!btns.length || !panels.length) return;
-
-            function setTab(key) {
-                btns.forEach((b) => {
-                    b.classList.add('btn');
-                    b.classList.toggle('btn-primary', b.dataset.tabBtn === key);
-                });
-                panels.forEach((p) => {
-                    p.style.display = p.dataset.tabPanel === key ? '' : 'none';
-                });
-            }
-
-            btns.forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tabBtn)));
-        })();
-    </script>
-@endpush
 @endsection
+
+@push('head')
+    <style>
+        .motor-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        .gallery-main {
+            width: 100%;
+            height: 400px;
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+        }
+        .gallery-thumbs {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .gallery-thumb {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+            padding: 0;
+        }
+        .gallery-thumb.active {
+            border-color: var(--accent);
+        }
+        .motor-brand {
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .motor-name {
+            font-size: clamp(24px, 4vw, 36px);
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .motor-price {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+        .motor-short-desc {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+        .motor-colors { margin-top: 24px; }
+        .motor-colors-label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .motor-colors-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .color-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid var(--line);
+            display: inline-block;
+        }
+        .color-name { font-size: 12px; color: var(--muted); }
+        .viewer-360 {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            user-select: none;
+        }
+        .viewer-360-canvas {
+            max-width: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+            cursor: grab;
+        }
+        .viewer-360-canvas:active { cursor: grabbing; }
+        .viewer-360-canvas img {
+            width: 100%;
+            max-width: 700px;
+            pointer-events: none;
+        }
+        .viewer-360-controls {
+            margin-top: 12px;
+        }
+        .viewer-hint {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .spec-tabs { display: flex; flex-direction: column; gap: 24px; }
+        .spec-table { display: flex; flex-direction: column; gap: 0; }
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 13px;
+        }
+        .spec-key { color: var(--muted); }
+        .spec-value { color: var(--text); font-weight: 500; text-align: right; }
+        @media (max-width: 720px) {
+            .motor-detail { grid-template-columns: 1fr; }
+            .gallery-main { height: 280px; }
+        }
+    </style>
+@endpush
+
+@if($motor->images360->count() >= 4)
+    @push('scripts')
+        <script>
+            (function() {
+                const viewer = document.querySelector('[data-360-viewer]');
+                if (!viewer) return;
+
+                const canvas = viewer.querySelector('[data-360-canvas]');
+                const img = document.getElementById('viewer360Img');
+                const images = [
+                    @foreach($motor->images360 as $img)
+                        "{{ asset($img->path) }}",
+                    @endforeach
+                ];
+                let currentFrame = 0;
+                let dragging = false;
+                let startX = 0;
+
+                function setFrame(idx) {
+                    currentFrame = ((idx % images.length) + images.length) % images.length;
+                    img.src = images[currentFrame];
+                }
+
+                canvas.addEventListener('mousedown', (e) => { dragging = true; startX = e.clientX; e.preventDefault(); });
+                canvas.addEventListener('touchstart', (e) => { dragging = true; startX = e.touches[0].clientX; });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!dragging) return;
+                    const diff = e.clientX - startX;
+                    if (Math.abs(diff) > 5) {
+                        setFrame(currentFrame + (diff > 0 ? 1 : -1));
+                        startX = e.clientX;
+                    }
+                });
+
+                document.addEventListener('touchmove', (e) => {
+                    if (!dragging) return;
+                    const diff = e.touches[0].clientX - startX;
+                    if (Math.abs(diff) > 5) {
+                        setFrame(currentFrame + (diff > 0 ? 1 : -1));
+                        startX = e.touches[0].clientX;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => { dragging = false; });
+                document.addEventListener('touchend', () => { dragging = false; });
+            })();
+        </script>
+    @endpush
+@endif

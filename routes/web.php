@@ -26,6 +26,28 @@ Route::get('/motors/{motor:slug}', [BuyerMotorController::class, 'show'])->name(
 Route::get('/parts', [BuyerPartController::class, 'index'])->name('buyer.parts.index');
 Route::get('/parts/{part:slug}', [BuyerPartController::class, 'show'])->name('buyer.parts.show');
 
+Route::get('/diler', [BuyerPageController::class, 'dealer'])->name('buyer.dealer');
+
+Route::get('/daftar-harga', [BuyerPageController::class, 'priceList'])->name('buyer.price-list');
+Route::get('/part-katalog', [BuyerPageController::class, 'partCatalog'])->name('buyer.part-catalog');
+
+Route::post('/quotation', [BuyerPageController::class, 'quotationStore'])->name('buyer.quotation.store');
+
+Route::get('/berita', [BuyerPageController::class, 'news'])->name('buyer.news.index');
+Route::get('/berita/{news:slug}', [BuyerPageController::class, 'newsShow'])->name('buyer.news.show');
+
+Route::get('/acara', [BuyerPageController::class, 'events'])->name('buyer.events.index');
+Route::get('/acara/{event:slug}', [BuyerPageController::class, 'eventShow'])->name('buyer.events.show');
+
+Route::get('/csr', [BuyerPageController::class, 'csr'])->name('buyer.csr.index');
+Route::get('/csr/{article:slug}', [BuyerPageController::class, 'csrShow'])->name('buyer.csr.show');
+
+Route::get('/karir', [BuyerPageController::class, 'careers'])->name('buyer.careers.index');
+Route::get('/karir/{career}', [BuyerPageController::class, 'careerShow'])->name('buyer.careers.show');
+
+Route::get('/kegiatan-internal', [BuyerPageController::class, 'internalActivities'])->name('buyer.internal-activities.index');
+Route::get('/kegiatan-internal/{activity:slug}', [BuyerPageController::class, 'internalActivityShow'])->name('buyer.internal-activities.show');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('auth.login');
     Route::post('/login', [LoginController::class, 'store'])->name('auth.login.store');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Motor;
+use App\Models\MotorCategory;
 use App\Models\PartCategory;
 use Illuminate\Http\Request;
 
@@ -14,6 +15,7 @@ class MotorController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $motors = Motor::query()
+            ->with(['brand', 'category'])
             ->where('status', 'active')
             ->when($q !== '', fn ($query) => $query->where('name', 'like', '%'.$q.'%'))
             ->orderByDesc('id')
@@ -25,7 +27,14 @@ class MotorController extends Controller
 
     public function show(Motor $motor)
     {
-        $motor->load(['images']);
+        $motor->load([
+            'brand',
+            'category',
+            'images',
+            'colors',
+            'specifications',
+            'images360',
+        ]);
 
         $categories = PartCategory::query()
             ->orderBy('group')
@@ -40,6 +49,19 @@ class MotorController extends Controller
             ->get()
             ->groupBy(fn ($p) => $p->category?->group ?? 'part');
 
-        return view('buyer.motors.show', compact('motor', 'categories', 'parts'));
+        $relatedMotors = Motor::query()
+            ->with(['brand'])
+            ->where('status', 'active')
+            ->where('id', '!=', $motor->id)
+            ->where(function($q) use ($motor) {
+                $q->where('brand_id', $motor->brand_id)
+                  ->orWhere('category_id', $motor->category_id);
+            })
+            ->take(4)
+            ->get();
+
+        $specGroups = $motor->specifications->groupBy('group');
+
+        return view('buyer.motors.show', compact('motor', 'categories', 'parts', 'relatedMotors', 'specGroups'));
     }
 }

@@ -10,19 +10,19 @@
 .card {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(16, 20, 26, 0.7);
+  background: var(--panel);
   overflow: hidden;
   transition: transform 180ms ease, border-color 180ms ease;
 }
 
 .card:hover {
   transform: translateY(-3px);
-  border-color: rgba(217, 180, 111, 0.28);
+  border-color: rgba(184, 134, 11, 0.28);
 }
 
 .card-media {
   aspect-ratio: 16 / 10;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .card-body {
