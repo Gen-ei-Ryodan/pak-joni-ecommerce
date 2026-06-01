@@ -39,6 +39,16 @@ class BannerResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('type')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'hero' => 'warning',
+                        'promo' => 'success',
+                        'launching' => 'info',
+                        'kegiatan' => 'gray',
+                        default => 'gray',
+                    }),
+
                 Tables\Columns\TextColumn::make('link_url')
                     ->label('Link')
                     ->searchable()
@@ -72,9 +82,25 @@ class BannerResource extends Resource
                     ->required()
                     ->maxLength(255),
 
+                Forms\Components\Select::make('type')
+                    ->options([
+                        'hero' => 'Hero Banner',
+                        'promo' => 'Promo',
+                        'launching' => 'Launching Produk',
+                        'kegiatan' => 'Kegiatan',
+                    ])
+                    ->default('hero')
+                    ->required(),
+
+                Forms\Components\TextInput::make('subtitle')
+                    ->maxLength(255),
+
                 Forms\Components\TextInput::make('link_url')
                     ->label('Link URL')
                     ->maxLength(255),
+
+                Forms\Components\TextInput::make('button_text')
+                    ->maxLength(50),
 
                 Forms\Components\FileUpload::make('image_path')
                     ->label('Image')

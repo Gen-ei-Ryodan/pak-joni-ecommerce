@@ -12,7 +12,7 @@ class Wishlist extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'part_id'];
+        protected $fillable = ['user_id', 'part_id'];
 
     public function user(): BelongsTo
     {

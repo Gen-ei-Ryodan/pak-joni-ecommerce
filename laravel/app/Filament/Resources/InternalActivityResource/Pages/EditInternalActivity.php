@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\InternalActivityResource\Pages; use App\Filament\Resources\InternalActivityResource; use Filament\Resources\Pages\EditRecord; class EditInternalActivity extends EditRecord { protected static string $resource = InternalActivityResource::class; }

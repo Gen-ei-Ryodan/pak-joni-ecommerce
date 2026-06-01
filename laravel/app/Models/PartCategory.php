@@ -12,7 +12,7 @@ class PartCategory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['group', 'name', 'slug', 'sort_order'];
+        protected $fillable = ['group', 'name', 'slug', 'sort_order'];
 
     public function parts(): HasMany
     {

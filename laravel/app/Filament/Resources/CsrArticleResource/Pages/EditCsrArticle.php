@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\CsrArticleResource\Pages; use App\Filament\Resources\CsrArticleResource; use Filament\Resources\Pages\EditRecord; class EditCsrArticle extends EditRecord { protected static string $resource = CsrArticleResource::class; }

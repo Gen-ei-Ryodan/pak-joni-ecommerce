@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\CsrArticleResource\Pages; use App\Filament\Resources\CsrArticleResource; use Filament\Resources\Pages\ListRecords; class ListCsrArticles extends ListRecords { protected static string $resource = CsrArticleResource::class; }

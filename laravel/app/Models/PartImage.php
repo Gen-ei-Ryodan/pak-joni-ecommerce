@@ -12,7 +12,7 @@ class PartImage extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['part_id', 'path', 'sort_order'];
+        protected $fillable = ['part_id', 'path', 'sort_order'];
 
     public function part(): BelongsTo
     {

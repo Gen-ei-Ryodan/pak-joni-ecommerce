@@ -82,6 +82,23 @@ class MotorResource extends Resource
                     ->minValue(1900)
                     ->maxValue(2099),
 
+                Forms\Components\TextInput::make('price')
+                    ->numeric()
+                    ->prefix('Rp')
+                    ->minValue(0),
+
+                Forms\Components\Select::make('brand_id')
+                    ->label('Brand')
+                    ->relationship('brand', 'name')
+                    ->searchable()
+                    ->preload(),
+
+                Forms\Components\Select::make('category_id')
+                    ->label('Kategori')
+                    ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload(),
+
                 Forms\Components\Select::make('status')
                     ->options([
                         'active' => 'Active',

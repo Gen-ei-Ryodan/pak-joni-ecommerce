@@ -26,7 +26,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('JOMOTO CENTER')
+            ->brandName('MOTOMART')
             ->colors([
                 'primary' => Color::Orange,
             ])

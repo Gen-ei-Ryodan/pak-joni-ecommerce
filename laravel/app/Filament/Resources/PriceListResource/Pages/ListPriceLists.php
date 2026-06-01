@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\PriceListResource\Pages; use App\Filament\Resources\PriceListResource; use Filament\Resources\Pages\ListRecords; class ListPriceLists extends ListRecords { protected static string $resource = PriceListResource::class; }
