@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="light">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,9 +27,8 @@
                     </a>
 
                     <nav class="nav-links">
-                        <a href="{{ route('buyer.home') }}">Home</a>
-                        <a href="{{ route('buyer.about') }}">About</a>
-                        <a href="{{ route('buyer.products') }}">Products</a>
+                        <a href="{{ route('buyer.home') }}">Beranda</a>
+                        <a href="{{ route('buyer.products') }}">Produk</a>
                     </nav>
 
                     <div class="nav-cta">
