@@ -18,7 +18,10 @@
 laravel/node_modules
 /build
 /hot
+/bootstrap
+/public
 /storage
+/vendor
 laravel/vendor
 laravel/storage/*.key
 laravel/storage/pail
