@@ -13,7 +13,7 @@
     <div class="grid grid-3">
         @forelse ($items as $it)
             <a class="card" href="{{ route('buyer.parts.show', $it->part->slug) }}">
-                <div class="card-media" style="background-image:url('{{ $it->part->thumbnail_path ? asset($it->part->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
+                <div class="card-media" style="background-image:url('{{ $it->part->thumbnail_path ? image_url($it->part->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
                 <div class="card-body">
                     <div class="card-title">{{ $it->part->name }}</div>
                     <div class="card-meta">{{ $it->part->category?->group }} — {{ $it->part->category?->name }}</div>

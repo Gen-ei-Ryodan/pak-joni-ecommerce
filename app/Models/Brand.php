@@ -23,4 +23,9 @@ class Brand extends Model
     {
         return $this->hasMany(Motor::class)->orderBy('name');
     }
+
+    public function categories(): HasMany
+    {
+        return $this->hasMany(MotorCategory::class)->orderBy('name');
+    }
 }

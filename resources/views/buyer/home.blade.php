@@ -8,7 +8,7 @@
             <div class="carousel-container" data-carousel-track>
                 @foreach ($heroBanners as $index => $banner)
                     <div class="carousel-slide" data-carousel-slide style="{{ $index === 0 ? '' : 'display:none;' }}">
-                        <div class="banner-slide" style="background-image: url('{{ asset($banner->image_path) }}'); background-size: cover; background-position: center; min-height: 75vh;">
+                        <div class="banner-slide" style="background-image: url('{{ image_url($banner->image_path) }}'); background-size: cover; background-position: center; min-height: 75vh;">
                             <div class="banner-overlay">
                                 <div class="container banner-content-inner">
                                     @if($banner->subtitle)
@@ -46,7 +46,7 @@
                 <div class="grid grid-3">
                     @foreach ($promoBanners as $banner)
                         <a class="card card-banner" href="{{ $banner->link_url ?: '#' }}">
-                            <div class="card-media" style="background-image:url('{{ asset($banner->image_path) }}');background-size:cover;background-position:center;"></div>
+                            <div class="card-media" style="background-image:url('{{ image_url($banner->image_path) }}');background-size:cover;background-position:center;"></div>
                             <div class="card-body">
                                 <div class="card-title">{{ $banner->title }}</div>
                                 @if($banner->subtitle)
@@ -70,7 +70,7 @@
                 <div class="carousel" data-interval="4000">
                     @foreach ($launchingBanners as $index => $banner)
                         <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                            <div class="launch-card" style="background-image:linear-gradient(135deg, rgba(0,0,0,0.7), rgba(0,0,0,0.3)),url('{{ asset($banner->image_path) }}'); background-size:cover; background-position:center; min-height:400px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; text-align:center; padding:40px;">
+                            <div class="launch-card" style="background-image:linear-gradient(135deg, rgba(0,0,0,0.7), rgba(0,0,0,0.3)),url('{{ image_url($banner->image_path) }}'); background-size:cover; background-position:center; min-height:400px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; text-align:center; padding:40px;">
                                 <div>
                                     @if($banner->subtitle)
                                         <div style="color:#f0d68a;font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;font-weight:600;">{{ $banner->subtitle }}</div>
@@ -102,7 +102,7 @@
                 <div class="carousel" data-interval="4000">
                     @foreach ($kegiatanBanners as $index => $banner)
                         <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                            <div class="kegiatan-card" style="background-image:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.3)),url('{{ asset($banner->image_path) }}');background-size:cover;background-position:center;min-height:350px;border-radius:var(--radius);display:flex;align-items:flex-end;padding:40px;">
+                            <div class="kegiatan-card" style="background-image:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.3)),url('{{ image_url($banner->image_path) }}');background-size:cover;background-position:center;min-height:350px;border-radius:var(--radius);display:flex;align-items:flex-end;padding:40px;">
                                 <div>
                                     <h3 style="font-size:28px;font-weight:700;color:#fff;">{{ $banner->title }}</h3>
                                     @if($banner->subtitle)
@@ -131,7 +131,7 @@
                 <div class="grid grid-4">
                     @foreach ($latestNews as $item)
                         <a class="card" href="{{ route('buyer.news.show', $item->slug) }}">
-                            <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? asset($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:180px;"></div>
+                            <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:180px;"></div>
                             <div class="card-body">
                                 <div class="card-meta">{{ $item->publish_date?->format('d M Y') }}</div>
                                 <div class="card-title" style="font-size:14px;">{{ $item->title }}</div>
@@ -152,7 +152,7 @@
                     <div class="section-line"></div>
                 </div>
                 <div class="highlight-card">
-                    <div class="highlight-image" style="background-image:url('{{ $highlight->motor->thumbnail_path ? asset($highlight->motor->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
+                    <div class="highlight-image" style="background-image:url('{{ $highlight->motor->thumbnail_path ? image_url($highlight->motor->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
                     <div class="highlight-body">
                         @if($highlight->motor->brand)
                             <div class="highlight-brand">{{ $highlight->motor->brand->name }}</div>
@@ -180,7 +180,7 @@
                     @foreach ($brands as $brand)
                         <a href="{{ route('buyer.products', ['brand' => $brand->slug]) }}" class="brand-item">
                             @if($brand->logo_path)
-                                <img src="{{ asset($brand->logo_path) }}" alt="{{ $brand->name }}" class="brand-logo-img">
+                                <img src="{{ image_url($brand->logo_path) }}" alt="{{ $brand->name }}" class="brand-logo-img">
                             @else
                                 <div class="brand-placeholder">{{ $brand->name }}</div>
                             @endif
@@ -222,7 +222,7 @@
                 <div class="grid grid-3">
                     @foreach ($latestEvents as $event)
                         <a class="card" href="{{ route('buyer.events.show', $event->slug) }}">
-                            <div class="card-media" style="background-image:url('{{ $event->thumbnail_path ? asset($event->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
+                            <div class="card-media" style="background-image:url('{{ $event->thumbnail_path ? image_url($event->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                             <div class="card-body">
                                 <div class="card-meta">{{ $event->event_date?->format('d M Y') }} @if($event->location) &middot; {{ $event->location }} @endif</div>
                                 <div class="card-title">{{ $event->title }}</div>
@@ -276,7 +276,7 @@
                 <div class="grid grid-4">
                     @foreach ($motors as $m)
                         <a class="card" href="{{ route('buyer.motors.show', $m->slug) }}">
-                            <div class="card-media" style="background-image:url('{{ $m->thumbnail_path ? asset($m->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
+                            <div class="card-media" style="background-image:url('{{ $m->thumbnail_path ? image_url($m->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
                             <div class="card-body">
                                 @if($m->brand)
                                     <div class="card-meta">{{ $m->brand->name }}</div>

@@ -8,6 +8,7 @@ use BackedEnum;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -35,7 +36,17 @@ class MotorResource extends Resource
                     ->label('Thumb')
                     ->square()
                     ->size(40)
-                    ->getStateUsing(fn ($record) => $record?->thumbnail_path ? url($record->thumbnail_path) : null),
+                    ->getStateUsing(fn ($record) => $record?->thumbnail_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($record->thumbnail_path) : null),
+
+                Tables\Columns\TextColumn::make('brand.name')
+                    ->label('Brand')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('category.name')
+                    ->label('Kategori')
+                    ->searchable()
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
@@ -44,6 +55,10 @@ class MotorResource extends Resource
                 Tables\Columns\TextColumn::make('year')
                     ->numeric()
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('colors_count')
+                    ->label('Varian')
+                    ->counts('colors'),
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
@@ -73,53 +88,152 @@ class MotorResource extends Resource
     {
         return $schema
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
+                Section::make('Data Utama')
+                    ->schema([
+                        Forms\Components\Select::make('brand_id')
+                            ->label('Brand')
+                            ->relationship('brand', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(fn (callable $set) => $set('category_id', null)),
 
-                Forms\Components\TextInput::make('year')
-                    ->numeric()
-                    ->minValue(1900)
-                    ->maxValue(2099),
+                        Forms\Components\Select::make('category_id')
+                            ->label('Kategori')
+                            ->relationship('category', 'name', fn ($query, $get) => $get('brand_id')
+                                ? $query->where('brand_id', $get('brand_id'))
+                                : $query
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->required(),
 
-                Forms\Components\TextInput::make('price')
-                    ->numeric()
-                    ->prefix('Rp')
-                    ->minValue(0),
+                        Forms\Components\TextInput::make('name')
+                            ->required()
+                            ->maxLength(255)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn ($state, callable $set) => $set('slug', Str::slug($state))),
 
-                Forms\Components\Select::make('brand_id')
-                    ->label('Brand')
-                    ->relationship('brand', 'name')
-                    ->searchable()
-                    ->preload(),
+                        Forms\Components\TextInput::make('slug')
+                            ->required()
+                            ->unique(ignoreRecord: true),
 
-                Forms\Components\Select::make('category_id')
-                    ->label('Kategori')
-                    ->relationship('category', 'name')
-                    ->searchable()
-                    ->preload(),
+                        Forms\Components\TextInput::make('year')
+                            ->numeric()
+                            ->minValue(1900)
+                            ->maxValue(2099),
 
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'active' => 'Active',
-                        'inactive' => 'Inactive',
+                        Forms\Components\TextInput::make('price')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->minValue(0),
+
+                        Forms\Components\Select::make('status')
+                            ->options([
+                                'active' => 'Active',
+                                'inactive' => 'Inactive',
+                            ])
+                            ->default('active'),
+
+                        Forms\Components\FileUpload::make('thumbnail_path')
+                            ->label('Thumbnail')
+                            ->image()
+                            ->imageEditor()
+                            ->imagePreviewHeight('150')
+                            ->disk('public')
+                            ->directory('motors/thumbnails')
+                            ->maxSize(5120),
+
+                        Forms\Components\Textarea::make('short_description')
+                            ->maxLength(500)
+                            ->columnSpanFull(),
+
+                        Forms\Components\RichEditor::make('description')
+                            ->columnSpanFull(),
                     ])
-                    ->default('active'),
+                    ->columns(2),
 
-                Forms\Components\FileUpload::make('thumbnail_path')
-                    ->label('Thumbnail')
-                    ->image()
-                    ->imageEditor()
-                    ->disk('public')
-                    ->directory('motors/thumbnails')
-                    ->maxSize(5120),
+                Section::make('Varian Warna')
+                    ->schema([
+                        Forms\Components\Repeater::make('colors')
+                            ->relationship('colors')
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->label('Nama Warna')
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\ColorPicker::make('color_code')
+                                    ->label('Kode Warna'),
+                                Forms\Components\FileUpload::make('image_path')
+                                    ->label('Gambar Warna')
+                                    ->image()
+                                    ->imagePreviewHeight('100')
+                                    ->disk('public')
+                                    ->directory('motors/colors')
+                                    ->maxSize(5120),
+                                Forms\Components\TextInput::make('sort_order')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->hidden(),
+                            ])
+                            ->columns(2)
+                            ->orderColumn('sort_order')
+                            ->defaultItems(0)
+                            ->collapsible()
+                            ->addActionLabel('Tambah Varian Warna'),
+                    ])
+                    ->collapsible(),
 
-                Forms\Components\Textarea::make('short_description')
-                    ->maxLength(500)
-                    ->columnSpanFull(),
+                Section::make('Spesifikasi Produk')
+                    ->schema([
+                        Forms\Components\Repeater::make('specifications')
+                            ->relationship('specifications')
+                            ->schema([
+                                Forms\Components\Select::make('group')
+                                    ->label('Grup')
+                                    ->options([
+                                        'Umum' => 'Umum',
+                                        'Mesin' => 'Mesin',
+                                        'Baterai' => 'Baterai',
+                                        'Performa' => 'Performa',
+                                        'Dimensi' => 'Dimensi',
+                                        'Fitur' => 'Fitur',
+                                        'Lainnya' => 'Lainnya',
+                                    ])
+                                    ->default('Umum')
+                                    ->required(),
+                                Forms\Components\TextInput::make('key')
+                                    ->label('Nama Spesifikasi')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->placeholder('Contoh: Motor Type, Battery, Range'),
+                                Forms\Components\TextInput::make('value')
+                                    ->label('Nilai')
+                                    ->required()
+                                    ->maxLength(500)
+                                    ->placeholder('Contoh: BLDC Hub Motor, 72V 32Ah'),
+                                Forms\Components\TextInput::make('sort_order')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->hidden(),
+                            ])
+                            ->columns(3)
+                            ->orderColumn('sort_order')
+                            ->defaultItems(0)
+                            ->collapsible()
+                            ->addActionLabel('Tambah Spesifikasi'),
+                    ])
+                    ->collapsible(),
 
-                Forms\Components\RichEditor::make('description')
-                    ->columnSpanFull(),
+                Section::make('360° Product View')
+                    ->schema([
+                        Forms\Components\Placeholder::make('coming_soon_360')
+                            ->label('')
+                            ->content('Fitur tampilan gambar 360 derajat akan segera hadir. Coming Soon.'),
+                    ])
+                    ->collapsible()
+                    ->collapsed(),
             ]);
     }
 

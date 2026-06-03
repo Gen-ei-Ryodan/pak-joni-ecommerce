@@ -10,7 +10,7 @@
             </a>
 
             @if($activity->thumbnail_path)
-                <div style="width:100%;height:350px;border-radius:var(--radius);background:url('{{ asset($activity->thumbnail_path) }}') center/cover no-repeat;margin-bottom:24px;"></div>
+                <div style="width:100%;height:350px;border-radius:var(--radius);background:url('{{ image_url($activity->thumbnail_path) }}') center/cover no-repeat;margin-bottom:24px;"></div>
             @endif
 
             <div class="article-meta" style="font-size:12px;color:var(--muted);margin-bottom:16px;">
@@ -30,7 +30,7 @@
                     <h3 style="font-size:18px;font-weight:600;margin-bottom:16px;">Galeri Dokumentasi</h3>
                     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">
                         @foreach($activity->galleries as $gallery)
-                            <div style="background-image:url('{{ asset($gallery->path) }}');background-size:cover;background-position:center;height:200px;border-radius:8px;"></div>
+                            <div style="background-image:url('{{ image_url($gallery->path) }}');background-size:cover;background-position:center;height:200px;border-radius:8px;"></div>
                         @endforeach
                     </div>
                 </div>

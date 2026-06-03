@@ -8,11 +8,11 @@
             <div class="motor-detail">
                 <div class="motor-gallery">
                     @if($motor->images->count())
-                        <div class="gallery-main" style="background-image:url('{{ asset($motor->images->first()->path) }}');background-size:cover;background-position:center;"></div>
+                        <div class="gallery-main" style="background-image:url('{{ image_url($motor->images->first()->path) }}');background-size:cover;background-position:center;"></div>
                         @if($motor->images->count() > 1)
                             <div class="gallery-thumbs">
                                 @foreach($motor->images as $img)
-                                    <button class="gallery-thumb {{ $loop->first ? 'active' : '' }}" style="background-image:url('{{ asset($img->path) }}');" onclick="document.querySelector('.gallery-main').style.backgroundImage='url({{ asset($img->path) }})';this.parentElement.querySelectorAll('.gallery-thumb').forEach(t=>t.classList.remove('active'));this.classList.add('active');"></button>
+                                    <button class="gallery-thumb {{ $loop->first ? 'active' : '' }}" style="background-image:url('{{ image_url($img->path) }}');" onclick="document.querySelector('.gallery-main').style.backgroundImage='url({{ image_url($img->path) }})';this.parentElement.querySelectorAll('.gallery-thumb').forEach(t=>t.classList.remove('active'));this.classList.add('active');"></button>
                                 @endforeach
                             </div>
                         @endif
@@ -54,7 +54,7 @@
                     <h2 class="section-title-text" style="margin-bottom:20px;">Viewer 360&deg;</h2>
                     <div class="viewer-360" data-360-viewer>
                         <div class="viewer-360-canvas" data-360-canvas>
-                            <img src="{{ asset($motor->images360->first()->path) }}" alt="360 view" id="viewer360Img">
+                            <img src="{{ image_url($motor->images360->first()->path) }}" alt="360 view" id="viewer360Img">
                         </div>
                         <div class="viewer-360-controls">
                             <p class="viewer-hint">&#8592; Drag atau geser untuk memutar &rarr;</p>
@@ -102,7 +102,7 @@
                     <div class="grid grid-4">
                         @foreach($relatedMotors as $rm)
                             <a class="card" href="{{ route('buyer.motors.show', $rm->slug) }}">
-                                <div class="card-media" style="background-image:url('{{ $rm->thumbnail_path ? asset($rm->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
+                                <div class="card-media" style="background-image:url('{{ $rm->thumbnail_path ? image_url($rm->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
                                 <div class="card-body">
                                     @if($rm->brand)
                                         <div class="card-meta">{{ $rm->brand->name }}</div>
@@ -255,7 +255,7 @@
                 const img = document.getElementById('viewer360Img');
                 const images = [
                     @foreach($motor->images360 as $img)
-                        "{{ asset($img->path) }}",
+                        "{{ image_url($img->path) }}",
                     @endforeach
                 ];
                 let currentFrame = 0;

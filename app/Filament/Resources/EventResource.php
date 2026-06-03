@@ -10,6 +10,7 @@ use Filament\Schemas\Schema;
 use Filament\Actions;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use BackedEnum;
 use UnitEnum;
@@ -28,7 +29,7 @@ class EventResource extends Resource
             ->defaultSort('event_date', 'desc')
             ->columns([
                 Tables\Columns\ImageColumn::make('thumbnail_path')->label('Thumb')->square()->size(40)
-                    ->getStateUsing(fn ($r) => $r?->thumbnail_path ? url($r->thumbnail_path) : null),
+                    ->getStateUsing(fn ($r) => $r?->thumbnail_path ? Storage::disk('public')->url($r->thumbnail_path) : null),
                 Tables\Columns\TextColumn::make('title')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('location')->searchable(),
                 Tables\Columns\TextColumn::make('event_date')->date()->sortable(),

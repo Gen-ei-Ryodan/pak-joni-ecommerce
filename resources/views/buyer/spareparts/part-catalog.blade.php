@@ -15,7 +15,7 @@
                 @forelse($partCatalogs as $item)
                     <div class="price-card">
                         @if($item->motor && $item->motor->thumbnail_path)
-                            <div class="card-media" style="background-image:url('{{ asset($item->motor->thumbnail_path) }}');background-size:cover;background-position:center;height:220px;"></div>
+                            <div class="card-media" style="background-image:url('{{ image_url($item->motor->thumbnail_path) }}');background-size:cover;background-position:center;height:220px;"></div>
                         @else
                             <div class="card-media" style="background:var(--panel);height:220px;display:flex;align-items:center;justify-content:center;color:var(--muted);">No Image</div>
                         @endif
@@ -24,7 +24,7 @@
                             @if($item->motor)
                                 <div class="card-meta">{{ $item->motor->name }}</div>
                             @endif
-                            <a href="{{ asset($item->pdf_path) }}" target="_blank" rel="noopener" class="btn btn-accent" style="margin-top:12px;width:100%;justify-content:center;">
+                            <a href="{{ image_url($item->pdf_path) }}" target="_blank" rel="noopener" class="btn btn-accent" style="margin-top:12px;width:100%;justify-content:center;">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                 Download PDF
                             </a>

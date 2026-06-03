@@ -14,7 +14,7 @@
             <div class="grid grid-3">
                 @forelse($activities as $activity)
                     <a class="card" href="{{ route('buyer.internal-activities.show', $activity->slug) }}">
-                        <div class="card-media" style="background-image:url('{{ $activity->thumbnail_path ? asset($activity->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
+                        <div class="card-media" style="background-image:url('{{ $activity->thumbnail_path ? image_url($activity->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                         <div class="card-body">
                             <div class="card-meta">{{ $activity->publish_date?->format('d M Y') }}</div>
                             <div class="card-title">{{ $activity->title }}</div>

@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 use UnitEnum;
 
 class BannerResource extends Resource
@@ -33,7 +34,7 @@ class BannerResource extends Resource
                 Tables\Columns\ImageColumn::make('image_path')
                     ->label('Image')
                     ->size(80)
-                    ->getStateUsing(fn ($record) => $record?->image_path ? url($record->image_path) : null),
+                    ->getStateUsing(fn ($record) => $record?->image_path ? Storage::disk('public')->url($record->image_path) : null),
 
                 Tables\Columns\TextColumn::make('title')
                     ->searchable()

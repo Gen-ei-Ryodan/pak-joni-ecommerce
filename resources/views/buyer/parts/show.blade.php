@@ -108,10 +108,10 @@
                         @php
                             $allImages = collect();
                             if ($part->thumbnail_path) {
-                                $allImages->push(['url' => asset($part->thumbnail_path), 'label' => 'Thumbnail']);
+                                $allImages->push(['url' => image_url($part->thumbnail_path), 'label' => 'Thumbnail']);
                             }
                             foreach ($part->images as $img) {
-                                $allImages->push(['url' => asset($img->path), 'label' => 'Gallery']);
+                                $allImages->push(['url' => image_url($img->path), 'label' => 'Gallery']);
                             }
                         @endphp
                         @if ($allImages->count())

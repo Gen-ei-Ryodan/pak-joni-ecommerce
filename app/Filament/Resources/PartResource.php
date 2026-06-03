@@ -19,6 +19,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use UnitEnum;
 
@@ -34,6 +35,11 @@ class PartResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -43,7 +49,7 @@ class PartResource extends Resource
                     ->label('Thumb')
                     ->square()
                     ->size(40)
-                    ->getStateUsing(fn ($record) => $record?->thumbnail_path ? url($record->thumbnail_path) : null),
+                    ->getStateUsing(fn ($record) => $record?->thumbnail_path ? Storage::disk('public')->url($record->thumbnail_path) : null),
 
                 Tables\Columns\TextColumn::make('sku')
                     ->label('SKU')

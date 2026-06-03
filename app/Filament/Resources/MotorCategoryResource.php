@@ -27,6 +27,7 @@ class MotorCategoryResource extends Resource
         return $table
             ->defaultSort('sort_order')
             ->columns([
+                Tables\Columns\TextColumn::make('brand.name')->label('Brand')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('slug'),
                 Tables\Columns\TextColumn::make('sort_order')->numeric()->sortable(),
@@ -44,6 +45,17 @@ class MotorCategoryResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
+            Forms\Components\Select::make('brand_id')
+                ->label('Brand')
+                ->relationship('brand', 'name')
+                ->searchable()
+                ->preload()
+                ->required()
+                ->createOptionForm([
+                    Forms\Components\TextInput::make('name')->required()->maxLength(255),
+                    Forms\Components\TextInput::make('slug')->required(),
+                ]),
+
             Forms\Components\TextInput::make('name')
                 ->required()->maxLength(255)
                 ->live(onBlur: true)

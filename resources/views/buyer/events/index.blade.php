@@ -13,7 +13,7 @@
             <div class="grid grid-3">
                 @forelse($events as $event)
                     <a class="card" href="{{ route('buyer.events.show', $event->slug) }}">
-                        <div class="card-media" style="background-image:url('{{ $event->thumbnail_path ? asset($event->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
+                        <div class="card-media" style="background-image:url('{{ $event->thumbnail_path ? image_url($event->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                         <div class="card-body">
                             <div class="card-meta">{{ $event->event_date?->format('d M Y') }} @if($event->location) &middot; {{ $event->location }} @endif</div>
                             <div class="card-title">{{ $event->title }}</div>

@@ -13,7 +13,7 @@
             <div class="grid grid-3">
                 @forelse($news as $item)
                     <a class="card" href="{{ route('buyer.news.show', $item->slug) }}">
-                        <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? asset($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
+                        <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                         <div class="card-body">
                             <div class="card-meta">{{ $item->publish_date?->format('d M Y') }} @if($item->category) &middot; {{ $item->category }} @endif</div>
                             <div class="card-title">{{ $item->title }}</div>
