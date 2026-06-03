@@ -81,9 +81,9 @@
                         <div class="item-card-modern">
                             <div class="item-thumb">
                                 @if($it->part && $it->part->thumbnail_path)
-                                    <img src="{{ asset($it->part->thumbnail_path) }}" alt="">
+                                    <img src="{{ image_url($it->part->thumbnail_path) }}" alt="">
                                 @elseif($it->variant && $it->variant->part && $it->variant->part->thumbnail_path)
-                                    <img src="{{ asset($it->variant->part->thumbnail_path) }}" alt="">
+                                    <img src="{{ image_url($it->variant->part->thumbnail_path) }}" alt="">
                                 @endif
                             </div>
                             <div class="item-info">

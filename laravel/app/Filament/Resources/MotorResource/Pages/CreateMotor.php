@@ -14,8 +14,8 @@ class CreateMotor extends CreateRecord
     {
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
 
-        if (isset($data['thumbnail_path'])) {
-            $data['thumbnail_path'] = 'storage/' . str_replace('storage/', '', $data['thumbnail_path']);
+        if (!empty($data['thumbnail_path'])) {
+            $data['thumbnail_path'] = str_replace('storage/', '', $data['thumbnail_path']);
         }
 
         return $data;

@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use UnitEnum;
 
@@ -36,7 +37,8 @@ class BrandResource extends Resource
                 Tables\Columns\ImageColumn::make('logo_path')
                     ->label('Logo')
                     ->size(40)
-                    ->getStateUsing(fn ($record) => $record?->logo_path ? url($record->logo_path) : null),
+                    ->defaultImageUrl(asset('images/placeholder-brand.svg'))
+                    ->getStateUsing(fn ($record) => $record?->logo_path ? Storage::disk('public')->url($record->logo_path) : null),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Active')
@@ -73,9 +75,12 @@ class BrandResource extends Resource
             Forms\Components\FileUpload::make('logo_path')
                 ->label('Logo')
                 ->image()
+                ->imagePreviewHeight('150')
+                ->imageEditor()
                 ->disk('public')
                 ->directory('brands')
-                ->maxSize(2048),
+                ->maxSize(2048)
+                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']),
 
             Forms\Components\Textarea::make('description')
                 ->maxLength(500),

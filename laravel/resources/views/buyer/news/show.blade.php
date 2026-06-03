@@ -10,7 +10,7 @@
             </a>
 
             @if($news->thumbnail_path)
-                <div style="width:100%;height:350px;border-radius:var(--radius);background:url('{{ asset($news->thumbnail_path) }}') center/cover no-repeat;margin-bottom:24px;"></div>
+                <div style="width:100%;height:350px;border-radius:var(--radius);background:url('{{ image_url($news->thumbnail_path) }}') center/cover no-repeat;margin-bottom:24px;"></div>
             @endif
 
             <div class="article-meta" style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-bottom:16px;">
@@ -31,7 +31,7 @@
                     <div class="grid grid-4">
                         @foreach($related as $item)
                             <a class="card" href="{{ route('buyer.news.show', $item->slug) }}">
-                                <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? asset($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:140px;"></div>
+                                <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:140px;"></div>
                                 <div class="card-body">
                                     <div class="card-meta">{{ $item->publish_date?->format('d M Y') }}</div>
                                     <div class="card-title" style="font-size:13px;">{{ $item->title }}</div>

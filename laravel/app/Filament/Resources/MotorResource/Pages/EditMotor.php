@@ -15,8 +15,8 @@ class EditMotor extends EditRecord
     {
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
 
-        if (isset($data['thumbnail_path'])) {
-            $data['thumbnail_path'] = 'storage/' . str_replace('storage/', '', $data['thumbnail_path']);
+        if (!empty($data['thumbnail_path'])) {
+            $data['thumbnail_path'] = str_replace('storage/', '', $data['thumbnail_path']);
         }
 
         return $data;
@@ -24,7 +24,7 @@ class EditMotor extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        if (isset($data['thumbnail_path'])) {
+        if (!empty($data['thumbnail_path'])) {
             $data['thumbnail_path'] = str_replace('storage/', '', $data['thumbnail_path']);
         }
 

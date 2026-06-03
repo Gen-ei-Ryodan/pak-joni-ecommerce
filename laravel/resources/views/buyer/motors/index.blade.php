@@ -21,7 +21,7 @@
             <div class="grid grid-3">
                 @forelse ($motors as $m)
                     <a class="card" href="{{ route('buyer.motors.show', $m->slug) }}">
-                        <div class="card-media" style="background-image:url('{{ $m->thumbnail_path ? asset($m->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
+                        <div class="card-media" style="background-image:url('{{ $m->thumbnail_path ? image_url($m->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                         <div class="card-body">
                             @if($m->brand)
                                 <div class="card-meta">{{ $m->brand->name }}</div>

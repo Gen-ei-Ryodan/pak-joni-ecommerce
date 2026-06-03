@@ -10,6 +10,7 @@ use Filament\Schemas\Schema;
 use Filament\Actions;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use BackedEnum;
 use UnitEnum;
@@ -27,7 +28,7 @@ class NewsResource extends Resource
             ->defaultSort('publish_date', 'desc')
             ->columns([
                 Tables\Columns\ImageColumn::make('thumbnail_path')->label('Thumb')->square()->size(40)
-                    ->getStateUsing(fn ($r) => $r?->thumbnail_path ? url($r->thumbnail_path) : null),
+                    ->getStateUsing(fn ($r) => $r?->thumbnail_path ? Storage::disk('public')->url($r->thumbnail_path) : null),
                 Tables\Columns\TextColumn::make('title')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('category')->sortable(),
                 Tables\Columns\TextColumn::make('publish_date')->date()->sortable(),

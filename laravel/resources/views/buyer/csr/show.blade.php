@@ -10,7 +10,7 @@
             </a>
 
             @if($article->thumbnail_path)
-                <div style="width:100%;height:350px;border-radius:var(--radius);background:url('{{ asset($article->thumbnail_path) }}') center/cover no-repeat;margin-bottom:24px;"></div>
+                <div style="width:100%;height:350px;border-radius:var(--radius);background:url('{{ image_url($article->thumbnail_path) }}') center/cover no-repeat;margin-bottom:24px;"></div>
             @endif
 
             <div class="article-meta" style="font-size:12px;color:var(--muted);margin-bottom:16px;">

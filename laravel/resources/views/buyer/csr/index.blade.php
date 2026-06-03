@@ -14,7 +14,7 @@
             <div class="grid grid-3">
                 @forelse($articles as $article)
                     <a class="card" href="{{ route('buyer.csr.show', $article->slug) }}">
-                        <div class="card-media" style="background-image:url('{{ $article->thumbnail_path ? asset($article->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
+                        <div class="card-media" style="background-image:url('{{ $article->thumbnail_path ? image_url($article->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                         <div class="card-body">
                             <div class="card-meta">{{ $article->publish_date?->format('d M Y') }}</div>
                             <div class="card-title">{{ $article->title }}</div>
