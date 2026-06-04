@@ -298,7 +298,17 @@ class CheckoutController extends Controller
 
     private function loadSelectedCart(Request $request): Cart
     {
-        $cart = $this->cart($request)->load(['items.itemable.motor', 'items.itemable.part']);
+        $cart = $this->cart($request)->load('items');
+        
+        // Load relations for each itemable type
+        foreach ($cart->items as $item) {
+            if ($item->itemable_type === PartVariant::class) {
+                $item->loadMissing(['itemable.part']);
+            } elseif ($item->itemable_type === MotorColor::class) {
+                $item->loadMissing(['itemable.motor']);
+            }
+        }
+
         $selectedIds = $request->session()->get('checkout.selected_ids', []);
 
         if (! empty($selectedIds)) {
