@@ -136,6 +136,15 @@ class MotorResource extends Resource
                             ])
                             ->default('active'),
 
+                        Forms\Components\Select::make('stock_status')
+                            ->label('Status Stok')
+                            ->options([
+                                'ready' => 'Ready Stock',
+                                'indent' => 'Indent',
+                            ])
+                            ->default('ready')
+                            ->required(),
+
                         Forms\Components\FileUpload::make('thumbnail_path')
                             ->label('Thumbnail')
                             ->image()
@@ -193,12 +202,14 @@ class MotorResource extends Resource
                                 Forms\Components\Select::make('group')
                                     ->label('Grup')
                                     ->options([
+                                        'Mesin dan Performa' => 'Mesin dan Performa',
+                                        'Dimensi dan Berat' => 'Dimensi dan Berat',
+                                        'Sasis' => 'Sasis',
+                                        'Fitur' => 'Fitur',
                                         'Umum' => 'Umum',
                                         'Mesin' => 'Mesin',
                                         'Baterai' => 'Baterai',
                                         'Performa' => 'Performa',
-                                        'Dimensi' => 'Dimensi',
-                                        'Fitur' => 'Fitur',
                                         'Lainnya' => 'Lainnya',
                                     ])
                                     ->default('Umum')
@@ -226,11 +237,44 @@ class MotorResource extends Resource
                     ])
                     ->collapsible(),
 
-                Section::make('360° Product View')
+                Section::make('Galeri Gambar')
                     ->schema([
-                        Forms\Components\Placeholder::make('coming_soon_360')
+                        Forms\Components\FileUpload::make('gallery')
                             ->label('')
-                            ->content('Fitur tampilan gambar 360 derajat akan segera hadir. Coming Soon.'),
+                            ->image()
+                            ->imageEditor()
+                            ->disk('public')
+                            ->directory('motors/gallery')
+                            ->maxSize(5120)
+                            ->multiple()
+                            ->reorderable()
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp']),
+                    ])
+                    ->collapsible(),
+
+                Section::make('Frame 360° Produk')
+                    ->description('Upload banyak frame gambar yang akan diputar otomatis seperti 360° (24/36/48 frame).')
+                    ->schema([
+                        Forms\Components\Repeater::make('images360')
+                            ->relationship('images360')
+                            ->schema([
+                                Forms\Components\FileUpload::make('path')
+                                    ->label('Frame Image')
+                                    ->image()
+                                    ->imagePreviewHeight('120')
+                                    ->disk('public')
+                                    ->directory('motors/360frames')
+                                    ->maxSize(2048)
+                                    ->required(),
+                                Forms\Components\TextInput::make('sort_order')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->hidden(),
+                            ])
+                            ->orderColumn('sort_order')
+                            ->defaultItems(0)
+                            ->collapsible()
+                            ->addActionLabel('Tambah Frame'),
                     ])
                     ->collapsible()
                     ->collapsed(),

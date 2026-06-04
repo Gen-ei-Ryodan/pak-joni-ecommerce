@@ -25,7 +25,7 @@ class MotorController extends Controller
         return view('buyer.motors.index', compact('motors', 'q'));
     }
 
-    public function show(Motor $motor)
+    public function show(Motor $motor, Request $request)
     {
         $motor->load([
             'brand',
@@ -36,18 +36,33 @@ class MotorController extends Controller
             'images360',
         ]);
 
-        $categories = PartCategory::query()
-            ->orderBy('group')
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get()
-            ->groupBy('group');
+        $tab = $request->query('tab', 'detail');
+        $selectedPartGroup = $request->query('part_group');
 
-        $parts = $motor->parts()
+        $partGroups = PartCategory::query()
+            ->select('group')
+            ->distinct()
+            ->orderBy('group')
+            ->pluck('group');
+
+        $partsQuery = $motor->parts()
+            ->with(['category', 'defaultVariant', 'motors.brand'])
+            ->where('status', 'active');
+
+        if ($selectedPartGroup) {
+            $partsQuery->whereHas('category', fn($q) => $q->where('group', $selectedPartGroup));
+        }
+
+        $parts = $partsQuery
+            ->orderBy('name')
+            ->paginate(12)
+            ->withQueryString();
+
+        $partsGrouped = $motor->parts()
             ->with(['category', 'defaultVariant'])
             ->where('status', 'active')
             ->get()
-            ->groupBy(fn ($p) => $p->category?->group ?? 'part');
+            ->groupBy(fn($p) => $p->category?->group ?? 'Lainnya');
 
         $relatedMotors = Motor::query()
             ->with(['brand'])
@@ -62,6 +77,9 @@ class MotorController extends Controller
 
         $specGroups = $motor->specifications->groupBy('group');
 
-        return view('buyer.motors.show', compact('motor', 'categories', 'parts', 'relatedMotors', 'specGroups'));
+        return view('buyer.motors.show', compact(
+            'motor', 'partGroups', 'parts', 'partsGrouped',
+            'relatedMotors', 'specGroups', 'tab', 'selectedPartGroup'
+        ));
     }
 }

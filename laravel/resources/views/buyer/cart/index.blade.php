@@ -55,16 +55,21 @@
                                     <input type="checkbox" class="cart-item-checkbox" data-item-id="{{ $it->id }}" checked style="flex-shrink:0;">
 
                                     <div style="width:80px;height:60px;border-radius:8px;border:1px solid var(--line);overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.03);">
-                                        @if($it->variant->part->thumbnail_path)
-                                            <img src="{{ image_url($it->variant->part->thumbnail_path) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                                        @if($it->image_path)
+                                            <img src="{{ image_url($it->image_path) }}" alt="" style="width:100%;height:100%;object-fit:cover;">
                                         @endif
                                     </div>
 
                                     <div style="flex:1;min-width:0;">
-                                        <a href="{{ route('buyer.parts.show', $it->variant->part->slug) }}" style="font-weight:500;">{{ $it->variant->part->name }}</a>
-                                        <div class="muted" style="margin-top:4px;font-size:12px;">{{ $it->variant->name }} — {{ $it->variant->sku }}</div>
-                                        <div style="margin-top:2px;font-size:11px;{{ $it->variant->stock < 10 ? 'color:#f87171;' : 'color:var(--muted);' }}">
-                                            Stock: {{ $it->variant->stock }}
+                                        <span style="font-weight:500;">{{ $it->product_name ?? $it->itemable?->motor?->name ?? $it->itemable?->part?->name ?? '-' }}</span>
+                                        <div class="muted" style="margin-top:4px;font-size:12px;">{{ $it->variant_name ?? $it->itemable?->name ?? '-' }}</div>
+                                        @php
+                                            $itemType = class_basename($it->itemable_type);
+                                            $isMotor = $itemType === 'MotorColor';
+                                            $stockLabel = $isMotor ? ($it->itemable?->motor?->stock_status === 'indent' ? 'Indent' : 'Ready') : 'Stock: '.($it->itemable?->stock ?? 0);
+                                        @endphp
+                                        <div style="margin-top:2px;font-size:11px;{{ $stockLabel === 'Ready' ? '' : 'color:#ca8a04;' }}">
+                                            {{ $isMotor ? $stockLabel : $stockLabel }}
                                         </div>
                                     </div>
 

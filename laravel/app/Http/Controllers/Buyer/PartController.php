@@ -15,7 +15,7 @@ class PartController extends Controller
         $category = $request->query('category');
 
         $parts = Part::query()
-            ->with(['category', 'defaultVariant'])
+            ->with(['category', 'defaultVariant', 'motors.brand'])
             ->where('status', 'active')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($q2) use ($q) {
@@ -41,9 +41,19 @@ class PartController extends Controller
 
     public function show(Part $part)
     {
-        $part->load(['images', 'variants', 'category', 'motors']);
+        $part->load(['images', 'variants', 'category', 'motors.brand', 'specifications']);
 
-        return view('buyer.parts.show', compact('part'));
+        $specGroups = $part->specifications->groupBy('group');
+
+        $relatedParts = Part::query()
+            ->with(['category', 'defaultVariant'])
+            ->where('status', 'active')
+            ->where('id', '!=', $part->id)
+            ->where('part_category_id', $part->part_category_id)
+            ->take(4)
+            ->get();
+
+        return view('buyer.parts.show', compact('part', 'specGroups', 'relatedParts'));
     }
 }
 

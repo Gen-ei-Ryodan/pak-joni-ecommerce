@@ -26,7 +26,7 @@ class Part extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['sku', 'name', 'slug', 'part_category_id', 'thumbnail_path', 'short_description', 'description', 'specification', 'base_price', 'status'];
+    protected $fillable = ['sku', 'name', 'slug', 'part_category_id', 'thumbnail_path', 'short_description', 'description', 'specification', 'base_price', 'status', 'stock_status'];
 
     protected function casts(): array
     {
@@ -58,6 +58,11 @@ class Part extends Model
     public function motors(): BelongsToMany
     {
         return $this->belongsToMany(Motor::class)->withTimestamps();
+    }
+
+    public function specifications(): HasMany
+    {
+        return $this->hasMany(PartSpecification::class)->orderBy('sort_order');
     }
 
     public function totalStock(): int

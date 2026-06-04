@@ -23,9 +23,8 @@ class CreatePart extends CreateRecord
             unset($data['motor_ids']);
         }
 
-        if (isset($data['thumbnail'])) {
-            $data['thumbnail_path'] = 'storage/' . $data['thumbnail'];
-        }
+        // Filament FileUpload di public disk — path sudah relatif (misal parts/thumbnails/foo.jpg)
+        $data['thumbnail_path'] = $data['thumbnail'] ?? null;
         unset($data['thumbnail']);
 
         $this->galleryPaths = $data['gallery'] ?? [];
@@ -42,7 +41,7 @@ class CreatePart extends CreateRecord
             foreach ($this->galleryPaths as $idx => $path) {
                 PartImage::create([
                     'part_id' => $part->id,
-                    'path' => 'storage/' . $path,
+                    'path' => $path,
                     'sort_order' => $idx,
                 ]);
             }

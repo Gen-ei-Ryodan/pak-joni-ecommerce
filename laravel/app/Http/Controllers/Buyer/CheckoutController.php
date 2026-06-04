@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Buyer;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Cart;
+use App\Models\CartItem;
+use App\Models\MotorColor;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PartVariant;
@@ -119,7 +121,20 @@ class CheckoutController extends Controller
         $shippingCost = (float) ($shipping['shipping_cost'] ?? 0);
         $total = $subtotal + $shippingCost;
 
-        return view('buyer.checkout.payment', compact('cart', 'address', 'shipping', 'subtotal', 'shippingCost', 'total'));
+        // Check if any item is indent
+        $hasIndent = $this->hasIndentItems($cart);
+        $dpAmount = 0;
+        $remainingAmount = 0;
+
+        if ($hasIndent) {
+            $dpAmount = round($subtotal * 0.5);
+            $remainingAmount = $subtotal - $dpAmount;
+        }
+
+        return view('buyer.checkout.payment', compact(
+            'cart', 'address', 'shipping', 'subtotal', 'shippingCost', 'total',
+            'hasIndent', 'dpAmount', 'remainingAmount'
+        ));
     }
 
     public function placeOrder(Request $request)
@@ -140,18 +155,33 @@ class CheckoutController extends Controller
         $address = Address::query()->where('user_id', $request->user()->id)->findOrFail($addressId);
 
         return DB::transaction(function () use ($request, $cart, $address, $shipping) {
-            $cart->load(['items.variant.part']);
-
+            // Validate stock for part variants only
             foreach ($cart->items as $it) {
-                $variant = PartVariant::lockForUpdate()->findOrFail($it->part_variant_id);
-                if ($variant->stock < $it->quantity) {
-                    return redirect('/cart')->withErrors(['stock' => 'Stock tidak cukup untuk '.$variant->sku]);
+                if ($it->itemable_type === PartVariant::class) {
+                    $variant = PartVariant::lockForUpdate()->find($it->itemable_id);
+                    if (! $variant) continue;
+                    if ($variant->stock < $it->quantity) {
+                        return redirect('/cart')->withErrors(['stock' => 'Stock tidak cukup untuk '.$it->product_name]);
+                    }
                 }
             }
 
             $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
             $shippingCost = (float) ($shipping['shipping_cost'] ?? 0);
             $total = $subtotal + $shippingCost;
+
+            $hasIndent = $this->hasIndentItems($cart);
+            $dpAmount = 0;
+            $remainingAmount = 0;
+            $isIndent = $hasIndent;
+
+            if ($hasIndent) {
+                $dpAmount = round($subtotal * 0.5);
+                $remainingAmount = $subtotal - $dpAmount;
+                $total = $dpAmount + $shippingCost;
+            }
+
+            $indentStatus = $hasIndent ? 'waiting_stock' : null;
 
             $order = Order::create([
                 'user_id' => $request->user()->id,
@@ -161,6 +191,10 @@ class CheckoutController extends Controller
                 'subtotal' => $subtotal,
                 'shipping_cost' => $shippingCost,
                 'total' => $total,
+                'dp_amount' => $dpAmount,
+                'remaining_amount' => $remainingAmount,
+                'is_indent' => $isIndent,
+                'indent_status' => $indentStatus,
                 'address_snapshot' => [
                     'label' => $address->label,
                     'recipient_name' => $address->recipient_name,
@@ -182,17 +216,33 @@ class CheckoutController extends Controller
             $this->paymentService->createPayment($order);
 
             foreach ($cart->items as $it) {
-                $variant = PartVariant::lockForUpdate()->with('part')->findOrFail($it->part_variant_id);
-                $variant->stock = max(0, $variant->stock - $it->quantity);
-                $variant->save();
+                // Decrement stock for part variants
+                if ($it->itemable_type === PartVariant::class) {
+                    $variant = PartVariant::lockForUpdate()->find($it->itemable_id);
+                    if ($variant) {
+                        $variant->stock = max(0, $variant->stock - $it->quantity);
+                        $variant->save();
+                    }
+                }
+
+                $partId = null;
+                $sku = '';
+                if ($it->itemable_type === PartVariant::class) {
+                    $pv = PartVariant::with('part')->find($it->itemable_id);
+                    if ($pv) {
+                        $partId = $pv->part_id;
+                        $sku = $pv->sku;
+                    }
+                }
 
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'part_id' => $variant->part_id,
-                    'part_variant_id' => $variant->id,
-                    'sku' => $variant->sku,
-                    'name' => $variant->part->name,
-                    'variant_name' => $variant->name,
+                    'part_id' => $partId,
+                    'itemable_type' => $it->itemable_type,
+                    'itemable_id' => $it->itemable_id,
+                    'sku' => $sku,
+                    'name' => $it->product_name,
+                    'variant_name' => $it->variant_name,
                     'price' => $it->price_snapshot,
                     'quantity' => $it->quantity,
                     'line_total' => (float) $it->price_snapshot * (int) $it->quantity,
@@ -217,7 +267,28 @@ class CheckoutController extends Controller
             abort(403);
         }
 
+        $order->load('items');
+
         return view('buyer.checkout.finish', compact('order'));
+    }
+
+    private function hasIndentItems(Cart $cart): bool
+    {
+        foreach ($cart->items as $it) {
+            if ($it->itemable_type === MotorColor::class) {
+                $color = MotorColor::with('motor')->find($it->itemable_id);
+                if ($color && $color->motor && $color->motor->stock_status === 'indent') {
+                    return true;
+                }
+            }
+            if ($it->itemable_type === PartVariant::class) {
+                $variant = PartVariant::with('part')->find($it->itemable_id);
+                if ($variant && $variant->part && $variant->part->stock_status === 'indent') {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private function cart(Request $request): Cart
@@ -227,7 +298,7 @@ class CheckoutController extends Controller
 
     private function loadSelectedCart(Request $request): Cart
     {
-        $cart = $this->cart($request)->load(['items.variant.part']);
+        $cart = $this->cart($request)->load(['items.itemable.motor', 'items.itemable.part']);
         $selectedIds = $request->session()->get('checkout.selected_ids', []);
 
         if (! empty($selectedIds)) {

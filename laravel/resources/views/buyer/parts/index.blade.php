@@ -91,9 +91,22 @@
                     <a class="card" href="{{ route('buyer.parts.show', $p->slug) }}">
                         <div class="card-media" style="background-image:url('{{ $p->thumbnail_path ? image_url($p->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
                         <div class="card-body">
+                            @php $pBrand = $p->motors->first()?->brand; @endphp
+                            @if($pBrand)
+                                <div class="card-meta">{{ $pBrand->name }}</div>
+                            @endif
                             <div class="card-title">{{ $p->name }}</div>
-                            <div class="card-meta">{{ $p->category?->group }} — {{ $p->category?->name }}</div>
-                            <div class="price">{{ $p->defaultVariant ? number_format((float) $p->defaultVariant->price, 2, '.', ',') : number_format((float) $p->base_price, 2, '.', ',') }}</div>
+                            <div class="card-meta">{{ $p->category?->group }} / {{ $p->category?->name }}</div>
+                            @if($p->defaultVariant)
+                                <div class="price">Rp {{ number_format($p->defaultVariant->price, 0, ',', '.') }}</div>
+                            @elseif($p->base_price)
+                                <div class="price">Rp {{ number_format($p->base_price, 0, ',', '.') }}</div>
+                            @endif
+                            @if($p->stock_status === 'indent')
+                                <span style="display:inline-block;margin-top:4px;font-size:10px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;">Indent</span>
+                            @elseif($p->stock_status === 'ready')
+                                <span style="display:inline-block;margin-top:4px;font-size:10px;background:rgba(34,197,94,0.1);color:#22c55e;padding:2px 8px;border-radius:10px;">Ready Stock</span>
+                            @endif
                         </div>
                     </a>
                 @empty

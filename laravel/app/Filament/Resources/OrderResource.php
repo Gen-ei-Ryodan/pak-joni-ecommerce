@@ -89,6 +89,29 @@ class OrderResource extends Resource
                     ->money('IDR')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('dp_amount')
+                    ->label('DP')
+                    ->money('IDR')
+                    ->visible(fn ($record) => $record->is_indent),
+
+                Tables\Columns\TextColumn::make('remaining_amount')
+                    ->label('Sisa')
+                    ->money('IDR')
+                    ->visible(fn ($record) => $record->is_indent && $record->remaining_amount > 0),
+
+                Tables\Columns\TextColumn::make('indent_status')
+                    ->label('Indent')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'waiting_stock' => 'warning',
+                        'ready_for_delivery' => 'info',
+                        'waiting_payment' => 'orange',
+                        'paid_full' => 'success',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => $state ? \App\Models\Order::indentStatusLabelStatic($state) : '-')
+                    ->visible(fn ($record) => $record->is_indent),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Date')
                     ->dateTime('d M Y H:i')
@@ -127,6 +150,18 @@ class OrderResource extends Resource
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         app(\App\Services\OrderService::class)->markAsPaid($record);
+                    }),
+                Actions\Action::make('ready_for_delivery')
+                    ->label('Ready For Delivery')
+                    ->icon('heroicon-o-truck')
+                    ->color('info')
+                    ->visible(fn (Order $record) => $record->is_indent && $record->indent_status === 'waiting_stock')
+                    ->requiresConfirmation()
+                    ->action(function (Order $record) {
+                        $record->update([
+                            'indent_status' => 'waiting_payment',
+                            'status' => 'unpaid',
+                        ]);
                     }),
                 Actions\Action::make('process')
                     ->label('Process')

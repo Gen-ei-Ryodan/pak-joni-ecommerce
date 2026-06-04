@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -18,6 +19,21 @@ class DashboardController extends Controller
         $wishlistCount = $user->wishlists()->count();
         $addressCount = $user->addresses()->count();
 
-        return view('buyer.dashboard', compact('ordersCount', 'wishlistCount', 'addressCount'));
+        $recentOrders = $user->orders()
+            ->with('items')
+            ->orderByDesc('id')
+            ->take(5)
+            ->get();
+
+        $indentOrders = $user->orders()
+            ->where('is_indent', true)
+            ->where('indent_status', '!=', 'paid_full')
+            ->orderByDesc('id')
+            ->get();
+
+        return view('buyer.dashboard', compact(
+            'ordersCount', 'wishlistCount', 'addressCount',
+            'recentOrders', 'indentOrders'
+        ));
     }
 }

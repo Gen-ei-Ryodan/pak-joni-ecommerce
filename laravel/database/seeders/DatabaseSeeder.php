@@ -21,6 +21,7 @@ use App\Models\Part;
 use App\Models\PartCatalog;
 use App\Models\PartCategory;
 use App\Models\PartImage;
+use App\Models\PartSpecification;
 use App\Models\PartVariant;
 use App\Models\PriceList;
 use App\Models\ProductHighlight;
@@ -32,16 +33,59 @@ use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
+    // partCategoryIds[golongan][namaKategori] => id
     private array $partCategoryIds = [];
     private array $motorIds = [];
-    private array $partIds = [];
-    private array $variantIds = [];
+    private array $allPartIds = [];
     private array $brandIds = [];
     private array $categoryIds = [];
+    private array $categoryMap = [];
+    // motorPartMap[motorId] => [partId, partId, ...]
+    private array $motorPartMap = [];
+
+    // Pool of local seeder images (located in public/images/seeder/)
+    private const MOTOR_IMAGES = [
+        'images/seeder/1.jpeg',
+        'images/seeder/2.jpeg',
+        'images/seeder/3.jpeg',
+        'images/seeder/4.jpeg',
+        'images/seeder/5.jpeg',
+        'images/seeder/6.jpeg',
+    ];
+
+    private const PART_IMAGES = [
+        'images/seeder/part1.jpeg',
+        'images/seeder/part2.jpeg',
+        'images/seeder/part3.jpeg',
+    ];
+
+    private const ALL_IMAGES = [
+        'images/seeder/1.jpeg',
+        'images/seeder/2.jpeg',
+        'images/seeder/3.jpeg',
+        'images/seeder/4.jpeg',
+        'images/seeder/5.jpeg',
+        'images/seeder/6.jpeg',
+        'images/seeder/part1.jpeg',
+        'images/seeder/part2.jpeg',
+        'images/seeder/part3.jpeg',
+    ];
 
     private function pic(int $w, int $h, int $id): string
     {
-        return "https://picsum.photos/{$w}/{$h}?random={$id}";
+        // Use local seeded images cycling through the pool
+        $pool = self::ALL_IMAGES;
+        return $pool[$id % count($pool)];
+    }
+
+    private function motorPic(int $id): string
+    {
+        return self::MOTOR_IMAGES[$id % count(self::MOTOR_IMAGES)];
+    }
+
+    private function partPic(int $id): string
+    {
+        return self::PART_IMAGES[$id % count(self::PART_IMAGES)];
     }
 
     public function run(): void
@@ -57,6 +101,7 @@ class DatabaseSeeder extends Seeder
             MotorSpecification::truncate();
             Part::truncate();
             PartVariant::truncate();
+            PartSpecification::truncate();
             PartImage::truncate();
             Banner::truncate();
             ProductHighlight::truncate();
@@ -137,60 +182,79 @@ class DatabaseSeeder extends Seeder
 
     private function createCategories(): void
     {
-        $categories = ['Matic', 'Cruiser', 'Naked Bike', 'Sport', 'Touring', 'Adventure', 'Trail', 'EV'];
+        $map = [
+            'Matic' => ['wmoto', 'sm-sport', 'zeeho'],
+            'Cruiser' => ['wmoto', 'cfmoto'],
+            'Naked Bike' => ['wmoto', 'sm-sport', 'zontes', 'cfmoto'],
+            'Sport' => ['wmoto', 'cfmoto', 'zontes'],
+            'Touring' => ['cfmoto', 'zontes'],
+            'Adventure' => ['cfmoto', 'zontes'],
+            'Trail' => ['wmoto', 'sm-sport'],
+            'EV' => ['zeeho'],
+        ];
 
-        foreach ($categories as $i => $name) {
-            $cat = MotorCategory::create([
-                'name' => $name,
-                'slug' => Str::slug($name),
-                'sort_order' => $i + 1,
-            ]);
-            $this->categoryIds[] = $cat->id;
+        $i = 0;
+        foreach ($map as $catName => $brandSlugs) {
+            foreach ($brandSlugs as $slug) {
+                $brandId = $this->brandIds[$slug] ?? null;
+                if (! $brandId) continue;
+
+                $cat = MotorCategory::create([
+                    'name' => $catName,
+                    'slug' => Str::slug($catName . '-' . $slug),
+                    'brand_id' => $brandId,
+                    'sort_order' => ++$i,
+                ]);
+                $this->categoryIds[] = $cat->id;
+                $this->categoryMap["{$slug}:{$catName}"] = $cat->id;
+            }
         }
     }
 
     private function createPartCategories(): void
     {
         $categories = [
-            ['oli', 'Oli Mesin'], ['oli', 'Oli Gardan'],
-            ['ban', 'Ban Depan'], ['ban', 'Ban Belakang'],
-            ['kelistrikan', 'Busi'], ['kelistrikan', 'Aki'], ['kelistrikan', 'Lampu'],
-            ['rem', 'Kampas Rem Depan'], ['rem', 'Kampas Rem Belakang'],
-            ['body', 'Spion'], ['body', 'Fairing'],
+            'Permesinan' => ['Busi', 'Filter Oli', 'Kampas Kopling', 'Piston Kit', 'Gasket Set', 'Oli Mesin', 'Oli Gardan'],
+            'Body' => ['Cover Body', 'Spakbor', 'Fairing', 'Visor', 'Handle Cover', 'Spion', 'Jok'],
+            'Roda dan Suspensi' => ['Shockbreaker', 'Velg', 'Ban Depan', 'Ban Belakang', 'Bearing Roda', 'Disc Brake', 'Kampas Rem'],
+            'Casis' => ['Footstep', 'Standar Tengah', 'Swing Arm', 'Handle Bar', 'Triple Clamp', 'Side Stand'],
+            'Elektrikal' => ['Lampu', 'Aki', 'Saklar', 'CDI', 'Spul', 'Kabel Body', 'Speedometer', 'Klakson'],
         ];
 
-        foreach ($categories as $i => [$group, $name]) {
-            $cat = PartCategory::create([
-                'group' => $group,
-                'name' => $name,
-                'slug' => Str::slug($name).'-'.($i + 1),
-                'sort_order' => $i + 1,
-            ]);
-            $this->partCategoryIds[] = $cat->id;
+        foreach ($categories as $group => $names) {
+            foreach ($names as $name) {
+                $cat = PartCategory::create([
+                    'group' => $group,
+                    'name' => $name,
+                    'slug' => Str::slug($group . ' ' . $name),
+                    'sort_order' => 0,
+                ]);
+                $this->partCategoryIds[$group][$name] = $cat->id;
+            }
         }
     }
 
     private function createMotors(): void
     {
         $motors = [
-            ['WMOTO Xtreme 250', 'wmoto', 0, 2025, 45900000, 'Sport naked bike 250cc dengan desain agresif dan performa bertenaga.'],
-            ['WMOTO Cruiser 400', 'wmoto', 1, 2024, 72000000, 'Motor cruiser 400cc bergaya klasik dengan kenyamanan maksimal.'],
-            ['SM SPORT Urban 150', 'sm-sport', 0, 2025, 28500000, 'Matic urban sporty 150cc dengan teknologi injeksi terbaru.'],
-            ['SM SPORT Neo 250', 'sm-sport', 2, 2024, 42000000, 'Naked bike 250cc bergaya neo-retro dengan fitur modern.'],
-            ['CFMOTO 450SR', 'cfmoto', 3, 2025, 79900000, 'Sport bike 450cc dengan fairing aerodinamis dan performa superior.'],
-            ['CFMOTO 800MT', 'cfmoto', 5, 2024, 165000000, 'Adventure touring 800cc siap jelajah jarak jauh.'],
-            ['CFMOTO Papio 125', 'cfmoto', 3, 2025, 35000000, 'Mini sport bike 125cc cocok untuk pemula.'],
-            ['ZONTES 350T', 'zontes', 4, 2025, 89000000, 'Touring 350cc dengan fitur lengkap dan kenyamanan premium.'],
-            ['ZONTES 350X', 'zontes', 5, 2025, 95000000, 'Adventure 350cc tangguh di segala medan.'],
-            ['ZONTES 125U', 'zontes', 2, 2024, 38000000, 'Naked bike 125cc stylish dengan teknologi modern.'],
-            ['ZEEHO AE6', 'zeeho', 0, 2025, 28000000, 'Motor listrik matic 1500W untuk mobilitas urban.'],
-            ['ZEEHO Magnet', 'zeeho', 7, 2024, 19500000, 'Motor listrik compact ideal untuk perjalanan pendek.'],
+            ['WMOTO Xtreme 250', 'wmoto', 'Matic', 2025, 45900000, 'Sport naked bike 250cc dengan desain agresif dan performa bertenaga.'],
+            ['WMOTO Cruiser 400', 'wmoto', 'Cruiser', 2024, 72000000, 'Motor cruiser 400cc bergaya klasik dengan kenyamanan maksimal.'],
+            ['SM SPORT Urban 150', 'sm-sport', 'Matic', 2025, 28500000, 'Matic urban sporty 150cc dengan teknologi injeksi terbaru.'],
+            ['SM SPORT Neo 250', 'sm-sport', 'Naked Bike', 2024, 42000000, 'Naked bike 250cc bergaya neo-retro dengan fitur modern.'],
+            ['CFMOTO 450SR', 'cfmoto', 'Sport', 2025, 79900000, 'Sport bike 450cc dengan fairing aerodinamis dan performa superior.'],
+            ['CFMOTO 800MT', 'cfmoto', 'Adventure', 2024, 165000000, 'Adventure touring 800cc siap jelajah jarak jauh.'],
+            ['CFMOTO Papio 125', 'cfmoto', 'Sport', 2025, 35000000, 'Mini sport bike 125cc cocok untuk pemula.'],
+            ['ZONTES 350T', 'zontes', 'Touring', 2025, 89000000, 'Touring 350cc dengan fitur lengkap dan kenyamanan premium.'],
+            ['ZONTES 350X', 'zontes', 'Adventure', 2025, 95000000, 'Adventure 350cc tangguh di segala medan.'],
+            ['ZONTES 125U', 'zontes', 'Naked Bike', 2024, 38000000, 'Naked bike 125cc stylish dengan teknologi modern.'],
+            ['ZEEHO AE6', 'zeeho', 'Matic', 2025, 28000000, 'Motor listrik matic 1500W untuk mobilitas urban.'],
+            ['ZEEHO Magnet', 'zeeho', 'EV', 2024, 19500000, 'Motor listrik compact ideal untuk perjalanan pendek.'],
         ];
 
-        foreach ($motors as $i => [$name, $brand, $catIdx, $year, $price, $desc]) {
+        foreach ($motors as $i => [$name, $brand, $catName, $year, $price, $desc]) {
             $motor = Motor::create([
                 'brand_id' => $this->brandIds[$brand] ?? null,
-                'category_id' => $this->categoryIds[$catIdx] ?? null,
+                'category_id' => $this->categoryMap["{$brand}:{$catName}"] ?? null,
                 'name' => $name,
                 'slug' => Str::slug($name),
                 'year' => $year,
@@ -199,8 +263,10 @@ class DatabaseSeeder extends Seeder
                 'short_description' => $desc,
                 'description' => '<p>' . $desc . '</p><p>Motor ini dilengkapi dengan mesin berperforma tinggi, desain modern, dan fitur keselamatan terkini. Tersedia dalam beberapa pilihan warna menarik.</p>',
                 'status' => 'active',
+                'stock_status' => 'ready',
             ]);
             $this->motorIds[] = $motor->id;
+            $this->motorPartMap[$motor->id] = [];
         }
     }
 
@@ -209,9 +275,9 @@ class DatabaseSeeder extends Seeder
         $colors = ['Merah', 'Hitam', 'Biru', 'Putih', 'Silver', 'Hijau Army'];
         $colorCodes = ['#dc2626', '#1a1a1a', '#2563eb', '#f5f5f5', '#c0c0c0', '#4d7c0f'];
         $specsData = [
-            [['Mesin dan Performa', 'Tipe Mesin', '4 Langkah, SOHC, Pendingin Cairan'], ['Mesin dan Performa', 'Kapasitas', '249cc'], ['Mesin dan Performa', 'Tenaga Maks', '26.5 HP @ 9250 rpm'], ['Mesin dan Performa', 'Torsi Maks', '22.5 Nm @ 7250 rpm'], ['Dimensi dan Berat', 'Panjang', '2,050 mm'], ['Dimensi dan Berat', 'Lebar', '780 mm'], ['Dimensi dan Berat', 'Tinggi', '1,075 mm'], ['Dimensi dan Berat', 'Berat Kosong', '148 kg'], ['Sasis', 'Rangka', 'Diamond Frame'], ['Sasis', 'Suspensi Depan', 'Telescopic 41mm'], ['Sasis', 'Suspensi Belakang', 'Monoshock Adjustable'], ['Fitur', 'ABS', 'Dual Channel'], ['Fitur', 'Panel Instrumen', 'Full Digital LCD'], ['Fitur', 'Lampu', 'Full LED']],
-            [['Mesin dan Performa', 'Tipe Mesin', '4 Langkah, V-Twin, Pendingin Udara'], ['Mesin dan Performa', 'Kapasitas', '396cc'], ['Mesin dan Performa', 'Tenaga Maks', '35 HP @ 8000 rpm'], ['Dimensi dan Berat', 'Panjang', '2,240 mm'], ['Dimensi dan Berat', 'Lebar', '920 mm'], ['Dimensi dan Berat', 'Berat Kosong', '195 kg'], ['Sasis', 'Rangka', 'Double Cradle Steel'], ['Fitur', 'Sistem Injeksi', 'EFI Bosch']],
-            [['Mesin dan Performa', 'Tipe Mesin', '4 Langkah, SOHC, Pendingin Cairan'], ['Mesin dan Performa', 'Kapasitas', '149cc'], ['Mesin dan Performa', 'Tenaga Maks', '12 HP @ 8500 rpm'], ['Dimensi dan Berat', 'Berat Kosong', '112 kg'], ['Sasis', 'Rangka', 'Underbone Steel'], ['Fitur', 'Sistem Kunci', 'Smart Keyless']],
+            [['Mesin dan Performa', 'Tipe Mesin', '4 Langkah, SOHC, Pendingin Cairan'], ['Mesin dan Performa', 'Kapasitas', '249cc'], ['Mesin dan Performa', 'Tenaga Maks', '26.5 HP @ 9250 rpm'], ['Mesin dan Performa', 'Torsi Maks', '22.5 Nm @ 7250 rpm'], ['Dimensi', 'Panjang', '2,050 mm'], ['Dimensi', 'Lebar', '780 mm'], ['Dimensi', 'Tinggi', '1,075 mm'], ['Dimensi', 'Berat Kosong', '148 kg'], ['Sasis', 'Rangka', 'Diamond Frame'], ['Sasis', 'Suspensi Depan', 'Telescopic 41mm'], ['Sasis', 'Suspensi Belakang', 'Monoshock Adjustable'], ['Fitur', 'ABS', 'Dual Channel'], ['Fitur', 'Panel Instrumen', 'Full Digital LCD'], ['Fitur', 'Lampu', 'Full LED']],
+            [['Mesin dan Performa', 'Tipe Mesin', '4 Langkah, V-Twin, Pendingin Udara'], ['Mesin dan Performa', 'Kapasitas', '396cc'], ['Mesin dan Performa', 'Tenaga Maks', '35 HP @ 8000 rpm'], ['Dimensi', 'Panjang', '2,240 mm'], ['Dimensi', 'Lebar', '920 mm'], ['Dimensi', 'Berat Kosong', '195 kg'], ['Sasis', 'Rangka', 'Double Cradle Steel'], ['Fitur', 'Sistem Injeksi', 'EFI Bosch']],
+            [['Mesin dan Performa', 'Tipe Mesin', '4 Langkah, SOHC, Pendingin Cairan'], ['Mesin dan Performa', 'Kapasitas', '149cc'], ['Mesin dan Performa', 'Tenaga Maks', '12 HP @ 8500 rpm'], ['Dimensi', 'Berat Kosong', '112 kg'], ['Sasis', 'Rangka', 'Underbone Steel'], ['Fitur', 'Sistem Kunci', 'Smart Keyless']],
         ];
 
         foreach ($this->motorIds as $i => $motorId) {
@@ -239,65 +305,155 @@ class DatabaseSeeder extends Seeder
 
     private function createParts(): void
     {
-        $parts = [
-            ['Oli Mesin MForce 1L', 0, 65000, 'Oli mesin original untuk semua motor MForce.'],
-            ['Oli Gardan Racing 120ml', 1, 35000, 'Oli gardan performa tinggi.'],
-            ['Ban Depan IRC 90/80-17', 2, 450000, 'Ban depan tubeless IRC premium.'],
-            ['Ban Belakang Pirelli 140/70-17', 3, 750000, 'Ban belakang Pirelli Diablo Rosso.'],
-            ['Busi NGK Racing CR8E', 4, 55000, 'Busi performa tinggi untuk motor sport.'],
-            ['Aki Maintenance Free YTZ7S', 5, 250000, 'Aki kering bebas perawatan.'],
-            ['Lampu LED Headlamp Universal', 6, 185000, 'Lampu utama LED super terang.'],
-            ['Kampas Rem Depan Brembo', 7, 125000, 'Kampas rem depan premium Brembo.'],
-            ['Kampas Rem Belakang EBC', 8, 95000, 'Kampas rem belakang EBC berkualitas.'],
-            ['Spion Foldable Universal', 9, 85000, 'Spion lipat universal untuk semua tipe.'],
-            ['Fairing Samping WMOTO', 10, 350000, 'Fairing samping original WMOTO.'],
+        $motorNames = [
+            'WMOTO Xtreme 250', 'WMOTO Cruiser 400',
+            'SM SPORT Urban 150', 'SM SPORT Neo 250',
+            'CFMOTO 450SR', 'CFMOTO 800MT', 'CFMOTO Papio 125',
+            'ZONTES 350T', 'ZONTES 350X', 'ZONTES 125U',
+            'ZEEHO AE6', 'ZEEHO Magnet',
         ];
 
-        foreach ($parts as $i => [$name, $catIdx, $price, $desc]) {
-            $part = Part::create([
-                'sku' => 'MP-'.str_pad($i + 1, 4, '0', STR_PAD_LEFT),
-                'name' => $name,
-                'slug' => Str::slug($name).'-'.($i + 1),
-                'part_category_id' => $this->partCategoryIds[$catIdx],
-                'thumbnail_path' => $this->pic(600, 400, $i + 100),
-                'short_description' => $desc,
-                'base_price' => $price,
-                'status' => 'active',
-            ]);
-            $this->partIds[] = $part->id;
+        $templates = [
+            'Permesinan' => [
+                ['Busi', 'Busi NGK Racing', 'Busi performa tinggi racing series.', 55000],
+                ['Filter Oli', 'Filter Oli Racing', 'Filter oli aftermarket kualitas racing.', 75000],
+                ['Kampas Kopling', 'Kampas Kopling Racing', 'Kampas kopling anti slip performa tinggi.', 180000],
+                ['Piston Kit', 'Piston Kit Forged', 'Piston kit forged high compression.', 350000],
+            ],
+            'Body' => [
+                ['Cover Body', 'Cover Body Depan', 'Cover body depan ABS high quality.', 250000],
+                ['Spakbor', 'Spakbor Depan', 'Spakbor depan tahan benturan.', 95000],
+                ['Fairing', 'Fairing Samping', 'Fairing samping full set.', 320000],
+                ['Spion', 'Spion Foldable', 'Spion lipat universal M10.', 85000],
+            ],
+            'Roda dan Suspensi' => [
+                ['Ban Depan', 'Ban Depan Tubeless', 'Ban tubeless premium grip maksimal.', 550000],
+                ['Kampas Rem', 'Kampas Rem Racing', 'Kampas rem semi-metallic performa tinggi.', 125000],
+                ['Velg', 'Velg Racing Alloy', 'Velg racing aluminium ringan.', 1800000],
+                ['Shockbreaker', 'Shockbreaker Adjustable', 'Shockbreaker adjustable preload.', 650000],
+            ],
+            'Casis' => [
+                ['Footstep', 'Footstep Racing', 'Footstep CNC billet aluminium.', 450000],
+                ['Handle Bar', 'Handle Bar Chrome', 'Handle bar chrome 22mm universal.', 250000],
+                ['Standar Tengah', 'Standar Tengah HD', 'Standar tengah heavy duty steel.', 350000],
+                ['Side Stand', 'Side Stand Chrome', 'Side stand chrome reinforced spring.', 180000],
+            ],
+            'Elektrikal' => [
+                ['Lampu', 'Lampu LED Headlamp', 'Lampu depan LED super terang.', 350000],
+                ['Aki', 'Aki Maintenance Free', 'Aki kering MF 12V 7Ah.', 250000],
+                ['Saklar', 'Saklar Starter Assy', 'Saklar starter assembly complete.', 180000],
+                ['Klakson', 'Klakson Disc', 'Klakson disc 2-tone 130dB.', 75000],
+            ],
+        ];
+
+        $specsTemplates = [
+            'Permesinan' => [
+                ['Material dan Kualitas', 'Material', 'Aluminium Alloy / Steel'],
+                ['Material dan Kualitas', 'Tipe', 'Aftermarket Performance'],
+                ['Material dan Kualitas', 'Bobot', '150 gram'],
+                ['Kompatibilitas', 'Kompatibel Dengan', 'Semua motor 150cc - 400cc'],
+            ],
+            'Body' => [
+                ['Material dan Dimensi', 'Material', 'ABS Plastic High Quality'],
+                ['Material dan Dimensi', 'Ketebalan', '2.5 mm'],
+                ['Material dan Dimensi', 'Warna', 'Hitam / Primer Siap Cat'],
+                ['Pemasangan', 'Mounting Type', 'Baut M6 Original'],
+            ],
+            'Roda dan Suspensi' => [
+                ['Material dan Spesifikasi', 'Material', 'Aluminium / Karet Kompon'],
+                ['Material dan Spesifikasi', 'Ukuran', '17 inch'],
+                ['Material dan Spesifikasi', 'Load Capacity', '150 kg'],
+                ['Fitur', 'Adjustable', 'Ya (Preload)'],
+            ],
+            'Casis' => [
+                ['Material dan Dimensi', 'Material', 'Baja Karbon Tinggi / Aluminium'],
+                ['Material dan Dimensi', 'Diameter', '22 mm'],
+                ['Material dan Dimensi', 'Panjang', '280 mm'],
+                ['Finishing', 'Surface Finish', 'Chrome / Anodized Hitam'],
+            ],
+            'Elektrikal' => [
+                ['Spesifikasi Elektrik', 'Voltage', '12V DC'],
+                ['Spesifikasi Elektrik', 'Watt / Ampere', '35W / 7Ah'],
+                ['Spesifikasi Elektrik', 'Tipe Konektor', 'Universal Plug & Play'],
+                ['Performa', 'Output', '130 dB / 3000 Lumen'],
+            ],
+        ];
+
+        $counter = 0;
+
+        foreach ($this->motorIds as $mIdx => $motorId) {
+            $mName = $motorNames[$mIdx] ?? "Motor #{$motorId}";
+
+            foreach ($templates as $group => $items) {
+                foreach ($items as [$catKey, $displayName, $desc, $price]) {
+                    $fullName = "{$displayName} — {$mName}";
+                    $catId = $this->partCategoryIds[$group][$catKey] ?? null;
+                    if (! $catId) continue;
+
+                    $part = Part::create([
+                        'sku' => 'MP-' . str_pad($counter + 1, 5, '0', STR_PAD_LEFT),
+                        'name' => $fullName,
+                        'slug' => Str::slug($fullName) . '-' . ($counter + 1),
+                        'part_category_id' => $catId,
+                        'thumbnail_path' => $this->pic(600, 400, $counter + 500),
+                        'short_description' => "{$desc} Kompatibel untuk {$mName}.",
+                        'description' => "<p>{$desc}</p><p>Kompatibel dengan <strong>{$mName}</strong>. Garansi MOTOMART 3 bulan.</p>",
+                        'specification' => '',
+                        'base_price' => $price,
+                        'status' => 'active',
+                        'stock_status' => 'ready',
+                    ]);
+
+                    // Add specifications for this part
+                    $specs = $specsTemplates[$group] ?? [];
+                    foreach ($specs as $sIdx => [$specGroup, $key, $value]) {
+                        PartSpecification::create([
+                            'part_id' => $part->id,
+                            'group' => $specGroup,
+                            'key' => $key,
+                            'value' => $value,
+                            'sort_order' => $sIdx,
+                        ]);
+                    }
+
+                    $this->allPartIds[] = $part->id;
+                    $this->motorPartMap[$motorId][] = $part->id;
+                    $counter++;
+                }
+            }
         }
     }
 
     private function createPartVariants(): void
     {
-        $variants = [
-            [0, 'Botol 1 Liter', 65000, 100, true],
-            [1, 'Tube 120ml', 35000, 200, true],
-            [2, '90/80-17', 450000, 30, true],
-            [3, '140/70-17', 750000, 20, true],
-            [4, 'CR8E Standard', 55000, 150, true],
-            [5, 'YTZ7S 12V', 250000, 50, true],
-        ];
+        $vNames = ['Standard', 'Premium', 'Racing'];
+        $mult = [1.0, 1.5, 0.85];
 
-        foreach ($variants as $i => [$partIdx, $name, $price, $stock, $default]) {
-            $variant = PartVariant::create([
-                'part_id' => $this->partIds[$partIdx],
-                'sku' => 'VAR-'.str_pad($i + 1, 4, '0', STR_PAD_LEFT),
-                'name' => $name,
-                'price' => $price,
-                'stock' => $stock,
-                'is_default' => $default,
-            ]);
-            $this->variantIds[] = $variant->id;
+        foreach ($this->allPartIds as $i => $partId) {
+            $part = Part::find($partId);
+            if (! $part) continue;
+            $bp = (float) $part->base_price;
+
+            for ($v = 0; $v < 2; $v++) {
+                PartVariant::create([
+                    'part_id' => $partId,
+                    'sku' => 'VAR-' . str_pad($i * 2 + $v + 1, 5, '0', STR_PAD_LEFT),
+                    'name' => $vNames[array_rand($vNames)],
+                    'price' => max(15000, round($bp * $mult[$v % 3])),
+                    'stock' => rand(5, 200),
+                    'is_default' => $v === 0,
+                ]);
+            }
         }
     }
 
     private function createPartImages(): void
     {
-        foreach ($this->partIds as $i => $partId) {
+        foreach ($this->allPartIds as $i => $partId) {
+            if ($i % 3 !== 0) continue;
             PartImage::create([
                 'part_id' => $partId,
-                'path' => $this->pic(600, 400, $i + 120),
+                'path' => $this->pic(600, 400, $i + 800),
                 'sort_order' => 1,
             ]);
         }
@@ -318,10 +474,10 @@ class DatabaseSeeder extends Seeder
 
     private function attachMotorParts(): void
     {
-        $mappings = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [0, 5], [1, 6], [2, 7], [3, 8], [4, 9], [0, 10]];
-        foreach ($mappings as [$mIdx, $pIdx]) {
-            if (isset($this->motorIds[$mIdx], $this->partIds[$pIdx])) {
-                Motor::find($this->motorIds[$mIdx])->parts()->attach($this->partIds[$pIdx]);
+        foreach ($this->motorPartMap as $motorId => $partIds) {
+            $motor = Motor::find($motorId);
+            if ($motor) {
+                $motor->parts()->syncWithoutDetaching($partIds);
             }
         }
     }
@@ -329,58 +485,56 @@ class DatabaseSeeder extends Seeder
     private function createBanners(): void
     {
         $heroBanners = [
-            ['title' => 'MOTOMART 2025', 'subtitle' => 'New Collection', 'button' => 'Jelajahi Produk', 'link' => '/produk', 'type' => 'hero'],
-            ['title' => 'CFMOTO 450SR', 'subtitle' => 'Sport Performance', 'button' => 'Lihat Detail', 'link' => '#', 'type' => 'hero'],
-            ['title' => 'ZEEHO Electric', 'subtitle' => 'EV Future', 'button' => 'Selengkapnya', 'link' => '/produk?brand=zeeho', 'type' => 'hero'],
+            ['title' => 'MOTOMART 2025', 'subtitle' => 'New Collection', 'button_text' => 'Jelajahi Produk', 'link_url' => '/produk', 'type' => 'hero'],
+            ['title' => 'CFMOTO 450SR', 'subtitle' => 'Sport Performance', 'button_text' => 'Lihat Detail', 'link_url' => '#', 'type' => 'hero'],
+            ['title' => 'ZEEHO Electric', 'subtitle' => 'EV Future', 'button_text' => 'Selengkapnya', 'link_url' => '/produk?brand=zeeho', 'type' => 'hero'],
         ];
 
         $promoBanners = [
-            ['title' => 'Promo Akhir Tahun', 'subtitle' => 'Diskon Hingga 5 Juta', 'button' => 'Lihat Promo', 'link' => '#', 'type' => 'promo'],
-            ['title' => 'Gratis Service 4x', 'subtitle' => 'Untuk Pembelian Motor Baru', 'button' => 'Syarat & Ketentuan', 'link' => '#', 'type' => 'promo'],
-            ['title' => 'Trade-In Motor Lama', 'subtitle' => 'Tukar Tambah Harga Tinggi', 'button' => 'Cek Sekarang', 'link' => '#', 'type' => 'promo'],
+            ['title' => 'Promo Akhir Tahun', 'subtitle' => 'Diskon Hingga 5 Juta', 'button_text' => 'Lihat Promo', 'link_url' => '#', 'type' => 'promo'],
+            ['title' => 'Gratis Service 4x', 'subtitle' => 'Untuk Pembelian Motor Baru', 'button_text' => 'Syarat & Ketentuan', 'link_url' => '#', 'type' => 'promo'],
+            ['title' => 'Trade-In Motor Lama', 'subtitle' => 'Tukar Tambah Harga Tinggi', 'button_text' => 'Cek Sekarang', 'link_url' => '#', 'type' => 'promo'],
         ];
 
         $launchingBanners = [
-            ['title' => 'ZONTES 350X Adventure', 'subtitle' => 'Launching Produk Baru', 'button' => 'Lihat Detail', 'link' => '#', 'type' => 'launching'],
-            ['title' => 'ZEEHO Magnet EV', 'subtitle' => 'Coming Soon', 'button' => 'Pre-Order', 'link' => '#', 'type' => 'launching'],
+            ['title' => 'ZONTES 350X Adventure', 'subtitle' => 'Launching Produk Baru', 'button_text' => 'Lihat Detail', 'link_url' => '#', 'type' => 'launching'],
+            ['title' => 'ZEEHO Magnet EV', 'subtitle' => 'Coming Soon', 'button_text' => 'Pre-Order', 'link_url' => '#', 'type' => 'launching'],
         ];
 
         $kegiatanBanners = [
-            ['title' => 'MOTOMART Fest 2025', 'subtitle' => 'Gathering Komunitas Motor', 'button' => 'Lihat Event', 'link' => '#', 'type' => 'kegiatan'],
-            ['title' => 'CSR Goes to School', 'subtitle' => 'Edukasi Safety Riding', 'button' => 'Selengkapnya', 'link' => '#', 'type' => 'kegiatan'],
+            ['title' => 'MOTOMART Fest 2025', 'subtitle' => 'Gathering Komunitas Motor', 'button_text' => 'Lihat Event', 'link_url' => '#', 'type' => 'kegiatan'],
+            ['title' => 'Ride & Camp', 'subtitle' => 'Petualangan 3 Hari 2 Malam', 'button_text' => 'Daftar', 'link_url' => '#', 'type' => 'kegiatan'],
         ];
 
-        $allBanners = array_merge($heroBanners, $promoBanners, $launchingBanners, $kegiatanBanners);
-        foreach ($allBanners as $i => $b) {
-            Banner::create([
-                'title' => $b['title'],
-                'type' => $b['type'],
-                'subtitle' => $b['subtitle'],
-                'image_path' => $this->pic(1400, 700, $i + 300),
-                'link_url' => $b['link'],
-                'button_text' => $b['button'] ?? null,
-                'is_active' => true,
-                'sort_order' => $i + 1,
-            ]);
+        foreach ($heroBanners as $i => $b) {
+            Banner::create(array_merge($b, ['sort_order' => $i + 1, 'is_active' => true, 'image_path' => $this->pic(1200, 500, $i + 300)]));
+        }
+        foreach ($promoBanners as $i => $b) {
+            Banner::create(array_merge($b, ['sort_order' => $i + 1, 'is_active' => true, 'image_path' => $this->pic(600, 400, $i + 350)]));
+        }
+        foreach ($launchingBanners as $i => $b) {
+            Banner::create(array_merge($b, ['sort_order' => $i + 1, 'is_active' => true, 'image_path' => $this->pic(600, 400, $i + 360)]));
+        }
+        foreach ($kegiatanBanners as $i => $b) {
+            Banner::create(array_merge($b, ['sort_order' => $i + 1, 'is_active' => true, 'image_path' => $this->pic(600, 400, $i + 370)]));
         }
     }
 
     private function createWhyChooseUs(): void
     {
-        $items = [
-            ['Kualitas Produk', 'Semua motor kami melewati quality control ketat sesuai standar internasional.', '&#9733;'],
-            ['Jaringan Dealer', 'Lebih dari 100 dealer resmi tersebar di seluruh Indonesia.', '&#x1F3EA;'],
-            ['Sparepart Tersedia', 'Suku cadang asli selalu tersedia dengan jaminan keaslian.', '&#x1F527;'],
-            ['Garansi Resmi', 'Garansi resmi 3 tahun atau 30.000 km untuk setiap pembelian.', '&#x1F4DC;'],
-            ['Teknologi Modern', 'Motor dilengkapi teknologi terkini: ABS, LED, Smart Key.', '&#x26A1;'],
-            ['Layanan Purna Jual', 'Bengkel resmi dengan mekanik bersertifikasi siap membantu.', '&#x1F468;&#x200D;&#x1F527;'],
+        $reasons = [
+            ['Kualitas Premium', 'Semua produk kami menggunakan material terbaik dengan standar kualitas internasional.'],
+            ['Garansi Resmi', 'Setiap pembelian dilengkapi garansi resmi pabrikan untuk ketenangan Anda.'],
+            ['Layanan Purna Jual', 'Jaringan bengkel resmi siap melayani perawatan dan perbaikan motor Anda.'],
+            ['Harga Kompetitif', 'Dapatkan produk berkualitas dengan harga terbaik di kelasnya.'],
+            ['Jaringan Luas', 'Dealer resmi tersebar di seluruh Indonesia untuk kemudahan akses.'],
         ];
 
-        foreach ($items as $i => [$title, $desc, $icon]) {
+        foreach ($reasons as $i => [$title, $desc]) {
             WhyChooseUs::create([
                 'title' => $title,
                 'description' => $desc,
-                'icon' => $icon,
+                'icon' => null,
                 'sort_order' => $i + 1,
                 'is_active' => true,
             ]);
@@ -389,34 +543,33 @@ class DatabaseSeeder extends Seeder
 
     private function createProductHighlights(): void
     {
-        if (!empty($this->motorIds)) {
-            ProductHighlight::create([
-                'motor_id' => $this->motorIds[4],
-                'is_active' => true,
-            ]);
+        $highlightMotors = [0, 1, 2, 4, 5, 8, 10];
+        foreach ($highlightMotors as $i => $mIdx) {
+            if (isset($this->motorIds[$mIdx])) {
+                ProductHighlight::create([
+                    'motor_id' => $this->motorIds[$mIdx],
+                    'is_active' => true,
+                ]);
+            }
         }
     }
 
     private function createNews(): void
     {
-        $articles = [
-            ['MOTOMART Luncurkan Brand ZEEHO Motor Listrik di Indonesia', 'Peluncuran resmi brand motor listrik ZEEHO sebagai langkah MOTOMART mendukung transisi kendaraan ramah lingkungan.', 'MOTOMART', 'Peluncuran'],
-            ['CFMOTO 450SR Raih Penghargaan Motor Sport Terbaik 2025', 'CFMOTO 450SR berhasil meraih penghargaan bergengsi sebagai motor sport terbaik dalam ajang Otomotif Award 2025.', 'MOTOMART', 'Penghargaan'],
-            ['MOTOMART Buka 20 Dealer Baru di Jawa Timur', 'Ekspansi jaringan dealer terus dilakukan untuk memberikan layanan terbaik kepada pelanggan di seluruh Indonesia.', 'MOTOMART', 'Bisnis'],
-            ['Tips Merawat Motor Sport Agar Performa Tetap Prima', 'Panduan lengkap perawatan motor sport dari mekanik profesional MOTOMART.', 'MOTOMART', 'Tips'],
-            ['Program Tukar Tambah MOTOMART Disambut Antusias', 'Program tukar tambah motor lama dengan nilai tinggi mendapat respon positif dari konsumen.', 'MOTOMART', 'Promo'],
-            ['MOTOMART Support Event Balap Nasional ISSOM 2025', 'MOTOMART menjadi sponsor utama kejuaraan balap motor nasional ISSOM 2025.', 'MOTOMART', 'Event'],
+        $news = [
+            ['MOTOMART Buka Dealer Baru di Surabaya', 'MOTOMART resmi membuka dealer flagship terbaru di Surabaya dengan konsep modern dan lengkap.'],
+            ['CFMOTO 450SR Raih Penghargaan Desain', 'CFMOTO 450SR meraih penghargaan desain motor sport terbaik tahun 2025.'],
+            ['ZEEHO AE6 Jadi Motor Listrik Terlaris', 'Penjualan ZEEHO AE6 melesat 200% di kuartal pertama 2025.'],
+            ['Tips Perawatan Motor Matic', 'Simak tips perawatan motor matic agar tetap prima dan awet.'],
         ];
 
-        foreach ($articles as $i => [$title, $content, $author, $cat]) {
+        foreach ($news as $i => [$title, $content]) {
             News::create([
                 'title' => $title,
                 'slug' => Str::slug($title),
-                'thumbnail_path' => $this->pic(800, 500, $i + 400),
-                'content' => '<p>' . $content . '</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>',
-                'author' => $author,
-                'category' => $cat,
-                'publish_date' => now()->subDays(($i + 1) * 3),
+                'thumbnail_path' => $this->pic(800, 400, $i + 400),
+                'content' => "<p>{$content}</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>",
+                'publish_date' => now()->subDays($i * 5),
                 'is_active' => true,
             ]);
         }
@@ -425,30 +578,27 @@ class DatabaseSeeder extends Seeder
     private function createEvents(): void
     {
         $events = [
-            ['MOTOMART Fest 2025', 'Festival akbar komunitas motor MOTOMART dengan berbagai kegiatan seru.', 'JCC Senayan, Jakarta', now()->addDays(14)],
-            ['Riding Together Chapter Bandung', 'Touring bersama komunitas motor MOTOMART Chapter Bandung.', 'Bandung - Lembang', now()->subDays(20)],
-            ['Test Ride Weekend CFMOTO', 'Kesempatan test ride motor CFMOTO terbaru selama weekend.', 'Dealer MOTOMART Surabaya', now()->subDays(45)],
-            ['Safety Riding Workshop', 'Workshop edukasi safety riding untuk pelajar dan komunitas.', 'Gedung Balai Kota', now()->addDays(30)],
+            ['MOTOMART Riding Camp 2025', 'Petualangan 3 hari 2 malam bersama komunitas MOTOMART.', now()->addDays(30), 'Jakarta - Bandung'],
+            ['Launching ZONTES 350X', 'Acara launching motor adventure terbaru ZONTES 350X.', now()->addDays(14), 'MOTOMART Flagship Store'],
+            ['Workshop Safety Riding', 'Pelatihan safety riding gratis untuk pelanggan setia.', now()->addDays(7), 'MOTOMART Training Center'],
         ];
 
-        foreach ($events as $i => [$title, $desc, $loc, $date]) {
+        foreach ($events as $i => [$title, $desc, $date, $loc]) {
             $event = Event::create([
                 'title' => $title,
                 'slug' => Str::slug($title),
-                'thumbnail_path' => $this->pic(800, 500, $i + 500),
-                'description' => $desc,
-                'content' => '<p>' . $desc . '</p><p>Acara ini akan diisi dengan berbagai kegiatan menarik termasuk meet & greet, riding bersama, doorprize, dan masih banyak lagi. Jangan lewatkan kesempatan untuk bergabung!</p>',
+                'thumbnail_path' => $this->pic(800, 400, $i + 420),
+                'description' => "<p>{$desc}</p>",
                 'location' => $loc,
                 'event_date' => $date,
                 'is_active' => true,
             ]);
 
-            for ($j = 1; $j <= 3; $j++) {
+            for ($g = 1; $g <= 2; $g++) {
                 EventGallery::create([
                     'event_id' => $event->id,
-                    'path' => $this->pic(800, 600, $i * 10 + $j + 500),
-                    'type' => 'image',
-                    'sort_order' => $j,
+                    'path' => $this->pic(800, 600, $i * 10 + $g + 430),
+                    'sort_order' => $g,
                 ]);
             }
         }
@@ -457,20 +607,17 @@ class DatabaseSeeder extends Seeder
     private function createCsr(): void
     {
         $articles = [
-            ['MOTOMART Peduli: Bantuan untuk Korban Bencana Alam', 'MOTOMART menyalurkan bantuan kemanusiaan untuk korban bencana alam di berbagai wilayah Indonesia.'],
-            ['Program Beasiswa MOTOMART untuk Pelajar Berprestasi', 'MOTOMART meluncurkan program beasiswa pendidikan bagi pelajar berprestasi dari keluarga kurang mampu.'],
-            ['Green Initiative: Penanaman 10.000 Pohon', 'MOTOMART bekerja sama dengan komunitas lingkungan untuk program penghijauan nasional.'],
-            ['Edukasi Safety Riding Goes to School', 'Program edukasi keselamatan berkendara untuk pelajar SMA di 50 kota.'],
+            ['MOTOMART Peduli Pendidikan', 'Program beasiswa untuk anak-anak di sekitar dealer MOTOMART.', now()->subDays(10)],
+            ['Tanam 1000 Pohon', 'Gerakan penghijauan bersama komunitas motor.', now()->subDays(20)],
         ];
 
-        foreach ($articles as $i => [$title, $content]) {
+        foreach ($articles as $i => [$title, $desc, $date]) {
             CsrArticle::create([
                 'title' => $title,
                 'slug' => Str::slug($title),
-                'thumbnail_path' => $this->pic(800, 500, $i + 600),
-                'content' => '<p>' . $content . '</p><p>Kami percaya bahwa tanggung jawab sosial adalah bagian integral dari bisnis yang berkelanjutan. MOTOMART berkomitmen untuk terus memberikan dampak positif bagi masyarakat dan lingkungan.</p>',
-                'documentation' => json_encode([$this->pic(800, 600, $i + 650), $this->pic(800, 600, $i + 660)]),
-                'publish_date' => now()->subDays($i * 10 + 5),
+                'thumbnail_path' => $this->pic(800, 400, $i + 450),
+                'content' => "<p>{$desc}</p><p>Kegiatan CSR ini merupakan bagian dari komitmen MOTOMART untuk berkontribusi positif bagi masyarakat dan lingkungan sekitar.</p>",
+                'publish_date' => $date,
                 'is_active' => true,
             ]);
         }
@@ -479,49 +626,40 @@ class DatabaseSeeder extends Seeder
     private function createDealers(): void
     {
         $dealers = [
-            ['MOTOMART Jakarta Pusat', 'Jl. Raya Motor No. 123, Tanah Abang', 'Jakarta Pusat', 'DKI Jakarta', '021-1234567', '081234567890', 'jakarta@motomart.co.id'],
-            ['MOTOMART Surabaya', 'Jl. Ahmad Yani No. 45', 'Surabaya', 'Jawa Timur', '031-7654321', '081987654321', 'surabaya@motomart.co.id'],
-            ['MOTOMART Bandung', 'Jl. Soekarno Hatta No. 78', 'Bandung', 'Jawa Barat', '022-1122334', '085612345678', 'bandung@motomart.co.id'],
-            ['MOTOMART Medan', 'Jl. Gatot Subroto No. 10', 'Medan', 'Sumatera Utara', '061-4455667', '082112345678', 'medan@motomart.co.id'],
-            ['MOTOMART Yogyakarta', 'Jl. Magelang Km 5 No. 22', 'Yogyakarta', 'DI Yogyakarta', '0274-889900', '081345678912', 'jogja@motomart.co.id'],
-            ['MOTOMART Semarang', 'Jl. Pemuda No. 33', 'Semarang', 'Jawa Tengah', '024-5566778', '087712345678', 'semarang@motomart.co.id'],
-            ['MOTOMART Makassar', 'Jl. AP Pettarani No. 50', 'Makassar', 'Sulawesi Selatan', '0411-990011', '085212345678', 'makassar@motomart.co.id'],
-            ['MOTOMART Denpasar', 'Jl. Gatot Subroto No. 15', 'Denpasar', 'Bali', '0361-223344', '083345678912', 'bali@motomart.co.id'],
+            ['MOTOMART Flagship Jakarta', 'Jl. Sudirman No. 123', 'Jakarta', 'DKI Jakarta', '-6.2088', '106.8456', '(021) 555-1234'],
+            ['MOTOMART Bandung', 'Jl. Asia Afrika No. 45', 'Bandung', 'Jawa Barat', '-6.9175', '107.6191', '(022) 555-5678'],
+            ['MOTOMART Surabaya', 'Jl. Tunjungan No. 78', 'Surabaya', 'Jawa Timur', '-7.2575', '112.7521', '(031) 555-9012'],
+            ['MOTOMART Medan', 'Jl. Gatot Subroto No. 90', 'Medan', 'Sumatra Utara', '3.5952', '98.6722', '(061) 555-3456'],
         ];
 
-        foreach ($dealers as $i => [$name, $addr, $city, $prov, $phone, $wa, $email]) {
+        foreach ($dealers as $i => [$name, $addr, $city, $prov, $lat, $lng, $phone]) {
             Dealer::create([
                 'name' => $name,
                 'address' => $addr,
                 'city' => $city,
                 'province' => $prov,
                 'phone' => $phone,
-                'whatsapp' => $wa,
-                'email' => $email,
-                'google_maps_url' => 'https://maps.google.com/?q=' . urlencode("{$name} {$addr}"),
-                'is_active' => true,
                 'sort_order' => $i + 1,
+                'is_active' => true,
             ]);
         }
     }
 
     private function createCareers(): void
     {
-        $careers = [
-            ['Sales Consultant', 'Jakarta', '<p>Bertanggung jawab melayani pelanggan dan mencapai target penjualan.</p>', '<ul><li>Pendidikan minimal SMA/SMK</li><li>Berpengalaman di bidang sales minimal 1 tahun</li><li>Memiliki SIM C</li><li>Komunikatif dan berorientasi target</li></ul>'],
-            ['Teknisi Bengkel', 'Surabaya', '<p>Melakukan perawatan dan perbaikan motor pelanggan.</p>', '<ul><li>Lulusan SMK Teknik Otomotif</li><li>Pengalaman minimal 2 tahun</li><li>Menguasai mesin motor injeksi</li><li>Bersertifikat mekanik</li></ul>'],
-            ['Admin Marketing', 'Bandung', '<p>Mendukung tim marketing dalam kegiatan promosi dan event.</p>', '<ul><li>Pendidikan D3/S1 Marketing atau Komunikasi</li><li>Mahir media sosial</li><li>Kreatif dan proaktif</li></ul>'],
-            ['Customer Service', 'Jakarta', '<p>Menangani keluhan dan pertanyaan pelanggan.</p>', '<ul><li>Pendidikan minimal SMA/SMK</li><li>Pengalaman CS minimal 1 tahun</li><li>Sabar dan komunikatif</li><li>Menguasai Ms. Office</li></ul>'],
+        $jobs = [
+            ['Sales Consultant', 'Jakarta', 'Kami mencari sales consultant berpengalaman untuk bergabung di dealer flagship Jakarta.', now()->addDays(14)],
+            ['Teknisi Motor', 'Bandung', 'Dibutuhkan teknisi motor berpengalaman minimal 2 tahun.', now()->addDays(21)],
+            ['Digital Marketing', 'Jakarta', 'MOTOMART mencari digital marketing specialist untuk mengelola kampanye online.', now()->addDays(7)],
         ];
 
-        foreach ($careers as $i => [$title, $loc, $desc, $req]) {
+        foreach ($jobs as [$title, $loc, $desc, $deadline]) {
             Career::create([
                 'title' => $title,
                 'location' => $loc,
-                'description' => $desc,
-                'requirements' => $req,
-                'publish_date' => now()->subDays($i * 4),
+                'description' => "<p>{$desc}</p><h3>Kualifikasi</h3><ul><li>Pengalaman minimal 2 tahun di bidang terkait</li><li>Pendidikan minimal SMA/SMK sederajat</li><li>Memiliki SIM C</li><li>Jujur dan pekerja keras</li></ul>",
                 'status' => 'active',
+                'publish_date' => now(),
                 'is_active' => true,
             ]);
         }
@@ -530,26 +668,26 @@ class DatabaseSeeder extends Seeder
     private function createInternalActivities(): void
     {
         $activities = [
-            ['Team Building MOTOMART Jogja 2025', 'Kegiatan team building tahunan di Yogyakarta untuk mempererat kerjasama tim.'],
-            ['Sharing Session Technology Update', 'Sesi berbagi pengetahuan tentang teknologi motor terkini.'],
-            ['Hari Olahraga Nasional MOTOMART', 'Turnamen olahraga internal antar cabang MOTOMART.'],
-            ['Workshop Service Excellence', 'Pelatihan layanan pelanggan untuk seluruh staff frontliner.'],
+            ['Training Product Knowledge', 'Pelatihan internal untuk sales team mengenai produk terbaru.', now()->subDays(5), 'Training Room'],
+            ['Team Building 2025', 'Kegiatan team building tahunan di Puncak.', now()->subDays(30), 'Puncak, Bogor'],
+            ['Annual Meeting', 'Rapat tahunan evaluasi kinerja dan perencanaan strategi.', now()->subDays(45), 'Main Office'],
         ];
 
-        foreach ($activities as $i => [$title, $content]) {
+        foreach ($activities as $i => [$title, $desc, $date, $loc]) {
             $act = InternalActivity::create([
                 'title' => $title,
                 'slug' => Str::slug($title),
-                'thumbnail_path' => $this->pic(800, 500, $i + 700),
-                'content' => '<p>' . $content . '</p><p>Kegiatan internal ini merupakan bagian dari program pengembangan SDM MOTOMART yang berkelanjutan, bertujuan untuk meningkatkan kompetensi dan kebersamaan seluruh karyawan.</p>',
-                'publish_date' => now()->subDays($i * 8 + 3),
+                'thumbnail_path' => $this->pic(800, 400, $i + 470),
+                'content' => "<p>{$desc}</p>",
+                'publish_date' => $date,
                 'is_active' => true,
             ]);
 
-            for ($j = 1; $j <= 2; $j++) {
-                $act->galleries()->create([
-                    'path' => $this->pic(800, 600, $i * 10 + $j + 800),
-                    'sort_order' => $j,
+            for ($g = 1; $g <= 2; $g++) {
+                \App\Models\InternalActivityGallery::create([
+                    'internal_activity_id' => $act->id,
+                    'path' => $this->pic(800, 600, $i * 10 + $g + 480),
+                    'sort_order' => $g,
                 ]);
             }
         }
@@ -557,54 +695,64 @@ class DatabaseSeeder extends Seeder
 
     private function createPriceLists(): void
     {
-        foreach ($this->motorIds as $i => $motorId) {
-            if ($i >= 6) break;
-            $motor = Motor::find($motorId);
+        if (empty($this->motorIds)) return;
+
+        $priceLists = [
+            ['Daftar Harga Motor Januari 2025', 'list_harga_januari_2025.pdf'],
+            ['Daftar Harga Sparepart Q1 2025', 'list_harga_sparepart_q1.pdf'],
+        ];
+
+        foreach ($priceLists as $i => [$name, $file]) {
             PriceList::create([
-                'motor_id' => $motorId,
-                'name' => 'Daftar Harga Spare Part ' . ($motor->name ?? 'Motor'),
-                'pdf_path' => 'storage/price-lists/sample.pdf',
-                'is_active' => true,
+                'motor_id' => $this->motorIds[$i % count($this->motorIds)],
+                'name' => $name,
+                'pdf_path' => 'storage/price-lists/' . $file,
                 'sort_order' => $i + 1,
+                'is_active' => true,
             ]);
         }
     }
 
     private function createPartCatalogs(): void
     {
-        foreach ($this->motorIds as $i => $motorId) {
-            if ($i >= 6) break;
-            $motor = Motor::find($motorId);
+        if (empty($this->motorIds)) return;
+
+        $catalogs = [
+            ['Katalog Sparepart WMOTO', 'storage/catalogs/wmoto_parts.pdf'],
+            ['Katalog Sparepart SM Sport', 'storage/catalogs/smsport_parts.pdf'],
+            ['Katalog Sparepart CFMOTO', 'storage/catalogs/cfmoto_parts.pdf'],
+            ['Katalog Sparepart ZONTES', 'storage/catalogs/zontes_parts.pdf'],
+            ['Katalog Sparepart ZEEHO', 'storage/catalogs/zeeho_parts.pdf'],
+        ];
+
+        foreach ($catalogs as $i => [$name, $file]) {
             PartCatalog::create([
-                'motor_id' => $motorId,
-                'name' => 'Katalog Part ' . ($motor->name ?? 'Motor'),
-                'pdf_path' => 'storage/part-catalogs/sample.pdf',
-                'is_active' => true,
+                'motor_id' => $this->motorIds[$i % count($this->motorIds)],
+                'name' => $name,
+                'pdf_path' => $file,
                 'sort_order' => $i + 1,
+                'is_active' => true,
             ]);
         }
     }
 
     private function createCompanyProfile(): void
     {
-        CompanyProfile::updateOrCreate(
-            ['key' => 'sejarah'],
-            ['value' => '<p>MOTOMART didirikan pada tahun 2010 sebagai dealer resmi motor premium di Indonesia. Berawal dari satu showroom di Jakarta, kini MOTOMART telah berkembang menjadi jaringan dealer nasional dengan lebih dari 100 cabang yang tersebar di seluruh Indonesia. MOTOMART konsisten menghadirkan motor berkualitas dari brand-brand ternama seperti WMOTO, SM SPORT, CFMOTO, ZONTES, dan ZEEHO.</p>']
-        );
+        $profiles = [
+            ['company_name', 'PT MOTOMART Indonesia'],
+            ['company_description', 'MOTOMART adalah distributor resmi motor dan sparepart premium di Indonesia. Berdiri sejak 2020, kami berkomitmen menghadirkan produk berkualitas dengan pelayanan terbaik.'],
+            ['address', 'Jl. Industri Raya No. 88, Jakarta Pusat'],
+            ['phone', '(021) 555-0000'],
+            ['email', 'info@motomart.co.id'],
+            ['whatsapp', '6281234567890'],
+            ['facebook', 'https://facebook.com/motomartid'],
+            ['instagram', 'https://instagram.com/motomartid'],
+            ['youtube', 'https://youtube.com/@motomartid'],
+            ['tiktok', 'https://tiktok.com/@motomartid'],
+        ];
 
-        CompanyProfile::updateOrCreate(
-            ['key' => 'visi'],
-            ['value' => 'Menjadi jaringan dealer motor premium terdepan di Indonesia yang memberikan pengalaman berkendara terbaik bagi pelanggan.']
-        );
-
-        CompanyProfile::updateOrCreate(
-            ['key' => 'misi'],
-            ['value' => '<ul><li>Menyediakan produk motor berkualitas dengan harga kompetitif.</li><li>Memberikan layanan purna jual terbaik melalui bengkel resmi.</li><li>Memperluas jaringan dealer untuk menjangkau lebih banyak pelanggan.</li><li>Mendukung gaya hidup berkendara yang aman dan bertanggung jawab.</li></ul>']
-        );
-
-        CompanyProfile::updateOrCreate(
-            ['key' => 'nilai'],
-            ['value' => "Integritas\nInovasi\nKepuasan Pelanggan\nKerjasama Tim\nTanggung Jawab Sosial"]
-        );
+        foreach ($profiles as [$key, $value]) {
+            CompanyProfile::updateOrCreate(['key' => $key], ['value' => $value]);
+        }
     }
 }

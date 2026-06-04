@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [BuyerPageController::class, 'home'])->name('buyer.home');
 Route::get('/about', [BuyerPageController::class, 'about'])->name('buyer.about');
 Route::get('/produk', [BuyerPageController::class, 'products'])->name('buyer.products');
+Route::get('/cari', [BuyerPageController::class, 'search'])->name('buyer.search');
 
 Route::get('/motors', [BuyerMotorController::class, 'index'])->name('buyer.motors.index');
 Route::get('/motors/{motor:slug}', [BuyerMotorController::class, 'show'])->name('buyer.motors.show');
@@ -26,12 +27,31 @@ Route::get('/motors/{motor:slug}', [BuyerMotorController::class, 'show'])->name(
 Route::get('/parts', [BuyerPartController::class, 'index'])->name('buyer.parts.index');
 Route::get('/parts/{part:slug}', [BuyerPartController::class, 'show'])->name('buyer.parts.show');
 
-Route::get('/diler', [BuyerPageController::class, 'dealer'])->name('buyer.dealer');
+// Route Dealer disembunyikan sementara
+// Route::get('/diler', [BuyerPageController::class, 'dealer'])->name('buyer.dealer');
 
 Route::get('/daftar-harga', [BuyerPageController::class, 'priceList'])->name('buyer.price-list');
 Route::get('/part-katalog', [BuyerPageController::class, 'partCatalog'])->name('buyer.part-catalog');
 
-Route::post('/quotation', [BuyerPageController::class, 'quotationStore'])->name('buyer.quotation.store');
+// Quotation form diganti WhatsApp
+// Route::post('/quotation', [BuyerPageController::class, 'quotationStore'])->name('buyer.quotation.store');
+
+// WhatsApp redirect route
+Route::get('/whatsapp/{type}/{id}', function ($type, $id) {
+    $phone = config('app.whatsapp_number', '6281234567890');
+    if ($type === 'motor') {
+        $motor = \App\Models\Motor::findOrFail($id);
+        $msg = "Halo, saya tertarik dengan motor {$motor->name} ({$motor->brand?->name})%0A%0A".
+               "Link: ".route('buyer.motors.show', $motor->slug)."%0A%0A".
+               "Mohon info lebih lanjut.";
+    } else {
+        $part = \App\Models\Part::with('category')->findOrFail($id);
+        $msg = "Halo, saya tertarik dengan sparepart {$part->name} ({$part->category?->name})%0A%0A".
+               "Link: ".route('buyer.parts.show', $part->slug)."%0A%0A".
+               "Mohon info lebih lanjut.";
+    }
+    return redirect("https://wa.me/{$phone}?text={$msg}");
+})->name('buyer.whatsapp');
 
 Route::get('/berita', [BuyerPageController::class, 'news'])->name('buyer.news.index');
 Route::get('/berita/{news:slug}', [BuyerPageController::class, 'newsShow'])->name('buyer.news.show');
@@ -95,4 +115,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/my/orders/{order:order_no}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
     Route::post('/my/orders/{order:order_no}/simulate-payment', [BuyerOrderController::class, 'simulatePayment'])->name('buyer.orders.simulatePayment');
     Route::post('/my/orders/{order:order_no}/confirm-received', [BuyerOrderController::class, 'confirmReceived'])->name('buyer.orders.confirmReceived');
+    Route::post('/my/orders/{order:order_no}/pay-remaining', [BuyerOrderController::class, 'payRemaining'])->name('buyer.orders.payRemaining');
 });

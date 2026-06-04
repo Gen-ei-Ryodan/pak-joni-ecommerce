@@ -38,23 +38,17 @@
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" data-dropdown-toggle="produk">Produk <span class="dd-arrow">&#9662;</span></button>
                             <div class="nav-dropdown-menu" data-dropdown-menu="produk">
-                                <a href="{{ route('buyer.products', ['brand' => 'wmoto']) }}">WMOTO</a>
-                                <a href="{{ route('buyer.products', ['brand' => 'sm-sport']) }}">SM SPORT</a>
-                                <a href="{{ route('buyer.products', ['brand' => 'cfmoto']) }}">CFMOTO</a>
-                                <a href="{{ route('buyer.products', ['brand' => 'zontes']) }}">ZONTES</a>
-                                <a href="{{ route('buyer.products', ['brand' => 'zeeho']) }}">ZEEHO</a>
-                            </div>
-                        </div>
-
-                        <div class="nav-dropdown">
-                            <button class="nav-dropdown-toggle" data-dropdown-toggle="sukucadang">Suku Cadang <span class="dd-arrow">&#9662;</span></button>
-                            <div class="nav-dropdown-menu" data-dropdown-menu="sukucadang">
+                                <a href="{{ route('buyer.products') }}">Semua Produk</a>
+                                <a href="{{ route('buyer.products', ['type' => 'motor']) }}">Motor</a>
+                                <a href="{{ route('buyer.products', ['type' => 'sparepart']) }}">Sparepart</a>
+                                <hr style="border-color:var(--line);margin:4px 0;">
                                 <a href="{{ route('buyer.price-list') }}">Daftar Harga</a>
                                 <a href="{{ route('buyer.part-catalog') }}">Part Katalog</a>
                             </div>
                         </div>
 
-                        <a href="{{ route('buyer.dealer') }}">Diler</a>
+                        {{-- Diler hidden sementara --}}
+                        {{-- <a href="{{ route('buyer.dealer') }}">Diler</a> --}}
 
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" data-dropdown-toggle="beritaacara">Berita dan Acara <span class="dd-arrow">&#9662;</span></button>
@@ -112,8 +106,8 @@
 
                 <div class="search-overlay" data-search-overlay style="display:none;">
                     <div class="container">
-                        <form class="search-form" action="{{ route('buyer.motors.index') }}" method="get">
-                            <input type="text" name="q" placeholder="Cari produk..." class="search-input" autocomplete="off">
+                        <form class="search-form" action="{{ route('buyer.search') }}" method="get">
+                            <input type="text" name="q" placeholder="Cari motor, sparepart, SKU..." class="search-input" autocomplete="off">
                             <button type="submit" class="search-submit">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                             </button>
@@ -148,7 +142,8 @@
                                 <li><a href="{{ route('buyer.products') }}">Produk</a></li>
                                 <li><a href="{{ route('buyer.price-list') }}">Daftar Harga</a></li>
                                 <li><a href="{{ route('buyer.part-catalog') }}">Part Katalog</a></li>
-                                <li><a href="{{ route('buyer.dealer') }}">Diler</a></li>
+                                {{-- Diler hidden sementara --}}
+                                {{-- <li><a href="{{ route('buyer.dealer') }}">Diler</a></li> --}}
                             </ul>
                         </div>
 
