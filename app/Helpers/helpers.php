@@ -15,6 +15,11 @@ if (! function_exists('image_url')) {
             return $path;
         }
 
+        // Public directory images (e.g. images/seeder/1.jpeg)
+        if (str_starts_with($path, 'images/') || str_starts_with($path, 'css/') || str_starts_with($path, 'js/') || str_starts_with($path, 'fonts/')) {
+            return asset($path);
+        }
+
         return asset('storage/' . $path);
     }
 }

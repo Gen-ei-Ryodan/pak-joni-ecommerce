@@ -43,9 +43,49 @@ class DatabaseSeeder extends Seeder
     // motorPartMap[motorId] => [partId, partId, ...]
     private array $motorPartMap = [];
 
+    // Pool of local seeder images (located in public/images/seeder/)
+    private const MOTOR_IMAGES = [
+        'images/seeder/1.jpeg',
+        'images/seeder/2.jpeg',
+        'images/seeder/3.jpeg',
+        'images/seeder/4.jpeg',
+        'images/seeder/5.jpeg',
+        'images/seeder/6.jpeg',
+    ];
+
+    private const PART_IMAGES = [
+        'images/seeder/part1.jpeg',
+        'images/seeder/part2.jpeg',
+        'images/seeder/part3.jpeg',
+    ];
+
+    private const ALL_IMAGES = [
+        'images/seeder/1.jpeg',
+        'images/seeder/2.jpeg',
+        'images/seeder/3.jpeg',
+        'images/seeder/4.jpeg',
+        'images/seeder/5.jpeg',
+        'images/seeder/6.jpeg',
+        'images/seeder/part1.jpeg',
+        'images/seeder/part2.jpeg',
+        'images/seeder/part3.jpeg',
+    ];
+
     private function pic(int $w, int $h, int $id): string
     {
-        return "https://picsum.photos/{$w}/{$h}?random={$id}";
+        // Use local seeded images cycling through the pool
+        $pool = self::ALL_IMAGES;
+        return $pool[$id % count($pool)];
+    }
+
+    private function motorPic(int $id): string
+    {
+        return self::MOTOR_IMAGES[$id % count(self::MOTOR_IMAGES)];
+    }
+
+    private function partPic(int $id): string
+    {
+        return self::PART_IMAGES[$id % count(self::PART_IMAGES)];
     }
 
     public function run(): void
