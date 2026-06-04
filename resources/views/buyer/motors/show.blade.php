@@ -30,68 +30,70 @@
 
             {{-- ============ TAB: DETAIL MOTOR ============ --}}
             @if($tab === 'detail')
-                <div class="motor-detail">
-                    <div class="motor-gallery">
-                        <div class="gallery-main" id="galleryMain" style="background-image:url('{{ $motor->thumbnail_path ? image_url($motor->thumbnail_path) : '' }}');background-size:cover;background-position:center;">
-                            @if(!$motor->thumbnail_path)
-                                <span style="color:var(--muted);">No Image</span>
-                            @endif
+                {{-- Gallery Atas --}}
+                <div class="motor-gallery-section">
+                    <div class="gallery-main" id="galleryMain" style="background-image:url('{{ $motor->thumbnail_path ? image_url($motor->thumbnail_path) : '' }}');background-size:cover;background-position:center;">
+                        @if(!$motor->thumbnail_path)
+                            <span style="color:var(--muted);">No Image</span>
+                        @endif
+                    </div>
+                    @php
+                        $galleryImages = $motor->images->filter(fn($img) => !str_starts_with($img->path, 'http'));
+                    @endphp
+                    @if($galleryImages->count())
+                        <div class="gallery-thumbs">
+                            @foreach($galleryImages as $img)
+                                <button class="gallery-thumb {{ $loop->first ? 'active' : '' }}" style="background-image:url('{{ image_url($img->path) }}');" onclick="document.getElementById('galleryMain').style.backgroundImage='url({{ image_url($img->path) }})';this.parentElement.querySelectorAll('.gallery-thumb').forEach(t=>t.classList.remove('active'));this.classList.add('active');"></button>
+                            @endforeach
                         </div>
-                        @php
-                            $galleryImages = $motor->images->filter(fn($img) => !str_starts_with($img->path, 'http'));
-                        @endphp
-                        @if($galleryImages->count())
-                            <div class="gallery-thumbs">
-                                @foreach($galleryImages as $img)
-                                    <button class="gallery-thumb {{ $loop->first ? 'active' : '' }}" style="background-image:url('{{ image_url($img->path) }}');" onclick="document.getElementById('galleryMain').style.backgroundImage='url({{ image_url($img->path) }})';this.parentElement.querySelectorAll('.gallery-thumb').forEach(t=>t.classList.remove('active'));this.classList.add('active');"></button>
+                    @endif
+                </div>
+
+                {{-- Info & Variants Bawah --}}
+                <div class="motor-info-section">
+                    @if($motor->short_description)
+                        <p class="motor-short-desc">{{ $motor->short_description }}</p>
+                    @endif
+
+                    @if($motor->colors->count())
+                        <div class="motor-colors">
+                            <div class="motor-colors-label">Varian Warna:</div>
+                            <div class="motor-colors-list">
+                                @foreach($motor->colors as $loopIdx => $color)
+                                    <button type="button" class="color-item color-btn {{ $loopIdx === 0 ? 'active' : '' }}"
+                                        @if($color->image_path)
+                                            data-img="{{ image_url($color->image_path) }}"
+                                        @else
+                                            data-img="{{ $motor->thumbnail_path ? image_url($motor->thumbnail_path) : '' }}"
+                                        @endif
+                                        onclick="var main=document.getElementById('galleryMain');if(this.dataset.img){main.style.backgroundImage='url('+this.dataset.img+')';}document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelector('[data-color-id]').value='{{ $color->id }}';">
+                                        <span class="color-dot" style="background:{{ $color->color_code ?: '#666' }};"></span>
+                                        <span class="color-name">{{ $color->name }}</span>
+                                    </button>
                                 @endforeach
                             </div>
-                        @endif
-                    </div>
+                        </div>
 
-                    <div class="motor-info">
-                        @if($motor->short_description)
-                            <p class="motor-short-desc">{{ $motor->short_description }}</p>
-                        @endif
+                        <form method="post" action="{{ route('buyer.cart.store') }}" style="margin-top:20px;display:grid;gap:10px;">
+                            @csrf
+                            <input type="hidden" name="itemable_type" value="motor_color">
+                            <input type="hidden" name="itemable_id" value="{{ $motor->colors->first()->id ?? '' }}" data-color-id>
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-primary" style="width:100%;">
+                                @if($motor->stock_status === 'indent')
+                                    Pre-Order (Indent) - DP 50%
+                                @else
+                                    Add to Cart
+                                @endif
+                            </button>
+                        </form>
 
-                        @if($motor->colors->count())
-                            <div class="motor-colors">
-                                <div class="motor-colors-label">Varian Warna:</div>
-                                <div class="motor-colors-list">
-                                    @foreach($motor->colors as $loopIdx => $color)
-                                        <button type="button" class="color-item color-btn {{ $loopIdx === 0 ? 'active' : '' }}"
-                                            @if($color->image_path)
-                                                data-img="{{ image_url($color->image_path) }}"
-                                            @endif
-                                            onclick="var main=document.getElementById('galleryMain');if(this.dataset.img){main.style.backgroundImage='url('+this.dataset.img+')';}document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelector('[data-color-id]').value='{{ $color->id }}';">
-                                            <span class="color-dot" style="background:{{ $color->color_code ?: '#666' }};"></span>
-                                            <span class="color-name">{{ $color->name }}</span>
-                                        </button>
-                                    @endforeach
-                                </div>
+                        @if($motor->stock_status === 'indent')
+                            <div class="indent-notice">
+                                Produk ini tersedia secara indent. DP 50% akan dibayarkan saat checkout.
                             </div>
-
-                            <form method="post" action="{{ route('buyer.cart.store') }}" style="margin-top:20px;display:grid;gap:10px;">
-                                @csrf
-                                <input type="hidden" name="itemable_type" value="motor_color">
-                                <input type="hidden" name="itemable_id" value="{{ $motor->colors->first()->id ?? '' }}" data-color-id>
-                                <input type="hidden" name="quantity" value="1">
-                                <button type="submit" class="btn btn-primary" style="width:100%;">
-                                    @if($motor->stock_status === 'indent')
-                                        Pre-Order (Indent) - DP 50%
-                                    @else
-                                        Add to Cart
-                                    @endif
-                                </button>
-                            </form>
-
-                            @if($motor->stock_status === 'indent')
-                                <div class="indent-notice">
-                                    Produk ini tersedia secara indent. DP 50% akan dibayarkan saat checkout.
-                                </div>
-                            @endif
                         @endif
-                    </div>
+                    @endif
                 </div>
 
                 @if($motor->images360->count() >= 4)
@@ -279,21 +281,24 @@
             border-bottom-color: var(--accent);
         }
 
-        /* Detail Tab */
-        .motor-detail {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            align-items: start;
+        /* Detail Tab - New Layout */
+        .motor-gallery-section {
+            margin-bottom: 32px;
+        }
+        .motor-info-section {
+            max-width: 700px;
+            margin: 0 auto;
         }
         .gallery-main {
             width: 100%;
-            height: 400px;
+            height: 450px;
             border-radius: var(--radius);
             border: 1px solid var(--line);
+            margin: 0 auto;
         }
         .gallery-thumbs {
             display: flex;
+            justify-content: center;
             gap: 10px;
             margin-top: 14px;
         }
@@ -313,6 +318,7 @@
             font-size: 14px;
             color: var(--muted);
             line-height: 1.7;
+            text-align: center;
         }
         .motor-colors { margin-top: 24px; }
         .motor-colors-label {
@@ -463,8 +469,7 @@
         }
 
         @media (max-width: 720px) {
-            .motor-detail { grid-template-columns: 1fr; }
-            .gallery-main { height: 280px; }
+            .gallery-main { height: 320px; }
             .motor-tab { padding: 12px 20px; font-size: 13px; }
         }
     </style>

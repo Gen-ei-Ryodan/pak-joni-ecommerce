@@ -196,12 +196,12 @@
         .part-detail {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 40px;
+            gap: 50px;
             align-items: start;
         }
         .gallery-main {
             width: 100%;
-            height: 400px;
+            height: 450px;
             border-radius: var(--radius);
             border: 1px solid var(--line);
         }
@@ -233,14 +233,14 @@
             margin-bottom: 8px;
         }
         .part-cat {
-            font-size: 11px;
+            font-size: 12px;
             background: var(--panel);
             border: 1px solid var(--line);
             display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
+            padding: 4px 12px;
+            border-radius: 14px;
             color: var(--muted);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
         .part-name {
             font-size: clamp(24px, 4vw, 36px);
@@ -253,41 +253,41 @@
             margin-bottom: 12px;
         }
         .part-price {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 700;
             color: var(--accent);
             margin-bottom: 16px;
         }
         .part-short-desc {
-            font-size: 14px;
+            font-size: 15px;
             color: var(--muted);
-            line-height: 1.7;
+            line-height: 1.8;
         }
-        .part-variants { margin-top: 24px; }
+        .part-variants { margin-top: 28px; }
         .part-variants-label {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
         .part-variants-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
         }
         .variant-btn {
-            padding: 8px 16px;
+            padding: 10px 18px;
             border: 1.5px solid var(--line);
-            border-radius: 10px;
+            border-radius: 12px;
             background: var(--panel);
             color: var(--text);
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all .2s;
         }
         .variant-btn.active {
             border-color: var(--accent);
-            background: rgba(217,180,111,0.1);
+            background: rgba(217,180,111,0.12);
             color: var(--accent);
         }
         .variant-btn:hover { border-color: var(--accent); }
