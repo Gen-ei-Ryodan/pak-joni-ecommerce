@@ -21,6 +21,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'subtotal',
     'shipping_cost',
     'total',
+    'dp_amount',
+    'remaining_amount',
+    'is_indent',
+    'indent_status',
     'address_snapshot',
     'shipping_snapshot',
     'shipping_courier',
@@ -33,11 +37,18 @@ class Order extends Model
 {
     use HasFactory;
 
-        protected $fillable = ['user_id', 'order_no', 'status', 'payment_status', 'payment_method', 'payment_provider', 'payment_reference', 'paid_at', 'subtotal', 'shipping_cost', 'total', 'address_snapshot', 'shipping_snapshot', 'shipping_courier', 'shipping_receipt', 'shipped_at', 'completed_at', 'cancelled_at'];
+    protected $fillable = [
+        'user_id', 'order_no', 'status', 'payment_status',
+        'payment_method', 'payment_provider', 'payment_reference', 'paid_at',
+        'subtotal', 'shipping_cost', 'total',
+        'dp_amount', 'remaining_amount', 'is_indent', 'indent_status',
+        'address_snapshot', 'shipping_snapshot', 'shipping_courier', 'shipping_receipt',
+        'shipped_at', 'completed_at', 'cancelled_at',
+    ];
 
     public const STATUSES = ['unpaid', 'paid', 'processing', 'shipped', 'completed', 'cancelled'];
-
     public const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'expired'];
+    public const INDENT_STATUSES = ['waiting_stock', 'ready_for_delivery', 'waiting_payment', 'paid_full'];
 
     protected function casts(): array
     {
@@ -45,6 +56,9 @@ class Order extends Model
             'subtotal' => 'decimal:2',
             'shipping_cost' => 'decimal:2',
             'total' => 'decimal:2',
+            'dp_amount' => 'decimal:2',
+            'remaining_amount' => 'decimal:2',
+            'is_indent' => 'boolean',
             'address_snapshot' => 'array',
             'shipping_snapshot' => 'array',
             'paid_at' => 'datetime',
@@ -97,6 +111,33 @@ class Order extends Model
             'completed' => 'Selesai',
             'cancelled' => 'Dibatalkan',
             default => $this->status,
+        };
+    }
+
+    public function indentStatusLabel(): string
+    {
+        return static::indentStatusLabelStatic($this->indent_status);
+    }
+
+    public static function indentStatusLabelStatic(?string $status): string
+    {
+        return match ($status) {
+            'waiting_stock' => 'Menunggu Stok',
+            'ready_for_delivery' => 'Siap Dikirim',
+            'waiting_payment' => 'Menunggu Pelunasan',
+            'paid_full' => 'Lunas',
+            default => '-',
+        };
+    }
+
+    public function indentStatusBadge(): string
+    {
+        return match ($this->indent_status) {
+            'waiting_stock' => 'bg-yellow',
+            'ready_for_delivery' => 'bg-blue',
+            'waiting_payment' => 'bg-orange',
+            'paid_full' => 'bg-green',
+            default => 'bg-gray',
         };
     }
 

@@ -91,6 +91,20 @@ class PartResource extends Resource
                         'inactive' => 'Inactive',
                         default => $state,
                     }),
+
+                Tables\Columns\TextColumn::make('stock_status')
+                    ->label('Stok')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'ready' => 'success',
+                        'indent' => 'warning',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'ready' => 'Ready',
+                        'indent' => 'Indent',
+                        default => $state,
+                    }),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('part_category_id')
@@ -146,6 +160,15 @@ class PartResource extends Resource
                             ])
                             ->required()
                             ->default('active'),
+
+                        Forms\Components\Select::make('stock_status')
+                            ->label('Status Stok')
+                            ->options([
+                                'ready' => 'Ready Stock',
+                                'indent' => 'Indent',
+                            ])
+                            ->required()
+                            ->default('ready'),
 
                         Forms\Components\TextInput::make('base_price')
                             ->label('Base Price')

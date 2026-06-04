@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 #[Fillable(['part_id', 'sku', 'name', 'price', 'stock', 'is_default'])]
 class PartVariant extends Model
@@ -25,5 +26,15 @@ class PartVariant extends Model
     public function part(): BelongsTo
     {
         return $this->belongsTo(Part::class);
+    }
+
+    public function cartItems(): MorphMany
+    {
+        return $this->morphMany(CartItem::class, 'itemable');
+    }
+
+    public function orderItems(): MorphMany
+    {
+        return $this->morphMany(OrderItem::class, 'itemable');
     }
 }

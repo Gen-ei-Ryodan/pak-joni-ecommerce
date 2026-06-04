@@ -37,7 +37,7 @@ class EditPart extends EditRecord
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
 
         if (isset($data['thumbnail'])) {
-            $data['thumbnail_path'] = 'storage/' . $data['thumbnail'];
+            $data['thumbnail_path'] = $data['thumbnail'];
         }
         unset($data['thumbnail']);
 
@@ -56,7 +56,7 @@ class EditPart extends EditRecord
             foreach ($this->galleryPaths as $idx => $path) {
                 PartImage::create([
                     'part_id' => $part->id,
-                    'path' => 'storage/' . $path,
+                    'path' => $path,
                     'sort_order' => $start + $idx,
                 ]);
             }

@@ -77,19 +77,55 @@ class PageController extends Controller
 
         $selectedBrand = $request->query('brand');
         $selectedCategory = $request->query('category');
+        $productType = $request->query('type'); // null = show all, 'motor' or 'sparepart'
 
-        $categories = MotorCategory::query()->orderBy('sort_order')->get();
-
-        $motors = Motor::query()
-            ->with(['brand', 'category', 'images'])
-            ->where('status', 'active')
+        // Get categories filtered by brand
+        $categories = MotorCategory::query()
             ->when($selectedBrand, fn($q) => $q->whereHas('brand', fn($b) => $b->where('slug', $selectedBrand)))
-            ->when($selectedCategory, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $selectedCategory)))
-            ->orderByDesc('id')
-            ->paginate(12)
-            ->withQueryString();
+            ->orderBy('sort_order')
+            ->get();
 
-        return view('buyer.products', compact('brands', 'categories', 'motors', 'selectedBrand', 'selectedCategory'));
+        $sparepartGroups = PartCategory::query()
+            ->orderBy('group')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('group');
+
+        $selectedSparepartGroup = $request->query('part_group');
+
+        // Always fetch motors when type is null or 'motor'
+        $motors = collect();
+        if ($productType === null || $productType === 'motor') {
+            $motors = Motor::query()
+                ->with(['brand', 'category', 'images', 'colors'])
+                ->where('status', 'active')
+                ->when($selectedBrand, fn($q) => $q->whereHas('brand', fn($b) => $b->where('slug', $selectedBrand)))
+                ->when($selectedCategory, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $selectedCategory)))
+                ->orderByDesc('id')
+                ->paginate(12)
+                ->withQueryString();
+        }
+
+        // Always fetch parts when type is null or 'sparepart'
+        $parts = collect();
+        if ($productType === null || $productType === 'sparepart') {
+            $parts = Part::query()
+                ->with(['category', 'defaultVariant', 'variants', 'motors.brand'])
+                ->where('status', 'active')
+                ->when($selectedBrand, fn($q) => $q->whereHas('motors', fn($mq) => $mq->whereHas('brand', fn($b) => $b->where('slug', $selectedBrand))))
+                ->when($selectedCategory, fn($q) => $q->whereHas('motors', fn($mq) => $mq->whereHas('category', fn($c) => $c->where('slug', $selectedCategory))))
+                ->when($selectedSparepartGroup, fn($q) => $q->whereHas('category', fn($c) => $c->where('group', $selectedSparepartGroup)))
+                ->orderByDesc('id')
+                ->paginate(12)
+                ->withQueryString();
+        }
+
+        return view('buyer.products', compact(
+            'brands', 'categories', 'sparepartGroups',
+            'motors', 'parts',
+            'selectedBrand', 'selectedCategory', 'productType', 'selectedSparepartGroup'
+        ));
     }
 
     public function dealer(Request $request)
@@ -205,44 +241,89 @@ class PageController extends Controller
 
     public function internalActivityShow(InternalActivity $activity)
     {
-        $activity->load('galleries');
-
         return view('buyer.internal-activities.show', compact('activity'));
     }
 
-    public function priceList()
+    public function priceList(Request $request)
     {
+        $q = trim((string) $request->query('q', ''));
         $priceLists = PriceList::query()
-            ->with('motor')
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get();
+            ->when($q !== '', fn($query) => $query->where('title', 'like', '%'.$q.'%'))
+            ->orderByDesc('id')
+            ->paginate(12)
+            ->withQueryString();
 
-        return view('buyer.spareparts.price-list', compact('priceLists'));
+        return view('buyer.spareparts.price-list', compact('priceLists', 'q'));
     }
 
-    public function partCatalog()
+    public function partCatalog(Request $request)
     {
-        $partCatalogs = PartCatalog::query()
-            ->with('motor')
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get();
+        $q = trim((string) $request->query('q', ''));
+        $catalogs = PartCatalog::query()
+            ->when($q !== '', fn($query) => $query->where('title', 'like', '%'.$q.'%'))
+            ->orderByDesc('id')
+            ->paginate(12)
+            ->withQueryString();
 
-        return view('buyer.spareparts.part-catalog', compact('partCatalogs'));
+        return view('buyer.spareparts.part-catalog', compact('catalogs', 'q'));
     }
 
-    public function quotationStore(Request $request)
+    public function search(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:20',
-            'message' => 'required|string|max:2000',
-        ]);
+        $q = trim((string) $request->query('q', ''));
+        $type = $request->query('type'); // null = all, 'motor', 'sparepart'
+        $brand = $request->query('brand');
+        $partGroup = $request->query('part_group');
 
-        \App\Models\QuotationRequest::create($validated);
+        $brands = Brand::query()->where('is_active', true)->orderBy('sort_order')->get();
+        $partGroups = PartCategory::query()
+            ->select('group')
+            ->distinct()
+            ->orderBy('group')
+            ->pluck('group');
 
-        return back()->with('success', 'Terima kasih! Permintaan penawaran Anda telah dikirim. Tim kami akan segera menghubungi Anda.');
+        $motors = collect();
+        $parts = collect();
+
+        if ($type === null || $type === 'motor') {
+            $motors = Motor::query()
+                ->with(['brand', 'category'])
+                ->where('status', 'active')
+                ->when($q !== '', fn($query) => $query->where(function($q2) use ($q) {
+                    $q2->where('name', 'like', '%'.$q.'%')
+                       ->orWhere('short_description', 'like', '%'.$q.'%');
+                }))
+                ->when($brand, fn($query) => $query->whereHas('brand', fn($b) => $b->where('slug', $brand)))
+                ->orderByDesc('id')
+                ->paginate(12, ['*'], 'motor_page')
+                ->withQueryString();
+        }
+
+        if ($type === null || $type === 'sparepart') {
+            $parts = Part::query()
+                ->with(['category', 'defaultVariant', 'motors.brand'])
+                ->where('status', 'active')
+                ->when($q !== '', fn($query) => $query->where(function($q2) use ($q) {
+                    $q2->where('name', 'like', '%'.$q.'%')
+                       ->orWhere('sku', 'like', '%'.$q.'%')
+                       ->orWhere('short_description', 'like', '%'.$q.'%');
+                }))
+                ->when($brand, fn($query) => $query->whereHas('motors', fn($mq) => $mq->whereHas('brand', fn($b) => $b->where('slug', $brand))))
+                ->when($partGroup, fn($query) => $query->whereHas('category', fn($c) => $c->where('group', $partGroup)))
+                ->orderByDesc('id')
+                ->paginate(12, ['*'], 'part_page')
+                ->withQueryString();
+        }
+
+        $totalResults = 0;
+        if ($type === null || $type === 'motor') $totalResults += $motors->total();
+        if ($type === null || $type === 'sparepart') $totalResults += $parts->total();
+
+        return view('buyer.search', compact(
+            'q', 'type', 'brand', 'partGroup',
+            'brands', 'partGroups',
+            'motors', 'parts',
+            'totalResults'
+        ));
     }
 }

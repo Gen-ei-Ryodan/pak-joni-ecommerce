@@ -20,6 +20,11 @@ class DealerResource extends Resource
     protected static string|UnitEnum|null $navigationGroup = 'Content';
     protected static ?int $navigationSort = 5;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function table(Table $table): Table
     {
         return $table

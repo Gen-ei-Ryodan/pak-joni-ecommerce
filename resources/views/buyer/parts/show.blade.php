@@ -2,77 +2,6 @@
 
 @section('title', $part->name)
 
-@push('head')
-<style>
-.rich-text p { margin-bottom: 8px; }
-.rich-text ul, .rich-text ol { padding-left: 22px; margin-bottom: 8px; }
-.rich-text li { margin-bottom: 4px; }
-.rich-text strong { font-weight: 700; }
-.rich-text em { font-style: italic; }
-.rich-text a { color: var(--accent); text-decoration: underline; }
-.rich-text blockquote {
-    border-left: 3px solid var(--line);
-    padding-left: 12px;
-    margin: 8px 0;
-    color: var(--muted);
-}
-.rich-text h1, .rich-text h2, .rich-text h3 { margin-top: 16px; margin-bottom: 8px; font-weight: 600; }
-.rich-text img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
-.gallery-main {
-    aspect-ratio: 1/1;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    overflow: hidden;
-    background: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.gallery-main img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transition: opacity .15s ease;
-}
-.gallery-thumbs {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    scrollbar-width: thin;
-}
-.gallery-thumbs::-webkit-scrollbar {
-    height: 4px;
-}
-.gallery-thumbs::-webkit-scrollbar-thumb {
-    background: var(--line);
-    border-radius: 4px;
-}
-.gallery-thumb {
-    flex: 0 0 auto;
-    width: 72px;
-    height: 72px;
-    border-radius: 10px;
-    border: 2px solid transparent;
-    overflow: hidden;
-    cursor: pointer;
-    transition: border-color .2s, opacity .2s;
-    background: #f0f0f0;
-}
-.gallery-thumb:hover {
-    opacity: .75;
-}
-.gallery-thumb.active {
-    border-color: #d9b46f;
-}
-.gallery-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-</style>
-@endpush
-
 @section('content')
     <section class="section">
         <div class="container">
@@ -82,308 +11,386 @@
                 </div>
             @endif
 
-            @if ($errors->any())
-                <div class="panel" style="padding:10px 12px;margin-bottom:12px;border-color:rgba(255,77,77,0.35);background:rgba(255,77,77,0.08);">
-                    <div style="display:grid;gap:6px;">
-                        @foreach ($errors->all() as $error)
-                            <div>{{ $error }}</div>
+            <div class="part-detail">
+                {{-- Gallery --}}
+                <div class="part-gallery">
+                    <div class="gallery-main" id="galleryMain" style="background-image:url('{{ $part->thumbnail_path ? image_url($part->thumbnail_path) : '' }}');background-size:cover;background-position:center;">
+                        @if(!$part->thumbnail_path)
+                            <span style="color:var(--muted);display:flex;align-items:center;justify-content:center;height:100%;">No Image</span>
+                        @endif
+                    </div>
+
+                    @php
+                        $galleryImages = collect();
+                        if ($part->thumbnail_path) $galleryImages->push(['url' => image_url($part->thumbnail_path)]);
+                        foreach ($part->images as $img) $galleryImages->push(['url' => image_url($img->path)]);
+                    @endphp
+
+                    @if($galleryImages->count() > 1)
+                        <div class="gallery-thumbs">
+                            @foreach($galleryImages as $i => $item)
+                                <button class="gallery-thumb {{ $i === 0 ? 'active' : '' }}" style="background-image:url('{{ $item['url'] }}');" onclick="document.getElementById('galleryMain').style.backgroundImage='url({{ $item['url'] }})';this.parentElement.querySelectorAll('.gallery-thumb').forEach(t=>t.classList.remove('active'));this.classList.add('active');"></button>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Sidebar Info --}}
+                <div class="part-info">
+                    @if($part->motors->count())
+                        @php $firstMotor = $part->motors->first(); @endphp
+                        @if($firstMotor->brand)
+                            <div class="part-brand">{{ $firstMotor->brand->name }}</div>
+                        @endif
+                    @endif
+
+                    @if($part->category)
+                        <div class="part-cat">{{ $part->category->group }} / {{ $part->category->name }}</div>
+                    @endif
+
+                    <h1 class="part-name">{{ $part->name }}</h1>
+                    <div class="part-sku">SKU: {{ $part->sku }}</div>
+
+                    @php $defaultVariant = $part->defaultVariant ?? $part->variants->first(); @endphp
+                    @if($defaultVariant)
+                        <div class="part-price">Rp {{ number_format($defaultVariant->price, 0, ',', '.') }}</div>
+                    @endif
+
+                    @if($part->short_description)
+                        <p class="part-short-desc">{{ $part->short_description }}</p>
+                    @endif
+
+                    {{-- Variant Selector --}}
+                    @if($part->variants->count())
+                        <div class="part-variants">
+                            <div class="part-variants-label">Pilih Variant</div>
+                            <div class="part-variants-list">
+                                @foreach($part->variants as $v)
+                                    <button type="button" class="variant-btn {{ $v->is_default ? 'active' : '' }}"
+                                        data-variant-id="{{ $v->id }}"
+                                        data-price="{{ $v->price }}"
+                                        data-stock="{{ $v->stock }}"
+                                        onclick="document.querySelectorAll('.variant-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelector('[data-variant-id]').value=this.dataset.variantId;document.querySelector('[data-price-view]').textContent='Rp '+parseInt(this.dataset.price).toLocaleString('id-ID');var max=parseInt(this.dataset.stock);var qty=document.querySelector('[data-qty]');qty.max=max;if(parseInt(qty.value)>max)qty.value=max;var warn=document.querySelector('[data-stock-warn]');warn.style.display=max<10?'block':'none';warn.textContent='Stok tersedia: '+this.dataset.stock;">
+                                        {{ $v->name }}
+                                    </button>
+                                @endforeach
+                            </div>
+                            <div class="price" data-price-view style="margin-top:8px;font-size:18px;font-weight:700;">Rp {{ number_format($defaultVariant->price, 0, ',', '.') }}</div>
+                        </div>
+
+                        <form method="post" action="{{ route('buyer.cart.store') }}" style="margin-top:16px;display:grid;gap:10px;">
+                            @csrf
+                            <input type="hidden" name="itemable_type" value="part_variant">
+                            <input type="hidden" name="itemable_id" value="{{ $defaultVariant->id }}" data-variant-id>
+                            <div>
+                                <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block;">Qty</label>
+                                <input type="number" name="quantity" value="1" min="1" data-qty max="{{ $defaultVariant->stock }}" required style="width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;">
+                                <div style="margin-top:4px;font-size:11px;color:#f87171;display:none;" data-stock-warn></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width:100%;">
+                                @if($part->stock_status === 'indent')
+                                    Pre-Order (Indent) - DP 50%
+                                @else
+                                    Add to Cart
+                                @endif
+                            </button>
+                        </form>
+
+                        @if($part->stock_status === 'indent')
+                            <div class="indent-warning">
+                                Produk ini tersedia secara indent. DP 50% akan dibayarkan saat checkout.
+                            </div>
+                        @endif
+                    @endif
+
+                    {{-- Link ke motor --}}
+                    @if($part->motors->count())
+                        <a href="{{ route('buyer.motors.show', $part->motors->first()->slug) }}" 
+                           class="motor-link-btn">
+                            Lihat Motor {{ $part->motors->first()->name }} &rarr;
+                        </a>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Specifications --}}
+            @if(!empty($specGroups) && $specGroups->count())
+                <div class="part-specs-section">
+                    <div style="max-width:700px;margin:0 auto;">
+                        <h2 class="section-title-text" style="margin-bottom:20px;text-align:center;">Spesifikasi</h2>
+                        <div class="spec-tabs">
+                            @foreach($specGroups as $group => $specs)
+                                <div class="spec-group">
+                                    <h3 class="spec-group-title">{{ $group }}</h3>
+                                    <div class="spec-table">
+                                        @foreach($specs as $spec)
+                                            <div class="spec-row">
+                                                <div class="spec-key">{{ $spec->key }}</div>
+                                                <div class="spec-value">{{ $spec->value }}</div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Description --}}
+            @if($part->description)
+                <div class="part-desc-section">
+                    <h2 class="section-title-text" style="margin-bottom:16px;">Deskripsi</h2>
+                    <div class="part-desc-content">{!! $part->description !!}</div>
+                </div>
+            @endif
+
+            {{-- Compatible Motors --}}
+            @if($part->motors->count())
+                <div class="compatible-section">
+                    <h2 class="section-title-text" style="margin-bottom:16px;">Kompatibel Dengan Motor</h2>
+                    <div class="compatible-list">
+                        @foreach($part->motors as $m)
+                            <a href="{{ route('buyer.motors.show', $m->slug) }}" class="compatible-tag">
+                                @if($m->brand)
+                                    <span class="compatible-brand">{{ $m->brand->name }}</span>
+                                @endif
+                                {{ $m->name }}
+                            </a>
                         @endforeach
                     </div>
                 </div>
             @endif
 
-            <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
-                <div>
-                    <div style="font-size:18px;font-weight:600;">{{ $part->name }}</div>
-                    <div class="muted" style="margin-top:6px;">SKU: {{ $part->sku }} — {{ $part->category?->group }} / {{ $part->category?->name }}</div>
-                </div>
-                <a class="btn" href="{{ route('buyer.parts.index') }}">Kembali</a>
-            </div>
-
-            <div style="height:16px;"></div>
-
-            <div style="display:grid;grid-template-columns:1fr 420px;gap:16px;">
-                <div class="panel" style="padding:12px;">
-                    <div class="gallery-main">
-                        @php
-                            $allImages = collect();
-                            if ($part->thumbnail_path) {
-                                $allImages->push(['url' => image_url($part->thumbnail_path), 'label' => 'Thumbnail']);
-                            }
-                            foreach ($part->images as $img) {
-                                $allImages->push(['url' => image_url($img->path), 'label' => 'Gallery']);
-                            }
-                        @endphp
-                        @if ($allImages->count())
-                            <img id="mainPreview" src="{{ $allImages->first()['url'] }}" alt="">
-                        @endif
+            {{-- Related Parts --}}
+            @if(!empty($relatedParts) && $relatedParts->count())
+                <div class="related-section">
+                    <div class="section-header">
+                        <h2 class="section-title-text">Sparepart Terkait</h2>
+                        <div class="section-line"></div>
                     </div>
-
-                    @if ($allImages->count() > 1)
-                        <div style="height:10px;"></div>
-                        <div class="gallery-thumbs" id="galleryThumbs">
-                            @foreach ($allImages as $i => $item)
-                                <div class="gallery-thumb {{ $i === 0 ? 'active' : '' }}" data-index="{{ $i }}" data-src="{{ $item['url'] }}">
-                                    <img src="{{ $item['url'] }}" alt="">
+                    <div class="grid grid-4">
+                        @foreach($relatedParts as $rp)
+                            <a class="card" href="{{ route('buyer.parts.show', $rp->slug) }}">
+                                <div class="card-media" style="background-image:url('{{ $rp->thumbnail_path ? image_url($rp->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
+                                <div class="card-body">
+                                    @if($rp->category)
+                                        <div class="card-meta">{{ $rp->category->group }} / {{ $rp->category->name }}</div>
+                                    @endif
+                                    <div class="card-title">{{ $rp->name }}</div>
+                                    @if($rp->defaultVariant)
+                                        <div class="price">Rp {{ number_format($rp->defaultVariant->price, 0, ',', '.') }}</div>
+                                    @endif
                                 </div>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    @if ($part->description)
-                        <div style="height:16px;"></div>
-                        <div style="font-weight:600;">Description</div>
-                        <div style="height:8px;"></div>
-                        <div class="muted rich-text" style="line-height:1.8;">{!! $part->description !!}</div>
-                    @endif
-
-                    @if ($part->specification)
-                        <div style="height:16px;"></div>
-                        <div style="font-weight:600;">Specification</div>
-                        <div style="height:8px;"></div>
-                        <div class="muted rich-text" style="line-height:1.8;">{!! $part->specification !!}</div>
-                    @endif
-
-                    @if ($part->motors->count())
-                        <div style="height:16px;"></div>
-                        <div style="font-weight:600;">Compatible Motor</div>
-                        <div style="height:8px;"></div>
-                        <div class="muted">{{ $part->motors->pluck('name')->join(', ') }}</div>
-                    @endif
+                            </a>
+                        @endforeach
+                    </div>
                 </div>
-
-                        <div class="panel" style="padding:14px;">
-                            <div id="cart-notification" style="display:none;padding:10px 12px;margin-bottom:12px;border-radius:12px;border:1px solid rgba(217,180,111,0.35);background:rgba(217,180,111,0.08);"></div>
-
-                            <div style="display:grid;gap:12px;">
-                                <div>
-                                    <div style="font-weight:600;">Pilih Variant</div>
-                                    <div style="height:8px;"></div>
-                                    <select class="select" style="width:100%;" data-variant-select>
-                                        @foreach ($part->variants as $v)
-                                            <option value="{{ $v->id }}" data-price="{{ $v->price }}" data-stock="{{ $v->stock }}" @selected($v->is_default)>
-                                                {{ $v->name }} — {{ number_format((float) $v->price, 2, '.', ',') }} (stock: {{ $v->stock }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <div class="price" data-price-view></div>
-                                </div>
-
-                                <form style="display:grid;gap:12px;" data-add-to-cart>
-                                    @csrf
-                                    <input type="hidden" name="variant_id" data-variant-id>
-                                    <div class="field">
-                                        <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:6px;">Qty</label>
-                                        <input class="input" style="width:100%;min-width:0;" name="quantity" type="number" value="1" min="1" max="99" required data-qty-input>
-                                        <div style="margin-top:4px;font-size:11px;color:#f87171;display:none;" data-stock-warning></div>
-                                    </div>
-                                    <button class="btn btn-primary" type="submit">Add to Cart</button>
-                                </form>
-
-                                <form method="post" action="{{ route('buyer.wishlist.toggle', $part) }}">
-                                    @csrf
-                                    <button class="btn" type="submit">Toggle Wishlist</button>
-                                </form>
-
-                                <a class="btn" href="{{ route('buyer.cart.index') }}">Go to Cart</a>
-                            </div>
-                        </div>
-            </div>
+            @endif
         </div>
     </section>
-
-@push('scripts')
-    <script>
-        (function () {
-            var thumbs = document.querySelectorAll('.gallery-thumb');
-            var mainImg = document.getElementById('mainPreview');
-
-            if (thumbs.length && mainImg) {
-                thumbs.forEach(function (el) {
-                    el.addEventListener('click', function () {
-                        thumbs.forEach(function (t) { t.classList.remove('active'); });
-                        el.classList.add('active');
-                        mainImg.style.opacity = '0';
-                        setTimeout(function () {
-                            mainImg.src = el.getAttribute('data-src');
-                            mainImg.style.opacity = '1';
-                        }, 100);
-                    });
-                });
-            }
-        })();
-    </script>
-    <script>
-        (function () {
-            const select = document.querySelector('[data-variant-select]');
-            const idInput = document.querySelector('[data-variant-id]');
-            const priceView = document.querySelector('[data-price-view]');
-            const qtyInput = document.querySelector('[data-qty-input]');
-            const stockWarning = document.querySelector('[data-stock-warning]');
-            const form = document.querySelector('[data-add-to-cart]');
-            const notif = document.getElementById('cart-notification');
-            const thumb = document.querySelector('.panel:first-child img');
-            const cartIcon = document.querySelector('.nav-cart-icon');
-
-            function sync() {
-                if (!select || !idInput || !priceView) return;
-                const opt = select.options[select.selectedIndex];
-                idInput.value = opt.value;
-                const price = opt.getAttribute('data-price') || '0';
-                const stock = parseInt(opt.getAttribute('data-stock') || '0');
-                priceView.textContent = 'Price: ' + price + ' | Stock: ' + stock;
-
-                if (qtyInput) {
-                    qtyInput.max = Math.min(99, stock);
-                    const qty = parseInt(qtyInput.value) || 1;
-                    if (qty > stock) {
-                        stockWarning.style.display = '';
-                        stockWarning.textContent = 'Stock only ' + stock + ' available';
-                    } else {
-                        stockWarning.style.display = 'none';
-                    }
-                }
-            }
-
-            if (select) {
-                select.addEventListener('change', sync);
-            }
-
-            if (qtyInput) {
-                qtyInput.addEventListener('input', function () {
-                    const opt = select.options[select.selectedIndex];
-                    const stock = parseInt(opt.getAttribute('data-stock') || '0');
-                    const qty = parseInt(this.value) || 1;
-                    if (qty > stock) {
-                        stockWarning.style.display = '';
-                        stockWarning.textContent = 'Stock only ' + stock + ' available';
-                    } else {
-                        stockWarning.style.display = 'none';
-                    }
-                });
-            }
-
-            if (form) {
-                form.addEventListener('submit', function (e) {
-                    e.preventDefault();
-
-                    const fd = new FormData(this);
-                    const qty = parseInt(fd.get('quantity')) || 1;
-                    const opt = select ? select.options[select.selectedIndex] : null;
-                    const stock = opt ? parseInt(opt.getAttribute('data-stock') || '0') : 0;
-
-                    if (qty > stock) {
-                        if (stockWarning) {
-                            stockWarning.style.display = '';
-                            stockWarning.textContent = 'Stock only ' + stock + ' available';
-                        }
-                        return;
-                    }
-
-                    const submitBtn = this.querySelector('button[type="submit"]');
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = 'Adding...';
-
-                    fetch('{{ route('buyer.cart.store') }}', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                            'Accept': 'application/json',
-                        },
-                        body: fd,
-                    })
-                    .then(function (r) {
-                        if (r.status === 401) {
-                            window.location.href = '{{ route('auth.login') }}';
-                            return null;
-                        }
-                        if (r.redirected) {
-                            window.location.href = r.url;
-                            return null;
-                        }
-                        return r.json();
-                    })
-                    .then(function (data) {
-                        if (!data) return;
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Add to Cart';
-
-                        if (data.success) {
-                            if (notif) {
-                                notif.textContent = data.message || 'Item added to cart.';
-                                notif.style.display = '';
-                                setTimeout(function () { notif.style.display = 'none'; }, 3000);
-                            }
-
-                            if (data.cartCount !== undefined) {
-                                var badge = document.querySelector('.cart-badge');
-                                if (data.cartCount > 0) {
-                                    if (badge) {
-                                        badge.textContent = data.cartCount;
-                                    } else {
-                                        var newBadge = document.createElement('span');
-                                        newBadge.className = 'cart-badge';
-                                        newBadge.textContent = data.cartCount;
-                                        if (cartIcon) cartIcon.appendChild(newBadge);
-                                    }
-                                } else {
-                                    if (badge) badge.remove();
-                                }
-                            }
-
-                            if (thumb && cartIcon) {
-                                var clone = thumb.cloneNode(true);
-                                var rect = thumb.getBoundingClientRect();
-                                var cartRect = cartIcon.getBoundingClientRect();
-
-                                clone.style.cssText = 'position:fixed;z-index:9999;width:80px;height:60px;object-fit:cover;border-radius:8px;pointer-events:none;transition:all 0.6s cubic-bezier(.25,.46,.45,.94);';
-                                clone.style.left = rect.left + 'px';
-                                clone.style.top = rect.top + 'px';
-                                document.body.appendChild(clone);
-
-                                requestAnimationFrame(function () {
-                                    clone.style.left = cartRect.left + (cartRect.width / 2) - 40 + 'px';
-                                    clone.style.top = cartRect.top + (cartRect.height / 2) - 30 + 'px';
-                                    clone.style.transform = 'scale(0.3)';
-                                    clone.style.opacity = '0.3';
-                                });
-
-                                setTimeout(function () { clone.remove(); }, 700);
-                            }
-                        } else {
-                            if (notif) {
-                                notif.textContent = data.message || 'Failed to add item.';
-                                notif.style.borderColor = 'rgba(255,77,77,0.35)';
-                                notif.style.background = 'rgba(255,77,77,0.08)';
-                                notif.style.display = '';
-                                setTimeout(function () {
-                                    notif.style.display = 'none';
-                                    notif.style.borderColor = 'rgba(217,180,111,0.35)';
-                                    notif.style.background = 'rgba(217,180,111,0.08)';
-                                }, 3000);
-                            }
-                        }
-                    })
-                    .catch(function () {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Add to Cart';
-                        if (notif) {
-                            notif.textContent = 'Something went wrong.';
-                            notif.style.borderColor = 'rgba(255,77,77,0.35)';
-                            notif.style.background = 'rgba(255,77,77,0.08)';
-                            notif.style.display = '';
-                            setTimeout(function () {
-                                notif.style.display = 'none';
-                                notif.style.borderColor = 'rgba(217,180,111,0.35)';
-                                notif.style.background = 'rgba(217,180,111,0.08)';
-                            }, 3000);
-                        }
-                    });
-                });
-            }
-
-            sync();
-        })();
-    </script>
-@endpush
 @endsection
+
+@push('head')
+    <style>
+        .part-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        .gallery-main {
+            width: 100%;
+            height: 400px;
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+        }
+        .gallery-thumbs {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .gallery-thumb {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+            padding: 0;
+        }
+        .gallery-thumb.active {
+            border-color: var(--accent);
+        }
+        .part-brand {
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .part-cat {
+            font-size: 11px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+        .part-name {
+            font-size: clamp(24px, 4vw, 36px);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .part-sku {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+        .part-price {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+        .part-short-desc {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+        .part-variants { margin-top: 24px; }
+        .part-variants-label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .part-variants-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .variant-btn {
+            padding: 8px 16px;
+            border: 1.5px solid var(--line);
+            border-radius: 10px;
+            background: var(--panel);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .variant-btn.active {
+            border-color: var(--accent);
+            background: rgba(217,180,111,0.1);
+            color: var(--accent);
+        }
+        .variant-btn:hover { border-color: var(--accent); }
+        .indent-warning {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(234,179,8,0.1);
+            border: 1px solid rgba(234,179,8,0.3);
+            border-radius: 8px;
+            font-size: 13px;
+            color: #ca8a04;
+        }
+        .motor-link-btn {
+            display: block;
+            margin-top: 16px;
+            padding: 10px 16px;
+            border: 1px dashed var(--line);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+            transition: all .2s;
+        }
+        .motor-link-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .part-specs-section { margin-top: 40px; }
+        .spec-tabs { display: flex; flex-direction: column; gap: 24px; }
+        .spec-group-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--line);
+        }
+        .spec-table { display: flex; flex-direction: column; gap: 0; }
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 13px;
+        }
+        .spec-key { color: var(--muted); }
+        .spec-value { color: var(--text); font-weight: 500; text-align: right; }
+
+        .part-desc-section {
+            margin-top: 40px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 30px;
+        }
+        .part-desc-content {
+            color: var(--muted);
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .compatible-section {
+            margin-top: 40px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 30px;
+        }
+        .compatible-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .compatible-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--accent);
+            text-decoration: none;
+            transition: all .2s;
+        }
+        .compatible-tag:hover {
+            border-color: var(--accent);
+            background: rgba(217,180,111,0.08);
+        }
+        .compatible-brand {
+            font-weight: 600;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .related-section { margin-top: 50px; }
+
+        @media (max-width: 720px) {
+            .part-detail { grid-template-columns: 1fr; }
+            .gallery-main { height: 280px; }
+        }
+    </style>
+@endpush

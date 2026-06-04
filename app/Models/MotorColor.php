@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class MotorColor extends Model
 {
@@ -15,5 +16,15 @@ class MotorColor extends Model
     public function motor(): BelongsTo
     {
         return $this->belongsTo(Motor::class);
+    }
+
+    public function cartItems(): MorphMany
+    {
+        return $this->morphMany(CartItem::class, 'itemable');
+    }
+
+    public function orderItems(): MorphMany
+    {
+        return $this->morphMany(OrderItem::class, 'itemable');
     }
 }

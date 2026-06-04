@@ -10,7 +10,7 @@ class ProductHighlight extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['motor_id', 'is_active'];
+    protected $fillable = ['motor_id', 'label', 'title', 'description', 'is_active', 'sort_order'];
 
     protected function casts(): array
     {

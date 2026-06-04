@@ -10,10 +10,10 @@ class EditBanner extends EditRecord
 {
     protected static string $resource = BannerResource::class;
 
-    protected function mutateFormDataBeforeSave(array $data): array
+    protected function mutateFormDataBeforeFill(array $data): array
     {
-        if (isset($data['image_path'])) {
-            $data['image_path'] = 'storage/' . $data['image_path'];
+        if (!empty($data['image_path'])) {
+            $data['image_path'] = str_replace('banners/', '', $data['image_path']);
         }
 
         return $data;
