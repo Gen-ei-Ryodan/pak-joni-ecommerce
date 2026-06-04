@@ -8,11 +8,11 @@
     <main class="dash">
         <div class="container dash-grid">
             <aside class="sidebar">
-                <a href="{{ url('/dashboard') }}">Dashboard</a>
-                <a href="{{ route('buyer.addresses.index') }}">Addresses</a>
-                <a href="{{ route('buyer.orders.index') }}">My Orders</a>
-                <a href="{{ route('buyer.wishlist.index') }}">Wishlist</a>
-                <a href="{{ route('buyer.cart.index') }}">Cart</a>
+                <a href="{{ url('/dashboard') }}" class="{{ request()->is('dashboard') ? 'active' : '' }}">Dashboard</a>
+                <a href="{{ route('buyer.addresses.index') }}" class="{{ request()->is('addresses*') ? 'active' : '' }}">Addresses</a>
+                <a href="{{ route('buyer.orders.index') }}" class="{{ request()->is('orders*') ? 'active' : '' }}">My Orders</a>
+                <a href="{{ route('buyer.wishlist.index') }}" class="{{ request()->is('wishlist*') ? 'active' : '' }}">Wishlist</a>
+                <a href="{{ route('buyer.cart.index') }}" class="{{ request()->is('cart*') ? 'active' : '' }}">Cart</a>
             </aside>
 
             <section class="content">
