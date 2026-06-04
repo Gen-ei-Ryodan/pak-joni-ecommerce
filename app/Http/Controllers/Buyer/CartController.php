@@ -14,7 +14,16 @@ class CartController extends Controller
 {
     public function index(Request $request)
     {
-        $cart = $this->cart($request)->load(['items.itemable.motor.brand', 'items.itemable.part.category']);
+        $cart = $this->cart($request)->load('items');
+        
+        // Load relations for each itemable type
+        foreach ($cart->items as $item) {
+            if ($item->itemable_type === PartVariant::class) {
+                $item->loadMissing(['itemable.part.category']);
+            } elseif ($item->itemable_type === MotorColor::class) {
+                $item->loadMissing(['itemable.motor.brand']);
+            }
+        }
 
         $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
 
