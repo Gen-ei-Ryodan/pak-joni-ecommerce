@@ -293,12 +293,19 @@ class OrderResource extends Resource
 
                 Section::make('Shipping Address')
                     ->schema([
-                        Infolists\Components\TextEntry::make('address_snapshot.name')
+                        Infolists\Components\TextEntry::make('address_snapshot.recipient_name')
                             ->label('Recipient'),
                         Infolists\Components\TextEntry::make('address_snapshot.phone')
                             ->label('Phone'),
-                        Infolists\Components\TextEntry::make('address_snapshot.full_address')
+                        Infolists\Components\TextEntry::make('address')
                             ->label('Address')
+                            ->formatStateUsing(fn ($record) => collect([
+                                $record->address_snapshot['address_line1'] ?? '',
+                                $record->address_snapshot['address_line2'] ?? '',
+                                $record->address_snapshot['city'] ?? '',
+                                $record->address_snapshot['province'] ?? '',
+                                $record->address_snapshot['postal_code'] ?? '',
+                            ])->filter()->implode(', '))
                             ->columnSpanFull(),
                     ]),
 
