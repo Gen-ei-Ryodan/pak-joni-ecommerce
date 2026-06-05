@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const postalCodeInput = document.getElementById('postal-code-input');
 
     // Load provinces
-    fetch('https://wilayah.id/api/provinces.json')
+    fetch('/regions/provinces')
         .then(response => response.json())
         .then(data => {
             data.data.forEach(province => {
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function loadRegencies(provinceCode) {
-        fetch(`https://wilayah.id/api/regencies/${provinceCode}.json`)
+        fetch(`/regions/regencies/${provinceCode}`)
             .then(response => response.json())
             .then(data => {
                 regencySelect.disabled = false;
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadDistricts(regencyCode) {
-        fetch(`https://wilayah.id/api/districts/${regencyCode}.json`)
+        fetch(`/regions/districts/${regencyCode}`)
             .then(response => response.json())
             .then(data => {
                 districtSelect.disabled = false;
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadVillages(districtCode) {
-        fetch(`https://wilayah.id/api/villages/${districtCode}.json`)
+        fetch(`/regions/villages/${districtCode}`)
             .then(response => response.json())
             .then(data => {
                 villageSelect.disabled = false;
