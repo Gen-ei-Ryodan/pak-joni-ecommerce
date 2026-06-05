@@ -29,6 +29,11 @@ class OrderResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return true;
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -90,14 +95,14 @@ class OrderResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('dp_amount')
-                    ->label('DP')
+                    ->label('DP (50%)')
                     ->money('IDR')
-                    ->visible(fn ($record) => $record->is_indent),
+                    ->visible(fn ($record) => $record?->is_indent ?? false),
 
                 Tables\Columns\TextColumn::make('remaining_amount')
                     ->label('Sisa')
                     ->money('IDR')
-                    ->visible(fn ($record) => $record->is_indent && $record->remaining_amount > 0),
+                    ->visible(fn ($record) => ($record?->is_indent ?? false) && $record->remaining_amount > 0),
 
                 Tables\Columns\TextColumn::make('indent_status')
                     ->label('Indent')
@@ -110,7 +115,7 @@ class OrderResource extends Resource
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?string $state): string => $state ? \App\Models\Order::indentStatusLabelStatic($state) : '-')
-                    ->visible(fn ($record) => $record->is_indent),
+                    ->visible(fn ($record) => $record?->is_indent ?? false),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Date')
@@ -155,7 +160,7 @@ class OrderResource extends Resource
                     ->label('Ready For Delivery')
                     ->icon('heroicon-o-truck')
                     ->color('info')
-                    ->visible(fn (Order $record) => $record->is_indent && $record->indent_status === 'waiting_stock')
+                    ->visible(fn (?Order $record) => $record?->is_indent && $record?->indent_status === 'waiting_stock')
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         $record->update([
@@ -290,6 +295,28 @@ class OrderResource extends Resource
                                     }),
                             ]),
                     ]),
+
+                Section::make('Indent Info')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('indent_status')
+                            ->label('Indent Status')
+                            ->badge()
+                            ->color(fn (?string $state): string => match ($state) {
+                                'waiting_stock' => 'warning',
+                                'ready_for_delivery' => 'info',
+                                'waiting_payment' => 'orange',
+                                'paid_full' => 'success',
+                                default => 'gray',
+                            })
+                            ->formatStateUsing(fn (?string $state): string => $state ? \App\Models\Order::indentStatusLabelStatic($state) : '-'),
+                        Infolists\Components\TextEntry::make('dp_amount')
+                            ->label('DP (50%)')
+                            ->money('IDR'),
+                        Infolists\Components\TextEntry::make('remaining_amount')
+                            ->label('Remaining')
+                            ->money('IDR'),
+                    ])
+                    ->visible(fn ($record) => $record?->is_indent ?? false),
 
                 Section::make('Shipping Address')
                     ->schema([
