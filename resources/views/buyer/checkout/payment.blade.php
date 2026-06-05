@@ -37,8 +37,13 @@
                         @foreach ($cart->items as $it)
                             <div class="panel" style="padding:12px;border-radius:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
                                 <div>
-                                    <div style="font-weight:600;">{{ $it->variant->part->name }}</div>
-                                    <div class="muted" style="margin-top:6px;">{{ $it->variant->name }} — {{ $it->variant->sku }}</div>
+                                    @if ($it->itemable_type === 'App\Models\PartVariant')
+                                        <div style="font-weight:600;">{{ $it->itemable->part->name ?? 'N/A' }}</div>
+                                        <div class="muted" style="margin-top:6px;">{{ $it->variant_name }} — {{ $it->itemable->sku ?? 'N/A' }}</div>
+                                    @elseif ($it->itemable_type === 'App\Models\MotorColor')
+                                        <div style="font-weight:600;">{{ $it->itemable->motor->name ?? 'N/A' }}</div>
+                                        <div class="muted" style="margin-top:6px;">{{ $it->variant_name }}</div>
+                                    @endif
                                 </div>
                                 <div style="font-family:var(--mono);">
                                     {{ $it->quantity }} x {{ number_format((float) $it->price_snapshot, 2, '.', ',') }}
