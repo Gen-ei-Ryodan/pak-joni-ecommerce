@@ -80,10 +80,14 @@
                     @foreach ($order->items as $it)
                         <div class="item-card-modern">
                             <div class="item-thumb">
-                                @if($it->part && $it->part->thumbnail_path)
-                                    <img src="{{ image_url($it->part->thumbnail_path) }}" alt="">
-                                @elseif($it->variant && $it->variant->part && $it->variant->part->thumbnail_path)
-                                    <img src="{{ image_url($it->variant->part->thumbnail_path) }}" alt="">
+                                @if($it->itemable_type === 'App\Models\PartVariant')
+                                    @if($it->itemable && $it->itemable->part && $it->itemable->part->thumbnail_path)
+                                        <img src="{{ image_url($it->itemable->part->thumbnail_path) }}" alt="">
+                                    @endif
+                                @elseif($it->itemable_type === 'App\Models\MotorColor')
+                                    @if($it->itemable && $it->itemable->motor && $it->itemable->motor->thumbnail_path)
+                                        <img src="{{ image_url($it->itemable->motor->thumbnail_path) }}" alt="">
+                                    @endif
                                 @endif
                             </div>
                             <div class="item-info">

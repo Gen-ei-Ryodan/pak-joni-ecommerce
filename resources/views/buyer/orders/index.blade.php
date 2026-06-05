@@ -11,8 +11,8 @@
 
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;flex:1;min-width:0;">
-            <input name="search" value="{{ $search }}" placeholder="Search invoice..." style="flex:1;min-width:180px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
-            <select name="status" style="border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);min-width:140px;">
+            <input name="search" value="{{ $search }}" placeholder="Search invoice..." style="flex:1;min-width:180px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:10px 12px;color:var(--text);">
+            <select name="status" style="border-radius:12px;border:1px solid var(--line);background:#fff;padding:10px 12px;color:var(--text);min-width:140px;">
                 <option value="">All Status</option>
                 @foreach(\App\Models\Order::STATUSES as $s)
                     <option value="{{ $s }}" @selected($status === $s)>{{ ucfirst($s) }}</option>

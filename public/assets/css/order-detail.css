@@ -6,7 +6,7 @@
 }
 
 .order-header {
-  background: rgba(16, 20, 26, 0.7);
+  background: #fff;
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 24px;
@@ -56,7 +56,7 @@
 }
 
 .sidebar-card {
-  background: rgba(16, 20, 26, 0.7);
+  background: #fff;
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 20px;
@@ -255,7 +255,7 @@
 
 /* Shipping card */
 .shipping-card {
-  background: rgba(16, 20, 26, 0.7);
+  background: #fff;
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 20px;
