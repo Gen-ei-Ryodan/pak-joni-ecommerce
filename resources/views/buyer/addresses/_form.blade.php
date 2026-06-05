@@ -173,24 +173,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     const option = document.createElement('option');
                     option.value = village.name;
                     option.dataset.code = village.code;
-                    option.dataset.postal = village.postal;
                     option.textContent = village.name;
                     @if(isset($address) && $address->village)
                         if (village.name === '{{ $address->village }}') {
                             option.selected = true;
-                            postalCodeInput.value = village.postal;
                         }
                     @endif
-                    option.addEventListener('click', function() {
-                        postalCodeInput.value = village.postal;
-                    });
                     villageSelect.appendChild(option);
-                });
-                villageSelect.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    if (selectedOption.dataset.postal) {
-                        postalCodeInput.value = selectedOption.dataset.postal;
-                    }
                 });
             });
     }
