@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'address_line1',
     'address_line2',
     'city',
+    'district',
+    'village',
     'province',
     'postal_code',
     'notes',
@@ -24,7 +26,21 @@ class Address extends Model
 {
     use HasFactory;
 
-        protected $fillable = ['user_id', 'label', 'recipient_name', 'phone', 'address_line1', 'address_line2', 'city', 'province', 'postal_code', 'notes', 'is_default'];
+    protected $fillable = [
+        'user_id',
+        'label',
+        'recipient_name',
+        'phone',
+        'address_line1',
+        'address_line2',
+        'city',
+        'district',
+        'village',
+        'province',
+        'postal_code',
+        'notes',
+        'is_default'
+    ];
 
     protected function casts(): array
     {
