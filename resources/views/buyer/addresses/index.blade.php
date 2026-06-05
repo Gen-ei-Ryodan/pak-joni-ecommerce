@@ -24,6 +24,7 @@
                         <div class="muted" style="margin-top:8px;line-height:1.8;">
                             {{ $a->recipient_name }} — {{ $a->phone }}<br>
                             {{ $a->address_line1 }} {{ $a->address_line2 }}<br>
+                            {{ $a->village }}, {{ $a->district }}<br>
                             {{ $a->city }}, {{ $a->province }} {{ $a->postal_code }}
                         </div>
                     </div>
