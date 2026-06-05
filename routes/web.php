@@ -14,12 +14,18 @@ use App\Http\Controllers\Buyer\PageController as BuyerPageController;
 use App\Http\Controllers\Buyer\PartController as BuyerPartController;
 use App\Http\Controllers\Buyer\WishlistController as BuyerWishlistController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RegionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [BuyerPageController::class, 'home'])->name('buyer.home');
 Route::get('/about', [BuyerPageController::class, 'about'])->name('buyer.about');
 Route::get('/produk', [BuyerPageController::class, 'products'])->name('buyer.products');
 Route::get('/cari', [BuyerPageController::class, 'search'])->name('buyer.search');
+
+Route::get('/regions/provinces', [RegionController::class, 'provinces']);
+Route::get('/regions/regencies/{provinceCode}', [RegionController::class, 'regencies']);
+Route::get('/regions/districts/{regencyCode}', [RegionController::class, 'districts']);
+Route::get('/regions/villages/{districtCode}', [RegionController::class, 'villages']);
 
 Route::get('/motors', [BuyerMotorController::class, 'index'])->name('buyer.motors.index');
 Route::get('/motors/{motor:slug}', [BuyerMotorController::class, 'show'])->name('buyer.motors.show');
