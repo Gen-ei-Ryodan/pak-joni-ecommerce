@@ -147,6 +147,19 @@
                     <span style="color:var(--muted);">Shipping</span>
                     <span>Rp {{ number_format((float) $order->shipping_cost, 0, ',', '.') }}</span>
                 </div>
+                @if($order->is_indent)
+                    <div style="margin-top:6px;padding:8px;background:#fff3cd;border-radius:8px;font-size:12px;color:#856404;display:grid;gap:4px;">
+                        <div style="font-weight:600;">Indent Order - DP 50%</div>
+                        <div class="summary-row" style="margin:0;">
+                            <span>DP (dibayar)</span>
+                            <span>Rp {{ number_format((float) $order->dp_amount, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="summary-row" style="margin:0;">
+                            <span>Sisa</span>
+                            <span>Rp {{ number_format((float) $order->remaining_amount, 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                @endif
                 <div class="summary-total">
                     <span>Total</span>
                     <span style="color:var(--accent);">Rp {{ number_format((float) $order->total, 0, ',', '.') }}</span>

@@ -76,7 +76,11 @@ class CheckoutController extends Controller
         $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
         $shippingSnapshot = $request->session()->get('checkout.shipping') ?? null;
 
-        return view('buyer.checkout.shipping', compact('cart', 'address', 'subtotal', 'shippingSnapshot'));
+        $hasIndent = $this->hasIndentItems($cart);
+        $dpAmount = $hasIndent ? round($subtotal * 0.5) : 0;
+        $remainingAmount = $hasIndent ? $subtotal - $dpAmount : 0;
+
+        return view('buyer.checkout.shipping', compact('cart', 'address', 'subtotal', 'shippingSnapshot', 'hasIndent', 'dpAmount', 'remainingAmount'));
     }
 
     public function setShipping(Request $request)

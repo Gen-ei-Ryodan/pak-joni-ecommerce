@@ -28,6 +28,7 @@
                         <span>{{ config('app.name') }}</span>
                     </a>
 
+
                     <button class="mobile-menu-toggle" aria-label="Toggle menu" data-mobile-toggle>
                         <span></span><span></span><span></span>
                     </button>

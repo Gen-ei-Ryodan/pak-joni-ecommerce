@@ -47,7 +47,7 @@
                         <td style="padding:10px;">
                             <span class="badge {{ $o->paymentStatusBadge() }}">{{ $o->payment_status }}</span>
                         </td>
-                        <td style="padding:10px;">Rp {{ number_format((float) $o->total, 0, ',', '.') }}</td>
+                        <td style="padding:10px;">Rp {{ number_format((float) $o->total, 0, ',', '.') }} @if($o->is_indent)<span style="display:inline-block;padding:2px 6px;background:#fff3cd;color:#856404;border-radius:4px;font-size:10px;margin-left:4px;">INDENT</span>@endif</td>
                         <td style="padding:10px;">
                             <a class="btn" href="{{ route('buyer.orders.show', $o) }}">Detail</a>
                         </td>

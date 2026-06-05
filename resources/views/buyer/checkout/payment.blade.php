@@ -67,6 +67,13 @@
                     <div class="muted" style="display:grid;gap:8px;">
                         <div>Subtotal: <span style="font-family:var(--mono);">{{ number_format((float) $subtotal, 2, '.', ',') }}</span></div>
                         <div>Shipping: <span style="font-family:var(--mono);">{{ number_format((float) $shippingCost, 2, '.', ',') }}</span></div>
+                        @if($hasIndent)
+                            <div style="margin-top:6px;padding:8px;background:#fff3cd;border-radius:8px;font-size:12px;color:#856404;">
+                                <div style="font-weight:600;margin-bottom:4px;">Indent Order - DP 50%</div>
+                                <div>DP (dibayar sekarang): <span style="font-family:var(--mono);">{{ number_format($dpAmount, 2, '.', ',') }}</span></div>
+                                <div>Sisa (saat barang ready): <span style="font-family:var(--mono);">{{ number_format($remainingAmount, 2, '.', ',') }}</span></div>
+                            </div>
+                        @endif
                         <div>Total: <span style="font-family:var(--mono);">{{ number_format((float) $total, 2, '.', ',') }}</span></div>
                     </div>
 

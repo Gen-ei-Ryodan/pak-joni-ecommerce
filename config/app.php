@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'JOMOTO CENTER'),
+    'name' => env('APP_NAME', 'MOTOMART'),
 
     /*
     |--------------------------------------------------------------------------
