@@ -105,6 +105,12 @@ class PartResource extends Resource
                         'indent' => 'Indent',
                         default => $state,
                     }),
+
+                Tables\Columns\TextColumn::make('stock_updated_at')
+                    ->label('Last Update Stock')
+                    ->dateTime('d M Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('part_category_id')
@@ -119,6 +125,36 @@ class PartResource extends Resource
                         'active' => 'Active',
                         'inactive' => 'Inactive',
                     ]),
+            ])
+            ->headerActions([
+                Actions\Action::make('import_stock')
+                    ->label('Import Stock Excel')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->form([
+                        Forms\Components\FileUpload::make('file')
+                            ->label('Pilih file Excel (.xlsx)')
+                            ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
+                            ->required()
+                            ->preserveFilenames(),
+                    ])
+                    ->action(function (array $data) {
+                        $file = $data['file'];
+                        $import = new \App\Filament\Imports\PartVariantStockImport();
+                        $result = $import->import($file->getRealPath());
+
+                        $msg = "Updated: {$result['updated']} variants.";
+                        if ($result['skipped'] > 0) {
+                            $msg .= " Skipped: {$result['skipped']}.";
+                        }
+                        if (!empty($result['errors'])) {
+                            $msg .= ' Errors: ' . implode('; ', array_slice($result['errors'], 0, 5));
+                        }
+                        \Filament\Notifications\Notification::make()
+                            ->title('Stock Import')
+                            ->body($msg)
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->actions([
                 Actions\EditAction::make(),

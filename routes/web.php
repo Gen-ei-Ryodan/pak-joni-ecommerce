@@ -98,6 +98,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/cart', [BuyerCartController::class, 'index'])->name('buyer.cart.index');
     Route::post('/cart/items', [BuyerCartController::class, 'store'])->name('buyer.cart.store');
     Route::patch('/cart/items/{cartItem}', [BuyerCartController::class, 'update'])->name('buyer.cart.update');
+    Route::patch('/cart/items/{cartItem}/indent', [BuyerCartController::class, 'updateWithIndent'])->name('buyer.cart.updateWithIndent');
     Route::delete('/cart/items/{cartItem}', [BuyerCartController::class, 'destroy'])->name('buyer.cart.destroy');
     Route::delete('/cart', [BuyerCartController::class, 'clear'])->name('buyer.cart.clear');
     Route::post('/cart/checkout-selected', [BuyerCartController::class, 'checkoutSelected'])->name('buyer.cart.checkoutSelected');
