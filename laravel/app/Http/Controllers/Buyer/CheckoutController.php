@@ -77,8 +77,9 @@ class CheckoutController extends Controller
         $shippingSnapshot = $request->session()->get('checkout.shipping') ?? null;
 
         $hasIndent = $this->hasIndentItems($cart);
-        $dpAmount = $hasIndent ? round($subtotal * 0.5) : 0;
-        $remainingAmount = $hasIndent ? $subtotal - $dpAmount : 0;
+        $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
+        $dpAmount = $indentCalc['dp'];
+        $remainingAmount = $indentCalc['remaining'];
 
         return view('buyer.checkout.shipping', compact('cart', 'address', 'subtotal', 'shippingSnapshot', 'hasIndent', 'dpAmount', 'remainingAmount'));
     }
@@ -127,13 +128,9 @@ class CheckoutController extends Controller
 
         // Check if any item is indent
         $hasIndent = $this->hasIndentItems($cart);
-        $dpAmount = 0;
-        $remainingAmount = 0;
-
-        if ($hasIndent) {
-            $dpAmount = round($subtotal * 0.5);
-            $remainingAmount = $subtotal - $dpAmount;
-        }
+        $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
+        $dpAmount = $indentCalc['dp'];
+        $remainingAmount = $indentCalc['remaining'];
 
         return view('buyer.checkout.payment', compact(
             'cart', 'address', 'shipping', 'subtotal', 'shippingCost', 'total',
@@ -159,31 +156,31 @@ class CheckoutController extends Controller
         $address = Address::query()->where('user_id', $request->user()->id)->findOrFail($addressId);
 
         return DB::transaction(function () use ($request, $cart, $address, $shipping) {
-            // Validate stock for part variants only
+            // Validate stock for part variants only (exclude indent quantity)
             foreach ($cart->items as $it) {
                 if ($it->itemable_type === PartVariant::class) {
                     $variant = PartVariant::lockForUpdate()->find($it->itemable_id);
                     if (! $variant) continue;
-                    if ($variant->stock < $it->quantity) {
-                        return redirect('/cart')->withErrors(['stock' => 'Stock tidak cukup untuk '.$it->product_name]);
+                    $readyQty = max(0, $it->quantity - (int)($it->indent_quantity ?? 0));
+                    if ($variant->stock < $readyQty) {
+                        return redirect('/cart')->withErrors(['stock' => 'Stock tidak cukup untuk '.$it->product_name.' (ready: '.$variant->stock.')']);
                     }
                 }
             }
 
             $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
             $shippingCost = (float) ($shipping['shipping_cost'] ?? 0);
-            $total = $subtotal + $shippingCost;
 
             $hasIndent = $this->hasIndentItems($cart);
-            $dpAmount = 0;
-            $remainingAmount = 0;
+            $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
+            $dpAmount = $indentCalc['dp'];
+            $remainingAmount = $indentCalc['remaining'];
             $isIndent = $hasIndent;
 
-            if ($hasIndent) {
-                $dpAmount = round($subtotal * 0.5);
-                $remainingAmount = $subtotal - $dpAmount;
-                $total = $dpAmount + $shippingCost;
-            }
+            // Total = full subtotal (minus remaining) + shipping
+            // Buyer pays: ready items full + indent DP + shipping
+            // Remaining is paid later when stock arrives
+            $total = $subtotal - $remainingAmount + $shippingCost;
 
             $indentStatus = $hasIndent ? 'waiting_stock' : null;
 
@@ -224,8 +221,12 @@ class CheckoutController extends Controller
                 if ($it->itemable_type === PartVariant::class) {
                     $variant = PartVariant::lockForUpdate()->find($it->itemable_id);
                     if ($variant) {
-                        $variant->stock = max(0, $variant->stock - $it->quantity);
-                        $variant->save();
+                        $readyQty = max(0, $it->quantity - (int)($it->indent_quantity ?? 0));
+                        if ($readyQty > 0) {
+                            $variant->stock = max(0, $variant->stock - $readyQty);
+                            $variant->stock_updated_at = now();
+                            $variant->save();
+                        }
                     }
                 }
 
@@ -249,6 +250,7 @@ class CheckoutController extends Controller
                     'variant_name' => $it->variant_name,
                     'price' => $it->price_snapshot,
                     'quantity' => $it->quantity,
+                    'indent_quantity' => (int) ($it->indent_quantity ?? 0),
                     'line_total' => (float) $it->price_snapshot * (int) $it->quantity,
                 ]);
             }
@@ -276,9 +278,53 @@ class CheckoutController extends Controller
         return view('buyer.checkout.finish', compact('order'));
     }
 
+    /**
+     * Calculate DP & remaining based on indent_quantity (not whole subtotal).
+     * Returns ['dp' => int, 'remaining' => int, 'indent_subtotal' => float]
+     */
+    private function calculateIndentAmounts($cart): array
+    {
+        $indentSubtotal = 0.0;
+        foreach ($cart->items as $it) {
+            $indentQty = (int) ($it->indent_quantity ?? 0);
+            if ($indentQty > 0) {
+                $indentSubtotal += (float) $it->price_snapshot * $indentQty;
+            }
+        }
+
+        // Also check underlying product stock_status
+        foreach ($cart->items as $it) {
+            $indentQty = (int) ($it->indent_quantity ?? 0);
+            if ($indentQty > 0) continue; // already counted
+
+            if ($it->itemable_type === MotorColor::class) {
+                $color = MotorColor::with('motor')->find($it->itemable_id);
+                if ($color && $color->motor && $color->motor->stock_status === 'indent') {
+                    $indentSubtotal += (float) $it->price_snapshot * (int) $it->quantity;
+                }
+            }
+            if ($it->itemable_type === PartVariant::class) {
+                $variant = PartVariant::with('part')->find($it->itemable_id);
+                if ($variant && $variant->part && $variant->part->stock_status === 'indent') {
+                    $indentSubtotal += (float) $it->price_snapshot * (int) $it->quantity;
+                }
+            }
+        }
+
+        $dp = (int) round($indentSubtotal * 0.5);
+        return [
+            'dp' => $dp,
+            'remaining' => (int) round($indentSubtotal) - $dp,
+            'indent_subtotal' => $indentSubtotal,
+        ];
+    }
+
     private function hasIndentItems(Cart $cart): bool
     {
         foreach ($cart->items as $it) {
+            if ((int) ($it->indent_quantity ?? 0) > 0) {
+                return true;
+            }
             if ($it->itemable_type === MotorColor::class) {
                 $color = MotorColor::with('motor')->find($it->itemable_id);
                 if ($color && $color->motor && $color->motor->stock_status === 'indent') {

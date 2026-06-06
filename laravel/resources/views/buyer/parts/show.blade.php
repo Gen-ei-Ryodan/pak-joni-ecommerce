@@ -70,24 +70,26 @@
                                         data-variant-id="{{ $v->id }}"
                                         data-price="{{ $v->price }}"
                                         data-stock="{{ $v->stock }}"
-                                        onclick="document.querySelectorAll('.variant-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelector('[data-variant-id]').value=this.dataset.variantId;document.querySelector('[data-price-view]').textContent='Rp '+parseInt(this.dataset.price).toLocaleString('id-ID');var max=parseInt(this.dataset.stock);var qty=document.querySelector('[data-qty]');qty.max=max;if(parseInt(qty.value)>max)qty.value=max;var warn=document.querySelector('[data-stock-warn]');warn.style.display=max<10?'block':'none';warn.textContent='Stok tersedia: '+this.dataset.stock;">
-                                        {{ $v->name }}
+                                        onclick="document.querySelectorAll('.variant-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelector('[data-variant-id]').value=this.dataset.variantId;document.querySelector('[data-price-view]').textContent='Rp '+parseInt(this.dataset.price).toLocaleString('id-ID');var qty=document.querySelector('[data-qty]');var warn=document.querySelector('[data-stock-warn]');warn.style.display=parseInt(this.dataset.stock)<10?'block':'none';warn.textContent='Stok tersedia: '+this.dataset.stock;document.querySelector('[data-stock-info]').textContent='Stok: '+this.dataset.stock;">
+                                        {{ $v->name }} <span class="variant-stock-hint">{{ $v->stock > 0 ? '('.$v->stock.')' : '(Habis)' }}</span>
                                     </button>
                                 @endforeach
                             </div>
                             <div class="price" data-price-view style="margin-top:8px;font-size:18px;font-weight:700;">Rp {{ number_format($defaultVariant->price, 0, ',', '.') }}</div>
+                            <div style="font-size:13px;color:var(--muted);margin-top:4px;" data-stock-info>Stok: {{ $defaultVariant->stock }}</div>
                         </div>
 
-                        <form method="post" action="{{ route('buyer.cart.store') }}" style="margin-top:16px;display:grid;gap:10px;">
+                        <form method="post" action="{{ route('buyer.cart.store') }}" id="add-to-cart-form" style="margin-top:16px;display:grid;gap:10px;">
                             @csrf
                             <input type="hidden" name="itemable_type" value="part_variant">
                             <input type="hidden" name="itemable_id" value="{{ $defaultVariant->id }}" data-variant-id>
+                            <input type="hidden" name="indent_mode" value="" data-indent-mode>
                             <div>
                                 <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block;">Qty</label>
-                                <input type="number" name="quantity" value="1" min="1" data-qty max="{{ $defaultVariant->stock }}" required style="width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;">
+                                <input type="number" name="quantity" value="1" min="1" data-qty required style="width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;">
                                 <div style="margin-top:4px;font-size:11px;color:#f87171;display:none;" data-stock-warn></div>
                             </div>
-                            <button type="submit" class="btn btn-primary" style="width:100%;">
+                            <button type="button" class="btn btn-primary" style="width:100%;" onclick="handleAddToCart()">
                                 @if($part->stock_status === 'indent')
                                     Pre-Order (Indent) - DP 50%
                                 @else
@@ -189,7 +191,80 @@
             @endif
         </div>
     </section>
+
+    {{-- Indent Choice Modal --}}
+    <div id="indent-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;" onclick="this.style.display='none'">
+        <div class="panel" style="max-width:420px;width:90%;padding:20px;text-align:center;" onclick="event.stopPropagation()">
+            <div style="font-weight:600;font-size:16px;margin-bottom:8px;">Stok Tidak Mencukupi</div>
+            <div class="muted" style="margin-bottom:16px;" id="indent-modal-body">
+                <!-- filled by JS -->
+            </div>
+
+            <div style="display:grid;gap:10px;">
+                <button type="button" class="btn btn-primary" id="indent-split-btn" style="width:100%;text-align:left;padding:12px;">
+                    <div style="font-weight:600;" id="indent-split-title"></div>
+                    <div class="muted" style="font-size:11px;" id="indent-split-desc"></div>
+                </button>
+
+                <button type="button" class="btn" id="indent-full-btn" style="width:100%;text-align:left;padding:12px;border:1px solid #ca8a04;background:#fef3c7;color:#92400e;">
+                    <div style="font-weight:600;" id="indent-full-title"></div>
+                    <div style="font-size:11px;" id="indent-full-desc"></div>
+                </button>
+
+                <button type="button" class="btn" onclick="document.getElementById('indent-modal-overlay').style.display='none'" style="width:100%;padding:12px;color:#f87171;border-color:#f87171;">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+<script>
+function handleAddToCart() {
+    var form = document.getElementById('add-to-cart-form');
+    var qtyInput = form.querySelector('[data-qty]');
+    var qty = parseInt(qtyInput.value) || 1;
+    var variantBtn = document.querySelector('.variant-btn.active');
+    var stock = variantBtn ? parseInt(variantBtn.dataset.stock) : 9999;
+    var indentModeInput = form.querySelector('[data-indent-mode]');
+
+    if (qty <= stock || {{ $part->stock_status === 'indent' ? 'true' : 'false' }}) {
+        // Stock cukup atau produk indent → langsung submit
+        indentModeInput.value = '';
+        form.submit();
+        return;
+    }
+
+    // Qty > stock → show modal
+    var overlay = document.getElementById('indent-modal-overlay');
+    document.getElementById('indent-modal-body').innerHTML =
+        'Anda ingin memesan <strong>' + qty + '</strong> item,<br>stok tersedia hanya <strong>' + stock + '</strong>.';
+
+    document.getElementById('indent-split-title').textContent =
+        'Split: Kirim ' + stock + ' + Indent ' + (qty - stock);
+    document.getElementById('indent-split-desc').textContent =
+        stock + ' ready dikirim sekarang, ' + (qty - stock) + ' indent (DP 50%). Sisa dibayar saat barang ready.';
+
+    document.getElementById('indent-full-title').textContent =
+        'Full Indent: ' + qty + ' tunggu semua';
+    document.getElementById('indent-full-desc').textContent =
+        'Semua ' + qty + ' item indent (DP 50%), dikirim bersama saat ready.';
+
+    document.getElementById('indent-split-btn').onclick = function() {
+        indentModeInput.value = 'split';
+        form.submit();
+    };
+
+    document.getElementById('indent-full-btn').onclick = function() {
+        indentModeInput.value = 'full';
+        form.submit();
+    };
+
+    overlay.style.display = 'flex';
+}
+</script>
+@endpush
 
 @push('head')
     <style>
@@ -291,6 +366,11 @@
             color: var(--accent);
         }
         .variant-btn:hover { border-color: var(--accent); }
+        .variant-stock-hint {
+            font-size: 10px;
+            color: var(--muted);
+            margin-left: 4px;
+        }
         .indent-warning {
             margin-top: 8px;
             padding: 8px 12px;

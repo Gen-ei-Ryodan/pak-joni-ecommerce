@@ -55,6 +55,21 @@
                         <p class="motor-short-desc">{{ $motor->short_description }}</p>
                     @endif
 
+                    {{-- Stock Info --}}
+                    <div style="text-align:center;margin-bottom:16px;">
+                        @if($motor->stock_status === 'ready')
+                            <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:rgba(34,197,94,0.1);color:#22c55e;">
+                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>
+                                Ready Stock - Available
+                            </span>
+                        @elseif($motor->stock_status === 'indent')
+                            <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:#fef3c7;color:#92400e;">
+                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span>
+                                Indent - DP 50%
+                            </span>
+                        @endif
+                    </div>
+
                     @if($motor->colors->count())
                         <div class="motor-colors">
                             <div class="motor-colors-label">Varian Warna:</div>

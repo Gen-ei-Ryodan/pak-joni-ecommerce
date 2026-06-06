@@ -145,6 +145,18 @@ class OrderResource extends Resource
                     ])
                     ->searchable(),
             ])
+            ->headerActions([
+                Actions\Action::make('export_orders')
+                    ->label('Export Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->action(function () {
+                        $export = new \App\Filament\Exports\OrderExport();
+                        $fileName = $export->export();
+
+                        return redirect()->to(\Illuminate\Support\Facades\Storage::disk('public')->url('exports/' . $fileName));
+                    }),
+            ])
             ->actions([
                 Actions\ViewAction::make(),
                 Actions\Action::make('mark_paid')

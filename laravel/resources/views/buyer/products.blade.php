@@ -149,7 +149,7 @@
                                 @if($p->stock_status === 'indent')
                                     <span class="stock-badge indent">Indent</span>
                                 @elseif($p->stock_status === 'ready')
-                                    <span class="stock-badge ready">Ready Stock</span>
+                                    <span class="stock-badge ready">Ready Stock ({{ $p->totalStock() }})</span>
                                 @endif
                             </div>
                         </a>

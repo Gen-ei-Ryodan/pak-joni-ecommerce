@@ -25,7 +25,7 @@ class Motor extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['brand_id', 'category_id', 'name', 'slug', 'year', 'price', 'thumbnail_path', 'short_description', 'description', 'status', 'stock_status'];
+    protected $fillable = ['brand_id', 'category_id', 'name', 'slug', 'year', 'price', 'thumbnail_path', 'short_description', 'description', 'status', 'stock_status', 'stock_updated_at'];
 
     public function brand(): BelongsTo
     {

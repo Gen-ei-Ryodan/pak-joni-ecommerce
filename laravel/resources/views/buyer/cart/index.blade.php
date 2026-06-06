@@ -21,6 +21,52 @@
                 </div>
             @endif
 
+            {{-- Indent Pending Modal from Cart Update --}}
+            @php $indentPending = session('indent_pending'); @endphp
+            @if($indentPending)
+                <div id="indent-modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">
+                    <div class="panel" style="max-width:420px;width:90%;padding:20px;text-align:center;">
+                        <div style="font-weight:600;font-size:16px;margin-bottom:8px;">Stok Tidak Mencukupi</div>
+                        <div class="muted" style="margin-bottom:16px;">
+                            Anda ingin memesan <strong>{{ $indentPending['requested_qty'] }}</strong> × <strong>{{ $indentPending['product_name'] }}</strong><br>
+                            Stok tersedia hanya <strong>{{ $indentPending['available_stock'] }}</strong> item.
+                        </div>
+
+                        <div style="display:grid;gap:10px;">
+                            <form method="post" action="{{ route('buyer.cart.updateWithIndent', $indentPending['cart_item_id']) }}" style="display:contents;">
+                                @csrf
+                                @method('patch')
+                                <input type="hidden" name="quantity" value="{{ $indentPending['requested_qty'] }}">
+                                <input type="hidden" name="indent_mode" value="split">
+                                <button type="submit" class="btn btn-primary" style="width:100%;text-align:left;padding:12px;">
+                                    <div style="font-weight:600;">Split: Kirim {{ $indentPending['available_stock'] }} + Indent {{ $indentPending['requested_qty'] - $indentPending['available_stock'] }}</div>
+                                    <div class="muted" style="font-size:11px;">{{ $indentPending['available_stock'] }} dikirim sekarang, {{ $indentPending['requested_qty'] - $indentPending['available_stock'] }} indent (DP 50%)</div>
+                                </button>
+                            </form>
+
+                            <form method="post" action="{{ route('buyer.cart.updateWithIndent', $indentPending['cart_item_id']) }}" style="display:contents;">
+                                @csrf
+                                @method('patch')
+                                <input type="hidden" name="quantity" value="{{ $indentPending['requested_qty'] }}">
+                                <input type="hidden" name="indent_mode" value="full">
+                                <button type="submit" class="btn" style="width:100%;text-align:left;padding:12px;border:1px solid #ca8a04;background:#fef3c7;color:#92400e;">
+                                    <div style="font-weight:600;">Full Indent: {{ $indentPending['requested_qty'] }} tunggu semua</div>
+                                    <div style="font-size:11px;">Semua {{ $indentPending['requested_qty'] }} item indent (DP 50%)</div>
+                                </button>
+                            </form>
+
+                            <form method="post" action="{{ route('buyer.cart.updateWithIndent', $indentPending['cart_item_id']) }}" style="display:contents;">
+                                @csrf
+                                @method('patch')
+                                <input type="hidden" name="quantity" value="{{ $indentPending['available_stock'] }}">
+                                <input type="hidden" name="indent_mode" value="">
+                                <button type="submit" class="btn" style="width:100%;padding:12px;color:#f87171;border-color:#f87171;">Batalkan — Kembali ke {{ $indentPending['available_stock'] }}</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
                 <div style="font-size:18px;font-weight:600;">Cart</div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -70,6 +116,19 @@
                                         @endphp
                                         <div style="margin-top:2px;font-size:11px;{{ $stockLabel === 'Ready' ? '' : 'color:#ca8a04;' }}">
                                             {{ $isMotor ? $stockLabel : $stockLabel }}
+                                            @if((int)($it->indent_quantity ?? 0) > 0)
+                                                @php
+                                                    $readyQty = max(0, $it->quantity - $it->indent_quantity);
+                                                    $indentQty = $it->indent_quantity;
+                                                @endphp
+                                                <span style="color:#ca8a04;margin-left:4px;">
+                                                    @if($readyQty > 0)
+                                                        ({{ $readyQty }} ready + {{ $indentQty }} indent)
+                                                    @else
+                                                        ({{ $indentQty }} indent full)
+                                                    @endif
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
 

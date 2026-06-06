@@ -71,6 +71,12 @@ class MotorResource extends Resource
                 Tables\Columns\TextColumn::make('parts_count')
                     ->label('Parts')
                     ->counts('parts'),
+
+                Tables\Columns\TextColumn::make('stock_updated_at')
+                    ->label('Last Update Stock')
+                    ->dateTime('d M Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([])
             ->actions([
