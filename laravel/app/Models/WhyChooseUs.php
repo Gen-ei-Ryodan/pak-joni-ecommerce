@@ -11,7 +11,7 @@ class WhyChooseUs extends Model
 
     protected $table = 'why_choose_us';
 
-    protected $fillable = ['title', 'description', 'icon', 'sort_order', 'is_active'];
+    protected $fillable = ['title', 'description', 'icon', 'icon_image', 'sort_order', 'is_active'];
 
     protected function casts(): array
     {
