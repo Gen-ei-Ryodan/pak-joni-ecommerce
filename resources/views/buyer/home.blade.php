@@ -205,7 +205,7 @@
                         <div class="why-card">
                             <div class="why-icon">
                                 @if($item->icon_image)
-                                    <img src="{{ asset('storage/' . $item->icon_image) }}" alt="{{ $item->title }}" style="width:48px;height:48px;object-fit:contain;">
+                                    <img src="{{ $item->icon_image }}" alt="{{ $item->title }}" style="width:48px;height:48px;object-fit:contain;">
                                 @else
                                     {!! $item->icon ?: '&#9733;' !!}
                                 @endif
