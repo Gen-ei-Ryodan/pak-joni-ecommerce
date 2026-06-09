@@ -37,14 +37,11 @@ class WhyChooseUsResource extends Resource
             Forms\Components\TextInput::make('title')->required()->maxLength(255),
             Forms\Components\Textarea::make('description')->required()->maxLength(500),
             Forms\Components\TextInput::make('icon')->maxLength(255)->helperText('Emoji atau HTML entity'),
-            Forms\Components\FileUpload::make('icon_image')
-                ->label('Icon Image (opsional)')
-                ->image()
-                ->imageEditor()
-                ->disk('public')
-                ->directory('why-choose-us')
-                ->maxSize(512)
-                ->helperText('Maks 512KB. Jika diisi, akan menggantikan icon emoji.'),
+            Forms\Components\TextInput::make('icon_image')
+                ->label('Icon Image URL (opsional)')
+                ->maxLength(500)
+                ->url()
+                ->helperText('URL gambar icon. Gunakan gambar kecil (maks 100x100px).'),
             Forms\Components\Toggle::make('is_active')->default(true),
             Forms\Components\TextInput::make('sort_order')->numeric()->default(0),
         ]);
