@@ -203,7 +203,13 @@
                 <div class="grid grid-3">
                     @foreach ($whyChooseUs as $item)
                         <div class="why-card">
-                            <div class="why-icon">{!! $item->icon ?: '&#9733;' !!}</div>
+                            <div class="why-icon">
+                                @if($item->icon_image)
+                                    <img src="{{ asset('storage/' . $item->icon_image) }}" alt="{{ $item->title }}" style="width:48px;height:48px;object-fit:contain;">
+                                @else
+                                    {!! $item->icon ?: '&#9733;' !!}
+                                @endif
+                            </div>
                             <h4 class="why-title">{{ $item->title }}</h4>
                             <p class="why-desc">{{ $item->description }}</p>
                         </div>
