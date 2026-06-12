@@ -72,7 +72,7 @@
     <div class="about-page">
         <div class="about-banner">
             <div class="about-banner-content">
-                <div class="about-banner-title">Tentang MOTOMART</div>
+                <div class="about-banner-title">Tentang JOMOTO</div>
                 <div class="about-banner-sub">Dealer resmi motor premium Indonesia</div>
             </div>
         </div>
@@ -118,9 +118,9 @@
 
                 <div class="about-section" style="margin-top:50px;padding-top:30px;border-top:1px solid var(--line);text-align:center;color:var(--muted);">
                     <p>
-                        MOTOMART adalah dealer resmi untuk brand-brand motor premium: WMOTO, SM SPORT, CFMOTO, ZONTES, dan ZEEHO.
-                        Kami berkomitmen menyediakan produk berkualitas, suku cadang asli, dan layanan purna jual terbaik untuk pelanggan di seluruh Indonesia.
-                    </p>
+                JOMOTO adalah dealer resmi untuk brand-brand motor premium: WMOTO, SM SPORT, CFMOTO, ZONTES, dan ZEEHO.
+                Kami berkomitmen menyediakan produk berkualitas, suku cadang asli, dan layanan purna jual terbaik untuk pelanggan di seluruh Indonesia.
+            </p>
                 </div>
             </div>
         </div>
