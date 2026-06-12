@@ -148,10 +148,10 @@ class DatabaseSeeder extends Seeder
     private function createAdmin(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@motomart.co.id'],
+            ['email' => 'admin@jomoto.co.id'],
             [
                 'role' => 'admin',
-                'name' => 'Admin MOTOMART',
+                'name' => 'Admin JOMOTO',
                 'password' => Hash::make('password'),
             ]
         );
@@ -397,7 +397,7 @@ class DatabaseSeeder extends Seeder
                         'part_category_id' => $catId,
                         'thumbnail_path' => $this->pic(600, 400, $counter + 500),
                         'short_description' => "{$desc} Kompatibel untuk {$mName}.",
-                        'description' => "<p>{$desc}</p><p>Kompatibel dengan <strong>{$mName}</strong>. Garansi MOTOMART 3 bulan.</p>",
+                        'description' => "<p>{$desc}</p><p>Kompatibel dengan <strong>{$mName}</strong>. Garansi JOMOTO 3 bulan.</p>",
                         'specification' => '',
                         'base_price' => $price,
                         'status' => 'active',
@@ -485,7 +485,7 @@ class DatabaseSeeder extends Seeder
     private function createBanners(): void
     {
         $heroBanners = [
-            ['title' => 'MOTOMART 2025', 'subtitle' => 'New Collection', 'button_text' => 'Jelajahi Produk', 'link_url' => '/produk', 'type' => 'hero'],
+            ['title' => 'JOMOTO 2025', 'subtitle' => 'New Collection', 'button_text' => 'Jelajahi Produk', 'link_url' => '/produk', 'type' => 'hero'],
             ['title' => 'CFMOTO 450SR', 'subtitle' => 'Sport Performance', 'button_text' => 'Lihat Detail', 'link_url' => '#', 'type' => 'hero'],
             ['title' => 'ZEEHO Electric', 'subtitle' => 'EV Future', 'button_text' => 'Selengkapnya', 'link_url' => '/produk?brand=zeeho', 'type' => 'hero'],
         ];
@@ -502,7 +502,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         $kegiatanBanners = [
-            ['title' => 'MOTOMART Fest 2025', 'subtitle' => 'Gathering Komunitas Motor', 'button_text' => 'Lihat Event', 'link_url' => '#', 'type' => 'kegiatan'],
+            ['title' => 'JOMOTO Fest 2025', 'subtitle' => 'Gathering Komunitas Motor', 'button_text' => 'Lihat Event', 'link_url' => '#', 'type' => 'kegiatan'],
             ['title' => 'Ride & Camp', 'subtitle' => 'Petualangan 3 Hari 2 Malam', 'button_text' => 'Daftar', 'link_url' => '#', 'type' => 'kegiatan'],
         ];
 
@@ -557,7 +557,7 @@ class DatabaseSeeder extends Seeder
     private function createNews(): void
     {
         $news = [
-            ['MOTOMART Buka Dealer Baru di Surabaya', 'MOTOMART resmi membuka dealer flagship terbaru di Surabaya dengan konsep modern dan lengkap.'],
+            ['JOMOTO Buka Dealer Baru di Surabaya', 'JOMOTO resmi membuka dealer flagship terbaru di Surabaya dengan konsep modern dan lengkap.'],
             ['CFMOTO 450SR Raih Penghargaan Desain', 'CFMOTO 450SR meraih penghargaan desain motor sport terbaik tahun 2025.'],
             ['ZEEHO AE6 Jadi Motor Listrik Terlaris', 'Penjualan ZEEHO AE6 melesat 200% di kuartal pertama 2025.'],
             ['Tips Perawatan Motor Matic', 'Simak tips perawatan motor matic agar tetap prima dan awet.'],
@@ -578,9 +578,9 @@ class DatabaseSeeder extends Seeder
     private function createEvents(): void
     {
         $events = [
-            ['MOTOMART Riding Camp 2025', 'Petualangan 3 hari 2 malam bersama komunitas MOTOMART.', now()->addDays(30), 'Jakarta - Bandung'],
-            ['Launching ZONTES 350X', 'Acara launching motor adventure terbaru ZONTES 350X.', now()->addDays(14), 'MOTOMART Flagship Store'],
-            ['Workshop Safety Riding', 'Pelatihan safety riding gratis untuk pelanggan setia.', now()->addDays(7), 'MOTOMART Training Center'],
+            ['JOMOTO Riding Camp 2025', 'Petualangan 3 hari 2 malam bersama komunitas JOMOTO.', now()->addDays(30), 'Jakarta - Bandung'],
+            ['Launching ZONTES 350X', 'Acara launching motor adventure terbaru ZONTES 350X.', now()->addDays(14), 'JOMOTO Flagship Store'],
+            ['Workshop Safety Riding', 'Pelatihan safety riding gratis untuk pelanggan setia.', now()->addDays(7), 'JOMOTO Training Center'],
         ];
 
         foreach ($events as $i => [$title, $desc, $date, $loc]) {
@@ -607,7 +607,7 @@ class DatabaseSeeder extends Seeder
     private function createCsr(): void
     {
         $articles = [
-            ['MOTOMART Peduli Pendidikan', 'Program beasiswa untuk anak-anak di sekitar dealer MOTOMART.', now()->subDays(10)],
+            ['JOMOTO Peduli Pendidikan', 'Program beasiswa untuk anak-anak di sekitar dealer JOMOTO.', now()->subDays(10)],
             ['Tanam 1000 Pohon', 'Gerakan penghijauan bersama komunitas motor.', now()->subDays(20)],
         ];
 
@@ -616,7 +616,7 @@ class DatabaseSeeder extends Seeder
                 'title' => $title,
                 'slug' => Str::slug($title),
                 'thumbnail_path' => $this->pic(800, 400, $i + 450),
-                'content' => "<p>{$desc}</p><p>Kegiatan CSR ini merupakan bagian dari komitmen MOTOMART untuk berkontribusi positif bagi masyarakat dan lingkungan sekitar.</p>",
+                'content' => "<p>{$desc}</p><p>Kegiatan CSR ini merupakan bagian dari komitmen JOMOTO untuk berkontribusi positif bagi masyarakat dan lingkungan sekitar.</p>",
                 'publish_date' => $date,
                 'is_active' => true,
             ]);
@@ -626,10 +626,10 @@ class DatabaseSeeder extends Seeder
     private function createDealers(): void
     {
         $dealers = [
-            ['MOTOMART Flagship Jakarta', 'Jl. Sudirman No. 123', 'Jakarta', 'DKI Jakarta', '-6.2088', '106.8456', '(021) 555-1234'],
-            ['MOTOMART Bandung', 'Jl. Asia Afrika No. 45', 'Bandung', 'Jawa Barat', '-6.9175', '107.6191', '(022) 555-5678'],
-            ['MOTOMART Surabaya', 'Jl. Tunjungan No. 78', 'Surabaya', 'Jawa Timur', '-7.2575', '112.7521', '(031) 555-9012'],
-            ['MOTOMART Medan', 'Jl. Gatot Subroto No. 90', 'Medan', 'Sumatra Utara', '3.5952', '98.6722', '(061) 555-3456'],
+            ['JOMOTO Flagship Jakarta', 'Jl. Sudirman No. 123', 'Jakarta', 'DKI Jakarta', '-6.2088', '106.8456', '(021) 555-1234'],
+            ['JOMOTO Bandung', 'Jl. Asia Afrika No. 45', 'Bandung', 'Jawa Barat', '-6.9175', '107.6191', '(022) 555-5678'],
+            ['JOMOTO Surabaya', 'Jl. Tunjungan No. 78', 'Surabaya', 'Jawa Timur', '-7.2575', '112.7521', '(031) 555-9012'],
+            ['JOMOTO Medan', 'Jl. Gatot Subroto No. 90', 'Medan', 'Sumatra Utara', '3.5952', '98.6722', '(061) 555-3456'],
         ];
 
         foreach ($dealers as $i => [$name, $addr, $city, $prov, $lat, $lng, $phone]) {
@@ -650,7 +650,7 @@ class DatabaseSeeder extends Seeder
         $jobs = [
             ['Sales Consultant', 'Jakarta', 'Kami mencari sales consultant berpengalaman untuk bergabung di dealer flagship Jakarta.', now()->addDays(14)],
             ['Teknisi Motor', 'Bandung', 'Dibutuhkan teknisi motor berpengalaman minimal 2 tahun.', now()->addDays(21)],
-            ['Digital Marketing', 'Jakarta', 'MOTOMART mencari digital marketing specialist untuk mengelola kampanye online.', now()->addDays(7)],
+            ['Digital Marketing', 'Jakarta', 'JOMOTO mencari digital marketing specialist untuk mengelola kampanye online.', now()->addDays(7)],
         ];
 
         foreach ($jobs as [$title, $loc, $desc, $deadline]) {
@@ -739,16 +739,16 @@ class DatabaseSeeder extends Seeder
     private function createCompanyProfile(): void
     {
         $profiles = [
-            ['company_name', 'PT MOTOMART Indonesia'],
-            ['company_description', 'MOTOMART adalah distributor resmi motor dan sparepart premium di Indonesia. Berdiri sejak 2020, kami berkomitmen menghadirkan produk berkualitas dengan pelayanan terbaik.'],
+            ['company_name', 'PT JOMOTO Indonesia'],
+            ['company_description', 'JOMOTO adalah distributor resmi motor dan sparepart premium di Indonesia. Berdiri sejak 2020, kami berkomitmen menghadirkan produk berkualitas dengan pelayanan terbaik.'],
             ['address', 'Jl. Industri Raya No. 88, Jakarta Pusat'],
             ['phone', '(021) 555-0000'],
-            ['email', 'info@motomart.co.id'],
+            ['email', 'info@jomoto.co.id'],
             ['whatsapp', '6281234567890'],
-            ['facebook', 'https://facebook.com/motomartid'],
-            ['instagram', 'https://instagram.com/motomartid'],
-            ['youtube', 'https://youtube.com/@motomartid'],
-            ['tiktok', 'https://tiktok.com/@motomartid'],
+            ['facebook', 'https://facebook.com/jomotoid'],
+            ['instagram', 'https://instagram.com/jomotoid'],
+            ['youtube', 'https://youtube.com/@jomotoid'],
+            ['tiktok', 'https://tiktok.com/@jomotoid'],
         ];
 
         foreach ($profiles as [$key, $value]) {
