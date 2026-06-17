@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'JOMOTO'),
+    'name' => env('APP_NAME', 'JOMOTO CENTER'),
 
     /*
     |--------------------------------------------------------------------------
@@ -117,6 +117,16 @@ return [
     | Supported drivers: "file", "cache"
     |
     */
+
+    'whatsapp_number' => env('WHATSAPP_NUMBER', '6288298837887'),
+
+    'social' => [
+        'facebook' => env('SOCIAL_FACEBOOK', 'https://www.facebook.com/profile.php?id=61590453238869'),
+        'instagram' => env('SOCIAL_INSTAGRAM', 'https://instagram.com/jomotocenter'),
+        'email' => env('SOCIAL_EMAIL', 'jowimarmandirimakmur@gmail.com'),
+        'whatsapp' => env('SOCIAL_WHATSAPP', '088298837887'),
+        'whatsapp_link' => env('WHATSAPP_NUMBER', '6288298837887'),
+    ],
 
     'maintenance' => [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),

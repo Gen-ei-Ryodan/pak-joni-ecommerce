@@ -72,6 +72,8 @@ Route::get('/karir', [BuyerPageController::class, 'careers'])->name('buyer.caree
 Route::get('/karir/{career}', [BuyerPageController::class, 'careerShow'])->name('buyer.careers.show');
 
 Route::get('/kegiatan-internal', [BuyerPageController::class, 'internalActivities'])->name('buyer.internal-activities.index');
+
+Route::get('/showroom', [BuyerPageController::class, 'showroom'])->name('buyer.showroom');
 Route::get('/kegiatan-internal/{activity:slug}', [BuyerPageController::class, 'internalActivityShow'])->name('buyer.internal-activities.show');
 
 Route::middleware('guest')->group(function () {

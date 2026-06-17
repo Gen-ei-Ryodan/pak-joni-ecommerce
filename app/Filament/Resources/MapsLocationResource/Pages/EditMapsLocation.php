@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\MapsLocationResource\Pages; use App\Filament\Resources\MapsLocationResource; use Filament\Resources\Pages\EditRecord; class EditMapsLocation extends EditRecord { protected static string $resource = MapsLocationResource::class; }

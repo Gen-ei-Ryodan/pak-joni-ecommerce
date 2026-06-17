@@ -34,7 +34,15 @@ class CareerResource extends Resource
                 Tables\Columns\TextColumn::make('publish_date')->date()->sortable(),
                 Tables\Columns\IconColumn::make('is_active')->boolean(),
             ])
-            ->actions([Actions\EditAction::make(), Actions\DeleteAction::make()])
+            ->actions([
+                Actions\EditAction::make(),
+                Actions\Action::make('preview')
+                    ->label('Preview')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn($record) => route('buyer.careers.show', $record))
+                    ->openUrlInNewTab(),
+                Actions\DeleteAction::make(),
+            ])
             ->bulkActions([Actions\BulkActionGroup::make([Actions\DeleteBulkAction::make()])]);
     }
 

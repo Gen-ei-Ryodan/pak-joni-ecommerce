@@ -268,6 +268,12 @@ class PageController extends Controller
         return view('buyer.spareparts.part-catalog', compact('catalogs', 'q'));
     }
 
+    public function showroom()
+    {
+        $images = ShowroomGallery::query()->where('is_active', true)->orderBy('sort_order')->get();
+        return view('buyer.showroom', compact('images'));
+    }
+
     public function search(Request $request)
     {
         $q = trim((string) $request->query('q', ''));

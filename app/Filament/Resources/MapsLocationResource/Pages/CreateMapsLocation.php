@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\MapsLocationResource\Pages; use App\Filament\Resources\MapsLocationResource; use Filament\Resources\Pages\CreateRecord; class CreateMapsLocation extends CreateRecord { protected static string $resource = MapsLocationResource::class; }

@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\ShowroomGalleryResource\Pages; use App\Filament\Resources\ShowroomGalleryResource; use Filament\Resources\Pages\CreateRecord; class CreateShowroomGallery extends CreateRecord { protected static string $resource = ShowroomGalleryResource::class; }

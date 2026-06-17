@@ -8,7 +8,7 @@
             <div class="section-header center">
                 <h2 class="section-title-text">Karir</h2>
                 <div class="section-line center-line"></div>
-                <p style="color:var(--muted);max-width:600px;margin:12px auto 0;">Bergabunglah bersama tim JOMOTO dan kembangkan karir Anda bersama kami.</p>
+                <p style="color:var(--muted);max-width:600px;margin:12px auto 0;">Bergabunglah bersama tim {{ config('app.name') }} dan kembangkan karir Anda bersama kami.</p>
             </div>
 
             <div class="grid grid-2" style="max-width:900px;margin:0 auto;">

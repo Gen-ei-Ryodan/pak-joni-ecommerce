@@ -65,6 +65,19 @@
         }
         .about-value-card h4 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
         .about-value-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+        .location-list { display:flex; flex-direction:column; gap:12px; }
+        .location-card {
+            background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+            padding:16px 20px; transition:border-color 0.2s;
+        }
+        .location-card:hover { border-color:var(--accent); }
+        .location-name { font-weight:600; font-size:15px; display:flex; align-items:center; gap:8px; }
+        .location-type {
+            font-size:10px; font-weight:600; padding:2px 8px; border-radius:10px;
+            background:rgba(217,180,111,0.12); color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;
+        }
+        .location-address { font-size:13px; color:var(--muted); margin-top:4px; }
+        .location-contact { display:flex; gap:16px; font-size:12px; color:var(--muted); margin-top:6px; }
     </style>
 @endpush
 
@@ -72,7 +85,7 @@
     <div class="about-page">
         <div class="about-banner">
             <div class="about-banner-content">
-                <div class="about-banner-title">Tentang JOMOTO</div>
+                <div class="about-banner-title">Tentang {{ config('app.name') }}</div>
                 <div class="about-banner-sub">Dealer resmi motor premium Indonesia</div>
             </div>
         </div>
@@ -116,9 +129,58 @@
                     </div>
                 @endif
 
+                @php $mapsLocations = \App\Models\MapsLocation::where('is_active', true)->orderBy('sort_order')->get(); @endphp
+                @if($mapsLocations->count())
+                    <div class="about-section">
+                        <h3>Lokasi Kami</h3>
+                        <div id="aboutMap" style="width:100%;height:400px;border-radius:var(--radius);border:1px solid var(--line);margin-bottom:20px;"></div>
+                        <div class="location-list">
+                            @foreach($mapsLocations as $loc)
+                                <div class="location-card">
+                                    <div class="location-name">{{ $loc->name }}
+                                        <span class="location-type">{{ $loc->type === 'main' ? 'Utama' : 'Bengkel' }}</span>
+                                    </div>
+                                    <div class="location-address">{{ $loc->address }}</div>
+                                    @if($loc->phone || $loc->whatsapp)
+                                        <div class="location-contact">
+                                            @if($loc->phone)<span>Telp: {{ $loc->phone }}</span>@endif
+                                            @if($loc->whatsapp)<span>WA: {{ $loc->whatsapp }}</span>@endif
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @push('scripts')
+                    <script>
+                        function initMap() {
+                            const locations = [
+                                @foreach($mapsLocations as $loc)
+                                    { lat: {{ $loc->latitude }}, lng: {{ $loc->longitude }}, name: "{{ $loc->name }}", address: "{{ $loc->address }}" },
+                                @endforeach
+                            ];
+                            const center = locations.length > 1 ? locations[0] : { lat: -6.2088, lng: 106.8456 };
+                            const map = new google.maps.Map(document.getElementById('aboutMap'), {
+                                zoom: 12,
+                                center: center,
+                            });
+                            locations.forEach(function(loc) {
+                                new google.maps.Marker({
+                                    position: { lat: loc.lat, lng: loc.lng },
+                                    map: map,
+                                    title: loc.name,
+                                });
+                            });
+                        }
+                    </script>
+                    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_key', '') }}&callback=initMap"></script>
+                    @endpush
+                @endif
+
                 <div class="about-section" style="margin-top:50px;padding-top:30px;border-top:1px solid var(--line);text-align:center;color:var(--muted);">
                     <p>
-                JOMOTO adalah dealer resmi untuk brand-brand motor premium: WMOTO, SM SPORT, CFMOTO, ZONTES, dan ZEEHO.
+                {{ config('app.name') }} adalah dealer resmi untuk brand-brand motor premium: WMOTO, SM SPORT, CFMOTO, ZONTES, dan ZEEHO.
                 Kami berkomitmen menyediakan produk berkualitas, suku cadang asli, dan layanan purna jual terbaik untuk pelanggan di seluruh Indonesia.
             </p>
                 </div>

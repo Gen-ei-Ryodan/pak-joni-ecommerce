@@ -6,9 +6,9 @@
     <section class="section">
         <div class="container">
             <div class="section-header center">
-                <h2 class="section-title-text">Diler Resmi JOMOTO</h2>
+                <h2 class="section-title-text">Diler Resmi {{ config('app.name') }}</h2>
                 <div class="section-line center-line"></div>
-                <p style="color:var(--muted);max-width:600px;margin:12px auto 0;">Temukan diler resmi JOMOTO terdekat di kota Anda.</p>
+                <p style="color:var(--muted);max-width:600px;margin:12px auto 0;">Temukan diler resmi {{ config('app.name') }} terdekat di kota Anda.</p>
             </div>
 
             <form class="dealer-search" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:30px;">
