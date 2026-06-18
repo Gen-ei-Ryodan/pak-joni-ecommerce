@@ -152,29 +152,44 @@
                         </div>
                     </div>
 
+                    @push('head')
+                    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+                          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+                    <style>
+                        .leaflet-popup-content { font-size: 13px; line-height: 1.5; }
+                        .leaflet-popup-content strong { display: block; font-size: 14px; margin-bottom: 2px; }
+                    </style>
+                    @endpush
                     @push('scripts')
+                    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+                            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
                     <script>
-                        function initMap() {
+                        document.addEventListener('DOMContentLoaded', function() {
                             const locations = [
                                 @foreach($mapsLocations as $loc)
                                     { lat: {{ $loc->latitude }}, lng: {{ $loc->longitude }}, name: "{{ $loc->name }}", address: "{{ $loc->address }}" },
                                 @endforeach
                             ];
-                            const center = locations.length > 1 ? locations[0] : { lat: -6.2088, lng: 106.8456 };
-                            const map = new google.maps.Map(document.getElementById('aboutMap'), {
-                                zoom: 12,
-                                center: center,
-                            });
+                            const center = locations.length > 0 ? locations[0] : { lat: -6.2088, lng: 106.8456 };
+                            const map = L.map('aboutMap').setView([center.lat, center.lng], 12);
+
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+                                maxZoom: 19,
+                            }).addTo(map);
+
                             locations.forEach(function(loc) {
-                                new google.maps.Marker({
-                                    position: { lat: loc.lat, lng: loc.lng },
-                                    map: map,
-                                    title: loc.name,
-                                });
+                                L.marker([loc.lat, loc.lng])
+                                    .addTo(map)
+                                    .bindPopup('<strong>' + loc.name + '</strong>' + loc.address);
                             });
-                        }
+
+                            if (locations.length > 1) {
+                                const group = L.featureGroup(locations.map(l => L.marker([l.lat, l.lng])));
+                                map.fitBounds(group.getBounds().pad(0.1));
+                            }
+                        });
                     </script>
-                    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_key', '') }}&callback=initMap"></script>
                     @endpush
                 @endif
 
