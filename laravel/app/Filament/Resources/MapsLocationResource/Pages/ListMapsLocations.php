@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\MapsLocationResource\Pages; use App\Filament\Resources\MapsLocationResource; use Filament\Actions; use Filament\Resources\Pages\ListRecords; class ListMapsLocations extends ListRecords { protected static string $resource = MapsLocationResource::class; protected function getHeaderActions(): array { return [Actions\CreateAction::make()]; } }

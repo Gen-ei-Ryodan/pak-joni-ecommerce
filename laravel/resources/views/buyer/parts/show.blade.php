@@ -115,6 +115,115 @@
                 </div>
             </div>
 
+            {{-- 360° Viewer --}}
+            @php $images360 = $part->images360()->get(); @endphp
+            @if($images360->count() >= 4)
+                <div class="part-360-section">
+                    <h2 class="section-title-text" style="margin-bottom:20px;">Foto 360&deg; Produk</h2>
+                    <div class="viewer-360" data-360-viewer>
+                        <div class="viewer-360-frame">
+                            <img src="{{ image_url($images360->first()->image_path) }}" alt="360 view" id="viewer360Img" draggable="false">
+                        </div>
+                        <div class="viewer-360-controls">
+                            <button type="button" id="rotateLeftBtn">&#9664;</button>
+                            <span>&#8592; Drag / Scroll &#8594;</span>
+                            <button type="button" id="rotateRightBtn">&#9654;</button>
+                        </div>
+                        <div class="viewer-360-auto">
+                            <label>
+                                <input type="checkbox" id="autoRotateCheck"> Auto
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                @push('scripts')
+                <script>
+                    (function() {
+                        const viewer = document.querySelector('[data-360-viewer]');
+                        if (!viewer) return;
+                        const img = document.getElementById('viewer360Img');
+                        const images = [
+                            @foreach($images360 as $i)
+                                "{{ image_url($i->image_path) }}",
+                            @endforeach
+                        ];
+                        let currentFrame = 0;
+                        let dragging = false;
+                        let startX = 0;
+                        let autoRotateInterval = null;
+                        const autoRotateCheck = document.getElementById('autoRotateCheck');
+
+                        function setFrame(idx) {
+                            currentFrame = ((idx % images.length) + images.length) % images.length;
+                            img.src = images[currentFrame];
+                        }
+
+                        function startAutoRotate() {
+                            stopAutoRotate();
+                            autoRotateInterval = setInterval(() => setFrame(currentFrame + 1), 100);
+                        }
+
+                        function stopAutoRotate() {
+                            if (autoRotateInterval) {
+                                clearInterval(autoRotateInterval);
+                                autoRotateInterval = null;
+                            }
+                        }
+
+                        // Mouse drag
+                        viewer.addEventListener('mousedown', (e) => { dragging = true; startX = e.clientX; stopAutoRotate(); if(autoRotateCheck) autoRotateCheck.checked = false; e.preventDefault(); });
+                        viewer.addEventListener('touchstart', (e) => { dragging = true; startX = e.touches[0].clientX; stopAutoRotate(); if(autoRotateCheck) autoRotateCheck.checked = false; });
+
+                        document.addEventListener('mousemove', (e) => {
+                            if (!dragging) return;
+                            const diff = e.clientX - startX;
+                            if (Math.abs(diff) > 5) {
+                                setFrame(currentFrame + (diff > 0 ? -1 : 1));
+                                startX = e.clientX;
+                            }
+                        });
+
+                        document.addEventListener('touchmove', (e) => {
+                            if (!dragging) return;
+                            const diff = e.touches[0].clientX - startX;
+                            if (Math.abs(diff) > 5) {
+                                setFrame(currentFrame + (diff > 0 ? -1 : 1));
+                                startX = e.touches[0].clientX;
+                            }
+                        });
+
+                        document.addEventListener('mouseup', () => { dragging = false; });
+                        document.addEventListener('touchend', () => { dragging = false; });
+
+                        // Scroll
+                        viewer.addEventListener('wheel', (e) => {
+                            e.preventDefault();
+                            setFrame(currentFrame + (e.deltaY > 0 ? 1 : -1));
+                        }, { passive: false });
+
+                        // Arrow buttons
+                        document.getElementById('rotateLeftBtn')?.addEventListener('click', () => setFrame(currentFrame - 1));
+                        document.getElementById('rotateRightBtn')?.addEventListener('click', () => setFrame(currentFrame + 1));
+
+                        // Auto rotate toggle
+                        if (autoRotateCheck) {
+                            autoRotateCheck.addEventListener('change', function() {
+                                if (this.checked) startAutoRotate();
+                                else stopAutoRotate();
+                            });
+                        }
+
+                        // Keyboard
+                        document.addEventListener('keydown', (e) => {
+                            if (e.key === 'ArrowLeft') setFrame(currentFrame - 1);
+                            if (e.key === 'ArrowRight') setFrame(currentFrame + 1);
+                        });
+                    })();
+                </script>
+                @endpush
+            @endif
+
             {{-- Specifications --}}
             @if(!empty($specGroups) && $specGroups->count())
                 <div class="part-specs-section">
@@ -466,6 +575,76 @@ function handleAddToCart() {
             text-transform: uppercase;
         }
 
+        .part-360-section { margin-top: 40px; text-align: center; }
+        .viewer-360 {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            cursor: ew-resize;
+            user-select: none;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            background: #f0f0f0;
+        }
+        .viewer-360-frame {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            background: #e8e8e8;
+        }
+        .viewer-360-frame img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            -webkit-user-drag: none;
+            user-select: none;
+        }
+        .viewer-360-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.65);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 2;
+        }
+        .viewer-360-controls button {
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 4px;
+            line-height: 1;
+        }
+        .viewer-360-auto {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 2;
+        }
+        .viewer-360-auto label {
+            background: rgba(0,0,0,0.65);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .viewer-360-auto input[type="checkbox"] { accent-color: #d9b46f; }
         .related-section { margin-top: 50px; }
 
         @media (max-width: 720px) {

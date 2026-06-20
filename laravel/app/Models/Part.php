@@ -65,6 +65,11 @@ class Part extends Model
         return $this->hasMany(PartSpecification::class)->orderBy('sort_order');
     }
 
+    public function images360(): HasMany
+    {
+        return $this->hasMany(Part360Image::class)->orderBy('sort_order');
+    }
+
     public function totalStock(): int
     {
         return (int) $this->variants()->sum('stock');

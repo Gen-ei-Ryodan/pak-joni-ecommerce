@@ -6,6 +6,7 @@ use App\Filament\Resources\PartResource\Pages;
 use App\Models\Motor;
 use App\Models\Part;
 use App\Models\PartCategory;
+use App\Models\Part360Image;
 use App\Models\PartImage;
 use App\Models\PartVariant;
 use App\Services\ImageService;
@@ -261,6 +262,34 @@ class PartResource extends Resource
                             ->searchable()
                             ->preload(),
                     ]),
+
+                Section::make('Foto 360° Produk')
+                    ->description('Upload foto produk dari berbagai sudut secara berurutan (searah jarum jam) agar fitur rotasi 360° dapat berjalan dengan baik. Minimal 4 foto.')
+                    ->schema([
+                        Forms\Components\Repeater::make('images360')
+                            ->relationship('images360')
+                            ->schema([
+                                Forms\Components\FileUpload::make('image_path')
+                                    ->label('Frame Image')
+                                    ->image()
+                                    ->imagePreviewHeight('120')
+                                    ->disk('public')
+                                    ->directory('parts/360frames')
+                                    ->maxSize(2048)
+                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                                    ->required(),
+                                Forms\Components\TextInput::make('sort_order')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->hidden(),
+                            ])
+                            ->orderColumn('sort_order')
+                            ->defaultItems(0)
+                            ->collapsible()
+                            ->addActionLabel('Tambah Foto 360°'),
+                    ])
+                    ->collapsible()
+                    ->collapsed(),
 
                 Section::make('Variants')
                     ->columnSpanFull()
