@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Deploy MOTOMART ke shared hosting (cPanel)
+# Deploy JOMOTO CENTER ke shared hosting (cPanel)
 # Struktur:
 #   ~/public_html/jomoto.solusisurabaya.com/  → web root (public/)
 #   ~/jomoto/                                  → kode Laravel (hidden)
