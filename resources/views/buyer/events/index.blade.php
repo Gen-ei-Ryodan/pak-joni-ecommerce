@@ -17,7 +17,7 @@
                         <div class="card-body">
                             <div class="card-meta">{{ $event->event_date?->format('d M Y') }} @if($event->location) &middot; {{ $event->location }} @endif</div>
                             <div class="card-title">{{ $event->title }}</div>
-                            <div class="card-meta" style="margin-top:6px;">{{ \Illuminate\Support\Str::limit($event->description, 100) }}</div>
+                            <div class="card-meta" style="margin-top:6px;">{{ \Illuminate\Support\Str::limit(strip_tags($event->description), 100) }}</div>
                         </div>
                     </a>
                 @empty

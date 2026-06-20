@@ -20,7 +20,7 @@
 
             <h1 style="font-size:clamp(22px,4vw,32px);font-weight:700;margin-bottom:8px;">{{ $event->title }}</h1>
             @if($event->description)
-                <p style="color:var(--muted);font-size:15px;margin-bottom:24px;">{{ $event->description }}</p>
+                <p style="color:var(--muted);font-size:15px;margin-bottom:24px;">{{ strip_tags($event->description) }}</p>
             @endif
 
             @if($event->content)
