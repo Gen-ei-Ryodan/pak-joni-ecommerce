@@ -286,8 +286,7 @@ class PartResource extends Resource
                             ->orderColumn('sort_order')
                             ->defaultItems(0)
                             ->collapsible()
-                            ->addActionLabel('Tambah Foto 360°')
-                            ->itemLabel(fn(array $state): ?string => $state['sort_order'] ? 'Frame ' . ((int)$state['sort_order'] + 1) : null),
+                            ->addActionLabel('Tambah Foto 360°'),
                     ])
                     ->collapsible()
                     ->collapsed(),

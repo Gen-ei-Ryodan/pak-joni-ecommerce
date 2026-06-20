@@ -12,7 +12,7 @@
             </div>
 
             <div class="grid grid-3">
-                @forelse($partCatalogs as $item)
+                @forelse($catalogs as $item)
                     <div class="price-card">
                         @if($item->motor && $item->motor->thumbnail_path)
                             <div class="card-media" style="background-image:url('{{ image_url($item->motor->thumbnail_path) }}');background-size:cover;background-position:center;height:220px;"></div>

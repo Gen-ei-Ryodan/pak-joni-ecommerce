@@ -19,6 +19,7 @@ use App\Models\PartCatalog;
 use App\Models\PartCategory;
 use App\Models\PriceList;
 use App\Models\ProductHighlight;
+use App\Models\ShowroomGallery;
 use App\Models\WhyChooseUs;
 use Illuminate\Http\Request;
 

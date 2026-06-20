@@ -114,10 +114,12 @@
                 @if($motor->images360->count() >= 4)
                     <div class="motor-360-section">
                         <h2 class="section-title-text" style="margin-bottom:20px;">Frame 360&deg;</h2>
-                        <div class="viewer-360" data-360-viewer style="max-width:600px;margin:0 auto;position:relative;cursor:ew-resize;user-select:none;border-radius:12px;overflow:hidden;border:1px solid var(--line);">
-                            <img src="{{ image_url($motor->images360->first()->path) }}" alt="360 view" id="viewer360Img" style="width:100%;display:block;" draggable="false">
-                            <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;">
-                                &#8592; Drag untuk memutar 360&deg; &#8594;
+                        <div class="viewer-360" data-360-viewer>
+                            <div class="viewer-360-frame">
+                                <img src="{{ image_url($motor->images360->first()->path) }}" alt="360 view" id="viewer360Img" draggable="false">
+                            </div>
+                            <div class="viewer-360-controls" style="pointer-events:none;">
+                                <span>&#8592; Drag untuk memutar 360&deg; &#8594;</span>
                             </div>
                         </div>
                     </div>
@@ -379,6 +381,48 @@
             color: #ca8a04;
         }
         .motor-360-section { margin-top: 40px; }
+        .viewer-360 {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            cursor: ew-resize;
+            user-select: none;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            background: #f0f0f0;
+        }
+        .viewer-360-frame {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            background: #e8e8e8;
+        }
+        .viewer-360-frame img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            -webkit-user-drag: none;
+            user-select: none;
+        }
+        .viewer-360-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.65);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 2;
+        }
         .motor-specs-section { margin-top: 40px; }
         .spec-tabs { display: flex; flex-direction: column; gap: 24px; }
         .spec-group-title {

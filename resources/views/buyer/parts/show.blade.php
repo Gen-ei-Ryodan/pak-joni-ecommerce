@@ -120,16 +120,18 @@
             @if($images360->count() >= 4)
                 <div class="part-360-section">
                     <h2 class="section-title-text" style="margin-bottom:20px;">Foto 360&deg; Produk</h2>
-                    <div class="viewer-360" data-360-viewer style="max-width:600px;margin:0 auto;position:relative;cursor:ew-resize;user-select:none;border-radius:12px;overflow:hidden;border:1px solid var(--line);">
-                        <img src="{{ image_url($images360->first()->image_path) }}" alt="360 view" id="viewer360Img" style="width:100%;display:block;" draggable="false">
-                        <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:12px;">
-                            <button type="button" id="rotateLeftBtn" style="background:none;border:none;color:#fff;cursor:pointer;font-size:16px;">&#9664;</button>
-                            <span>&#8592; Drag / Scroll &#8594;</span>
-                            <button type="button" id="rotateRightBtn" style="background:none;border:none;color:#fff;cursor:pointer;font-size:16px;">&#9654;</button>
+                    <div class="viewer-360" data-360-viewer>
+                        <div class="viewer-360-frame">
+                            <img src="{{ image_url($images360->first()->image_path) }}" alt="360 view" id="viewer360Img" draggable="false">
                         </div>
-                        <div style="position:absolute;top:10px;right:10px;">
-                            <label style="background:rgba(0,0,0,0.6);color:#fff;padding:4px 10px;border-radius:14px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                                <input type="checkbox" id="autoRotateCheck" style="accent-color:#d9b46f;"> Auto
+                        <div class="viewer-360-controls">
+                            <button type="button" id="rotateLeftBtn">&#9664;</button>
+                            <span>&#8592; Drag / Scroll &#8594;</span>
+                            <button type="button" id="rotateRightBtn">&#9654;</button>
+                        </div>
+                        <div class="viewer-360-auto">
+                            <label>
+                                <input type="checkbox" id="autoRotateCheck"> Auto
                             </label>
                         </div>
                     </div>
@@ -574,6 +576,75 @@ function handleAddToCart() {
         }
 
         .part-360-section { margin-top: 40px; text-align: center; }
+        .viewer-360 {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            cursor: ew-resize;
+            user-select: none;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            background: #f0f0f0;
+        }
+        .viewer-360-frame {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            background: #e8e8e8;
+        }
+        .viewer-360-frame img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            -webkit-user-drag: none;
+            user-select: none;
+        }
+        .viewer-360-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.65);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 2;
+        }
+        .viewer-360-controls button {
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 4px;
+            line-height: 1;
+        }
+        .viewer-360-auto {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 2;
+        }
+        .viewer-360-auto label {
+            background: rgba(0,0,0,0.65);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .viewer-360-auto input[type="checkbox"] { accent-color: #d9b46f; }
         .related-section { margin-top: 50px; }
 
         @media (max-width: 720px) {
