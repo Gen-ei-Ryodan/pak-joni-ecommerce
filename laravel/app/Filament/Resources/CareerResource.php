@@ -53,6 +53,7 @@ class CareerResource extends Resource
             Forms\Components\TextInput::make('location')->maxLength(255),
             Forms\Components\Select::make('status')->options(['active' => 'Active', 'inactive' => 'Inactive'])->default('active'),
             Forms\Components\DateTimePicker::make('publish_date')->default(now()),
+            Forms\Components\FileUpload::make('thumbnail_path')->label('Image')->image()->disk('public')->directory('careers')->maxSize(3072),
             Forms\Components\RichEditor::make('description')->columnSpanFull(),
             Forms\Components\RichEditor::make('requirements')->columnSpanFull(),
             Forms\Components\Toggle::make('is_active')->default(true),
