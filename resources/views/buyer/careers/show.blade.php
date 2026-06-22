@@ -18,6 +18,12 @@
                 <p style="color:var(--muted);font-size:14px;margin-bottom:24px;">&#x1F4CD; {{ $career->location }}</p>
             @endif
 
+            @if($career->thumbnail_path)
+                <div style="margin-bottom:24px;border-radius:var(--radius);overflow:hidden;">
+                    <img src="{{ Storage::disk('public')->url($career->thumbnail_path) }}" alt="{{ $career->title }}" style="width:100%;height:auto;max-height:400px;object-fit:cover;border-radius:var(--radius);">
+                </div>
+            @endif
+
             @if($career->description)
                 <div style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:24px;">
                     <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">Deskripsi Pekerjaan</h3>

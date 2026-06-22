@@ -223,6 +223,14 @@ class OrderResource extends Resource
                     ->action(function (Order $record) {
                         app(\App\Services\OrderService::class)->cancelOrder($record);
                     }),
+                Actions\DeleteAction::make()
+                    ->label('Delete')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Delete Order')
+                    ->modalDescription('Are you sure you want to delete this order? This action cannot be undone and will also delete all related items, payments, and shipments.')
+                    ->modalSubmitActionLabel('Yes, delete order'),
             ])
             ->bulkActions([
                 Actions\BulkActionGroup::make([
