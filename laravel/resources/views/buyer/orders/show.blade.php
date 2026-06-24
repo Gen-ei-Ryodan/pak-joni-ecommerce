@@ -6,17 +6,32 @@
     <link rel="stylesheet" href="{{ asset('assets/css/order-detail.css') }}">
 @endpush
 
+@php
+    $snapToken = null;
+    $clientKey = null;
+    if ($order->status === 'unpaid' && $order->payment_status === 'pending') {
+        try {
+            $snapToken = app(\App\Services\PaymentService::class)->getSnapToken($order);
+            $clientKey = config('services.midtrans.client_key');
+        } catch (\Exception $e) {}
+    }
+@endphp
+
 @section('dashboard-content')
     @if($order->status === 'unpaid' && $order->payment_status === 'pending')
         <div class="payment-banner">
             <div>
-                <div style="font-weight:600;font-size:14px;">Awaiting Payment</div>
-                <div class="muted" style="margin-top:4px;font-size:13px;">Complete your payment to process this order.</div>
+                <div style="font-weight:600;font-size:14px;">Menunggu Pembayaran</div>
+                <div class="muted" style="margin-top:4px;font-size:13px;">Selesaikan pembayaran Anda untuk memproses pesanan ini.</div>
             </div>
-            <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
-                @csrf
-                <button class="btn btn-primary" type="submit" style="flex-shrink:0;">Pay Now</button>
-            </form>
+            @if($snapToken)
+                <button id="pay-button" class="btn btn-primary" type="button" style="flex-shrink:0;">Bayar Sekarang</button>
+            @else
+                <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
+                    @csrf
+                    <button class="btn btn-primary" type="submit" style="flex-shrink:0;">Bayar (Simulasi)</button>
+                </form>
+            @endif
         </div>
     @endif
 
@@ -169,10 +184,14 @@
             {{-- Action Buttons --}}
             <div class="sidebar-card" style="display:grid;gap:8px;">
                 @if($order->status === 'unpaid' && $order->payment_status === 'pending')
-                    <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
-                        @csrf
-                        <button class="action-btn-primary" type="submit">Pay Now</button>
-                    </form>
+                    @if($snapToken)
+                        <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
+                    @else
+                        <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
+                            @csrf
+                            <button class="action-btn-primary" type="submit">Bayar (Simulasi)</button>
+                        </form>
+                    @endif
                     <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Continue Shopping</a>
                 @elseif($order->status === 'shipped')
                     <form method="post" action="{{ route('buyer.orders.confirmReceived', $order) }}" onsubmit="return confirm('Konfirmasi barang sudah diterima?')">
