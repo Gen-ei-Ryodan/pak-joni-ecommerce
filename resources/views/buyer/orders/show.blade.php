@@ -6,18 +6,18 @@
     <link rel="stylesheet" href="{{ asset('assets/css/order-detail.css') }}">
 @endpush
 
-@section('dashboard-content')
-    @php
-        $snapToken = null;
-        $clientKey = null;
-        if ($order->status === 'unpaid' && $order->payment_status === 'pending') {
-            try {
-                $snapToken = app(\App\Services\PaymentService::class)->getSnapToken($order);
-                $clientKey = config('services.midtrans.client_key');
-            } catch (\Exception $e) {}
-        }
-    @endphp
+@php
+    $snapToken = null;
+    $clientKey = null;
+    if ($order->status === 'unpaid' && $order->payment_status === 'pending') {
+        try {
+            $snapToken = app(\App\Services\PaymentService::class)->getSnapToken($order);
+            $clientKey = config('services.midtrans.client_key');
+        } catch (\Exception $e) {}
+    }
+@endphp
 
+@section('dashboard-content')
     @if($order->status === 'unpaid' && $order->payment_status === 'pending')
         <div class="payment-banner">
             <div>
