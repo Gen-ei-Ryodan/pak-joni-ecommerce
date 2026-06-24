@@ -13,6 +13,7 @@ use App\Http\Controllers\Buyer\OrderController as BuyerOrderController;
 use App\Http\Controllers\Buyer\PageController as BuyerPageController;
 use App\Http\Controllers\Buyer\PartController as BuyerPartController;
 use App\Http\Controllers\Buyer\WishlistController as BuyerWishlistController;
+use App\Http\Controllers\Payment\MidtransController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RegionController;
 use Illuminate\Support\Facades\Route;
@@ -75,6 +76,12 @@ Route::get('/kegiatan-internal', [BuyerPageController::class, 'internalActivitie
 
 Route::get('/showroom', [BuyerPageController::class, 'showroom'])->name('buyer.showroom');
 Route::get('/kegiatan-internal/{activity:slug}', [BuyerPageController::class, 'internalActivityShow'])->name('buyer.internal-activities.show');
+
+// Midtrans Payment Routes
+Route::post('/payment/midtrans/notification', [MidtransController::class, 'notification'])->name('payment.midtrans.notification');
+Route::get('/payment/midtrans/finish', [MidtransController::class, 'finish'])->name('payment.midtrans.finish');
+Route::get('/payment/midtrans/unfinish', [MidtransController::class, 'unfinish'])->name('payment.midtrans.unfinish');
+Route::get('/payment/midtrans/error', [MidtransController::class, 'error'])->name('payment.midtrans.error');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('auth.login');
