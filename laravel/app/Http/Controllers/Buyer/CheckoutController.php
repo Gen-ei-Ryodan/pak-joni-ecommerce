@@ -275,7 +275,11 @@ class CheckoutController extends Controller
 
         $order->load('items');
 
-        return view('buyer.checkout.finish', compact('order'));
+        // Generate Midtrans Snap token
+        $snapToken = $this->paymentService->getSnapToken($order);
+        $clientKey = config('services.midtrans.client_key');
+
+        return view('buyer.checkout.finish', compact('order', 'snapToken', 'clientKey'));
     }
 
     /**

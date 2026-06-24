@@ -195,3 +195,32 @@
         </div>
     </div>
 @endsection
+
+@if($snapToken)
+    @push('head')
+        <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ $clientKey }}"></script>
+    @endpush
+
+    @push('scripts')
+        <script>
+            function payWithMidtrans() {
+                snap.pay('{{ $snapToken }}', {
+                    onSuccess: function(result) {
+                        window.location.reload();
+                    },
+                    onPending: function(result) {
+                        window.location.reload();
+                    },
+                    onError: function(result) {
+                        alert('Pembayaran gagal. Silakan coba lagi.');
+                    }
+                });
+            }
+
+            var payBtn = document.getElementById('pay-button');
+            var payBtnSidebar = document.getElementById('pay-button-sidebar');
+            if (payBtn) payBtn.addEventListener('click', payWithMidtrans);
+            if (payBtnSidebar) payBtnSidebar.addEventListener('click', payWithMidtrans);
+        </script>
+    @endpush
+@endif
