@@ -77,7 +77,7 @@ class PaymentService
             }
 
             $transactionDetails = [
-                'order_id' => $order->id,
+                'order_id' => $order->order_no,
                 'gross_amount' => (int) round((float) $order->total),
             ];
 
@@ -135,7 +135,7 @@ class PaymentService
                 return ['success' => false, 'message' => 'No order_id in notification'];
             }
 
-            $order = Order::query()->with('payment')->find($orderId);
+            $order = Order::query()->with('payment')->where('order_no', $orderId)->first();
 
             if (! $order) {
                 return ['success' => false, 'message' => 'Order not found: '.$orderId];
@@ -193,7 +193,7 @@ class PaymentService
             return ['success' => false, 'message' => 'Invalid payload'];
         }
 
-        $order = Order::query()->with('payment')->find($orderId);
+        $order = Order::query()->with('payment')->where('order_no', $orderId)->first();
 
         if (! $order) {
             return ['success' => false, 'message' => 'Order not found'];
