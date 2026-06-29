@@ -38,7 +38,7 @@
                 </div>
             @endif
 
-            <button class="btn btn-accent btn-full" style="max-width:300px;">Lamar Sekarang</button>
+            <a href="https://wa.me/{{ config('app.social.whatsapp_link') }}" target="_blank" rel="noopener" class="btn btn-accent btn-full" style="max-width:300px;text-decoration:none;display:inline-block;text-align:center;">Lamar Sekarang</a>
         </div>
     </section>
 @endsection

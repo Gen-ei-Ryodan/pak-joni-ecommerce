@@ -139,4 +139,5 @@ Route::middleware('auth')->group(function () {
     Route::post('/my/orders/{order:order_no}/simulate-payment', [BuyerOrderController::class, 'simulatePayment'])->name('buyer.orders.simulatePayment');
     Route::post('/my/orders/{order:order_no}/confirm-received', [BuyerOrderController::class, 'confirmReceived'])->name('buyer.orders.confirmReceived');
     Route::post('/my/orders/{order:order_no}/pay-remaining', [BuyerOrderController::class, 'payRemaining'])->name('buyer.orders.payRemaining');
+    Route::post('/my/orders/{order:order_no}/cancel', [BuyerOrderController::class, 'cancel'])->name('buyer.orders.cancel');
 });

@@ -43,7 +43,7 @@ class Order extends Model
         'subtotal', 'shipping_cost', 'total',
         'dp_amount', 'remaining_amount', 'is_indent', 'indent_status',
         'address_snapshot', 'shipping_snapshot', 'shipping_courier', 'shipping_receipt',
-        'shipped_at', 'completed_at', 'cancelled_at',
+        'shipped_at', 'completed_at', 'cancelled_at', 'cancellation_reason',
     ];
 
     public const STATUSES = ['unpaid', 'paid', 'processing', 'shipped', 'completed', 'cancelled'];

@@ -18,20 +18,48 @@
         }
     @endphp
 
+    {{-- Cancel status banner --}}
+    @if($order->status === 'cancelled')
+        <div style="display:flex;align-items:flex-start;gap:14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);border-radius:16px;padding:16px 20px;margin-bottom:20px;">
+            <div style="width:40px;height:40px;border-radius:50%;background:rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+            <div style="flex:1;">
+                <div style="font-weight:700;font-size:15px;color:#ef4444;">Pesanan Dibatalkan</div>
+                @if($order->cancellation_reason)
+                    <div style="margin-top:4px;font-size:13px;color:var(--muted);line-height:1.5;">
+                        "{{ $order->cancellation_reason }}"
+                    </div>
+                @else
+                    <div style="margin-top:4px;font-size:13px;color:var(--muted);">
+                        Pesanan ini telah dibatalkan oleh sistem.
+                    </div>
+                @endif
+                @if($order->cancelled_at)
+                    <div style="margin-top:6px;font-size:12px;color:var(--muted);opacity:0.6;">
+                        {{ $order->cancelled_at->isoFormat('dddd, D MMMM Y HH:mm') }} WIB
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
+
     @if($order->status === 'unpaid' && $order->payment_status === 'pending')
         <div class="payment-banner">
             <div>
                 <div style="font-weight:600;font-size:14px;">Menunggu Pembayaran</div>
                 <div class="muted" style="margin-top:4px;font-size:13px;">Selesaikan pembayaran Anda untuk memproses pesanan ini.</div>
             </div>
-            @if($snapToken)
-                <button id="pay-button" class="btn btn-primary" type="button" style="flex-shrink:0;">Bayar Sekarang</button>
-            @else
-                <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
-                    @csrf
-                    <button class="btn btn-primary" type="submit" style="flex-shrink:0;">Bayar (Simulasi)</button>
-                </form>
-            @endif
+            <div style="display:flex;gap:8px;flex-shrink:0;">
+                @if($snapToken)
+                    <button id="pay-button" class="btn btn-primary" type="button">Bayar Sekarang</button>
+                @else
+                    <div style="color:#ef4444;font-size:13px;">Gateway tidak tersedia</div>
+                @endif
+                <button onclick="document.getElementById('cancel-modal').style.display='flex'" class="btn" type="button" style="border-color:rgba(239,68,68,0.3);color:#ef4444;">Batalkan</button>
+            </div>
         </div>
         @if($snapToken)
             <div id="reopen-hint" style="display:none;background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:13px;color:#856404;text-align:center;">
@@ -192,11 +220,9 @@
                     @if($snapToken)
                         <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
                     @else
-                        <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
-                            @csrf
-                            <button class="action-btn-primary" type="submit">Bayar (Simulasi)</button>
-                        </form>
+                        <div style="color:#ef4444;font-size:13px;text-align:center;">Gateway tidak tersedia</div>
                     @endif
+                    <button onclick="document.getElementById('cancel-modal').style.display='flex'" class="action-btn-secondary" type="button" style="border-color:rgba(239,68,68,0.3);color:#ef4444;">Batalkan Pesanan</button>
                     <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Continue Shopping</a>
                 @elseif($order->status === 'shipped')
                     <form method="post" action="{{ route('buyer.orders.confirmReceived', $order) }}" onsubmit="return confirm('Konfirmasi barang sudah diterima?')">
@@ -218,6 +244,47 @@
             </div>
         </div>
     </div>
+</div>
+
+{{-- Cancel Modal --}}
+<div id="cancel-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:16px;">
+    <div style="background:var(--panel);border-radius:20px;max-width:440px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.4);overflow:hidden;">
+        {{-- Header --}}
+        <div style="display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--line);">
+            <div style="width:44px;height:44px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+            <div>
+                <div style="font-size:16px;font-weight:700;">Batalkan Pesanan</div>
+                <div class="muted" style="font-size:12px;margin-top:2px;">{{ $order->order_no }}</div>
+            </div>
+        </div>
+
+        {{-- Body --}}
+        <form method="post" action="{{ route('buyer.orders.cancel', $order) }}" style="padding:20px 24px;">
+            @csrf
+            <div style="background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div style="font-size:13px;color:#dc2626;line-height:1.4;">
+                    Pesanan akan dibatalkan dan stok dikembalikan. Tindakan ini <strong>tidak dapat dibatalkan</strong>.
+                </div>
+            </div>
+
+            <label style="font-size:13px;font-weight:600;display:block;margin-bottom:8px;">Alasan Pembatalan</label>
+            <textarea name="reason" required minlength="3" maxlength="500" rows="3" placeholder="Tulis alasan pembatalan pesanan..." style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:14px;resize:vertical;line-height:1.5;outline:none;transition:border-color .2s;"></textarea>
+
+            <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <button type="button" onclick="document.getElementById('cancel-modal').style.display='none'" style="padding:12px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:14px;font-weight:600;cursor:pointer;">Batal</button>
+                <button type="submit" style="padding:12px;border-radius:10px;border:none;background:#ef4444;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Ya, Batalkan Pesanan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @if($snapToken)

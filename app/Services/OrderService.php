@@ -34,19 +34,49 @@ class OrderService
         });
     }
 
-    public function cancelOrder(Order $order): bool
+    public function cancelOrder(Order $order, ?string $reason = null): bool
     {
         if (! $order->canTransitionTo('cancelled')) {
             return false;
         }
 
-        $order->update([
-            'status' => 'cancelled',
-            'payment_status' => $order->payment_status === 'pending' ? 'expired' : $order->payment_status,
-            'cancelled_at' => now(),
-        ]);
+        return DB::transaction(function () use ($order, $reason) {
+            $order->load('items');
 
-        return true;
+            $order->update([
+                'status' => 'cancelled',
+                'payment_status' => $order->payment_status === 'pending' ? 'expired' : $order->payment_status,
+                'cancelled_at' => now(),
+                'cancellation_reason' => $reason,
+            ]);
+
+            // Return reserved stock for unpaid orders
+            if ($order->payment_status === 'pending') {
+                $this->returnStock($order);
+            }
+
+            return true;
+        });
+    }
+
+    /**
+     * Return reserved stock when order is cancelled/expired before payment.
+     */
+    private function returnStock(Order $order): void
+    {
+        foreach ($order->items as $item) {
+            if ($item->itemable_type === 'App\\Models\\PartVariant') {
+                $variant = \App\Models\PartVariant::lockForUpdate()->find($item->itemable_id);
+                if ($variant) {
+                    $readyQty = max(0, $item->quantity - (int)($item->indent_quantity ?? 0));
+                    if ($readyQty > 0) {
+                        $variant->stock += $readyQty;
+                        $variant->stock_updated_at = now();
+                        $variant->save();
+                    }
+                }
+            }
+        }
     }
 
     public function markAsPaid(Order $order): bool

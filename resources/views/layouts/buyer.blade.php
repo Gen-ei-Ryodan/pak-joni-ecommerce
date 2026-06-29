@@ -154,7 +154,7 @@
                                 <li><a href="{{ route('buyer.about') }}">Tentang Kami</a></li>
                                 <li><a href="{{ route('buyer.news.index') }}">Berita</a></li>
                                 <li><a href="{{ route('buyer.events.index') }}">Acara</a></li>
-                                <li><a href="{{ route('buyer.careers.index') }}">Karir</a></li>
+                                <li>@auth<a href="{{ route('buyer.careers.index') }}">Karir</a>@else<a href="https://wa.me/{{ config('app.social.whatsapp_link') }}" target="_blank" rel="noopener">Karir</a>@endauth</li>
                                 <li><a href="{{ route('buyer.csr.index') }}">CSR</a></li>
                             </ul>
                         </div>

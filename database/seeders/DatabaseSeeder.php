@@ -25,6 +25,7 @@ use App\Models\PartSpecification;
 use App\Models\PartVariant;
 use App\Models\PriceList;
 use App\Models\ProductHighlight;
+use App\Models\StoreAddress;
 use App\Models\User;
 use App\Models\WhyChooseUs;
 use Illuminate\Database\Seeder;
@@ -143,6 +144,7 @@ class DatabaseSeeder extends Seeder
         $this->createPriceLists();
         $this->createPartCatalogs();
         $this->createCompanyProfile();
+        $this->createStoreAddress();
     }
 
     private function createAdmin(): void
@@ -774,5 +776,19 @@ class DatabaseSeeder extends Seeder
         foreach ($profiles as [$key, $value]) {
             CompanyProfile::updateOrCreate(['key' => $key], ['value' => $value]);
         }
+    }
+
+    private function createStoreAddress(): void
+    {
+        StoreAddress::create([
+            'label' => 'Pusat',
+            'address_line1' => 'Jl. Kapasari No.73',
+            'address_line2' => 'Kapasan, Kec. Simokerto',
+            'city' => 'Surabaya',
+            'district' => 'Simokerto',
+            'province' => 'Jawa Timur',
+            'postal_code' => '60174',
+            'is_default' => true,
+        ]);
     }
 }

@@ -44,9 +44,16 @@ class PaymentService
     /**
      * Get the Midtrans Snap transaction token for an order.
      * Returns the snap token string, or null on failure.
+     * Reuses existing token if already generated.
      */
     public function getSnapToken(Order $order): ?string
     {
+        // Reuse existing snap token from payment payload
+        $existingToken = $order->payment?->payload['snap_token'] ?? null;
+        if ($existingToken) {
+            return $existingToken;
+        }
+
         try {
             $this->configureMidtrans();
 
@@ -315,13 +322,16 @@ class PaymentService
     }
 
     /**
-     * Mark payment as expired.
+     * Mark payment as expired. Called by Midtrans webhook when transaction expires.
      */
     public function paymentExpired(Order $order): void
     {
         DB::transaction(function () use ($order) {
             $order->update([
                 'payment_status' => 'expired',
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+                'cancellation_reason' => 'Batas waktu pembayaran telah habis.',
             ]);
 
             $order->payment()->updateOrCreate(

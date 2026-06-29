@@ -114,6 +114,35 @@ class OrderController extends Controller
         return redirect()->route('buyer.orders.show', $order)->with('status', 'Pelunasan berhasil! Pesanan akan segera diproses.');
     }
 
+    /**
+     * Cancel an unpaid order with a reason.
+     */
+    public function cancel(Request $request, Order $order)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        // Only allow cancellation when unpaid and pending
+        if ($order->status !== 'unpaid' || $order->payment_status !== 'pending') {
+            throw ValidationException::withMessages([
+                'cancel' => 'Pesanan sudah dibayar atau diproses, tidak bisa dibatalkan.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'min:3', 'max:500'],
+        ]);
+
+        $success = $this->orderService->cancelOrder($order, $validated['reason']);
+
+        if (! $success) {
+            return back()->withErrors(['cancel' => 'Gagal membatalkan pesanan.']);
+        }
+
+        return redirect()->route('buyer.orders.show', $order)->with('status', 'Pesanan berhasil dibatalkan.');
+    }
+
     private function buildTimeline(Order $order): array
     {
         $tl = [];
@@ -125,7 +154,11 @@ class OrderController extends Controller
         $tl[] = ['label' => 'Completed', 'time' => $order->completed_at, 'done' => $order->status === 'completed'];
 
         if ($order->status === 'cancelled') {
-            $tl[] = ['label' => 'Cancelled', 'time' => $order->cancelled_at, 'done' => true];
+            $label = 'Cancelled';
+            if ($order->cancellation_reason) {
+                $label .= ': ' . $order->cancellation_reason;
+            }
+            $tl[] = ['label' => $label, 'time' => $order->cancelled_at, 'done' => true];
         }
 
         return $tl;

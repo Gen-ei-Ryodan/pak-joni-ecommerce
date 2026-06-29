@@ -96,12 +96,12 @@
                         </button>
                     </div>
                 @else
-                    <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
-                        @csrf
-                        <button class="btn btn-primary" type="submit" style="width:100%;padding:14px;font-size:15px;">
-                            Bayar (Simulasi) — Rp {{ number_format((float) $order->total, 0, ',', '.') }}
-                        </button>
-                    </form>
+                    <div style="height:12px;"></div>
+                    <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:14px;text-align:center;">
+                        <div style="font-size:13px;color:#ef4444;font-weight:500;">
+                            Gateway pembayaran tidak tersedia. Silakan hubungi admin.
+                        </div>
+                    </div>
                 @endif
 
                 <div style="height:12px;"></div>
