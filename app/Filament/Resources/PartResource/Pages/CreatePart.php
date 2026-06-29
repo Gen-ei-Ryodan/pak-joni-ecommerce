@@ -7,10 +7,13 @@ use App\Models\PartImage;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
 
-class CreatePart extends CreateRecord
+
+use App\Filament\Traits\RedirectsToList;class CreatePart extends CreateRecord
 {
     protected static string $resource = PartResource::class;
 
+
+    use RedirectsToList;
     private array $motorIds = [];
     private array $galleryPaths = [];
 

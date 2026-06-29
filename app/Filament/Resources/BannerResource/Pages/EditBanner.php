@@ -6,10 +6,13 @@ use App\Filament\Resources\BannerResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditBanner extends EditRecord
+
+use App\Filament\Traits\RedirectsToList;class EditBanner extends EditRecord
 {
     protected static string $resource = BannerResource::class;
 
+
+    use RedirectsToList;
     protected function mutateFormDataBeforeSave(array $data): array
     {
         if (empty($data['image_path']) && $this->record->image_path) {

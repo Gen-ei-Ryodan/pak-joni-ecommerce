@@ -11,7 +11,7 @@ class MotorColor extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['motor_id', 'name', 'color_code', 'image_path', 'sort_order'];
+    protected $fillable = ['motor_id', 'name', 'color_code', 'image_path', 'weight', 'sort_order'];
 
     public function motor(): BelongsTo
     {

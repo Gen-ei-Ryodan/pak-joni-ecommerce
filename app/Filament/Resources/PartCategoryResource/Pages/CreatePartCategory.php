@@ -6,10 +6,13 @@ use App\Filament\Resources\PartCategoryResource;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
 
-class CreatePartCategory extends CreateRecord
+
+use App\Filament\Traits\RedirectsToList;class CreatePartCategory extends CreateRecord
 {
     protected static string $resource = PartCategoryResource::class;
 
+
+    use RedirectsToList;
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);

@@ -187,6 +187,11 @@ class MotorResource extends Resource
                                     ->disk('public')
                                     ->directory('motors/colors')
                                     ->maxSize(5120),
+                                Forms\Components\TextInput::make('weight')
+                                    ->label('Weight (gram)')
+                                    ->integer()
+                                    ->minValue(0)
+                                    ->default(100),
                                 Forms\Components\TextInput::make('sort_order')
                                     ->numeric()
                                     ->default(0)

@@ -106,6 +106,7 @@ class CartController extends Controller
 
                 $item = CartItem::create([
                     'cart_id' => $cart->id,
+                    'part_variant_id' => $variant->id,
                     'itemable_type' => PartVariant::class,
                     'itemable_id' => $variant->id,
                     'quantity' => $qty,

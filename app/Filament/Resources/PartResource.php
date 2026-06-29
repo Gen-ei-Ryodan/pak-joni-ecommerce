@@ -314,10 +314,15 @@ class PartResource extends Resource
                                     ->integer()
                                     ->minValue(0)
                                     ->required(),
+                                Forms\Components\TextInput::make('weight')
+                                    ->label('Weight (gram)')
+                                    ->integer()
+                                    ->minValue(0)
+                                    ->default(100),
                                 Forms\Components\Toggle::make('is_default')
                                     ->label('Default'),
                             ])
-                            ->columns(5)
+                            ->columns(6)
                             ->defaultItems(1)
                             ->addActionLabel('Add Variant'),
                     ]),

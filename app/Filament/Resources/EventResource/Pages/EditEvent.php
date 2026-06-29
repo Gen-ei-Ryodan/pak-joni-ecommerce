@@ -6,10 +6,13 @@ use App\Filament\Resources\EventResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditEvent extends EditRecord
+
+use App\Filament\Traits\RedirectsToList;class EditEvent extends EditRecord
 {
     protected static string $resource = EventResource::class;
 
+
+    use RedirectsToList;
     protected function getHeaderActions(): array
     {
         return [

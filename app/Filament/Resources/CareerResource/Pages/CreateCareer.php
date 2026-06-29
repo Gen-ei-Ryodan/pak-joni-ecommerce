@@ -5,7 +5,10 @@ namespace App\Filament\Resources\CareerResource\Pages;
 use App\Filament\Resources\CareerResource;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateCareer extends CreateRecord
+
+use App\Filament\Traits\RedirectsToList;class CreateCareer extends CreateRecord
 {
     protected static string $resource = CareerResource::class;
+
+    use RedirectsToList;
 }
