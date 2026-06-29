@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Payment;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -82,5 +83,70 @@ class MidtransController extends Controller
         }
 
         return redirect()->route('buyer.dashboard');
+    }
+
+    /**
+     * Check payment status manually via Midtrans API.
+     * Used by the "Cek Status" button in frontend.
+     */
+    public function status(Order $order, Request $request)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        if ($order->payment_status === 'paid') {
+            return response()->json([
+                'paid' => true,
+                'status' => 'paid',
+                'payment_status' => $order->payment_status,
+            ]);
+        }
+
+        if ($order->payment_status === 'failed') {
+            return response()->json([
+                'paid' => false,
+                'status' => 'failed',
+                'payment_status' => $order->payment_status,
+            ]);
+        }
+
+        if ($order->payment_status === 'expired') {
+            return response()->json([
+                'paid' => false,
+                'status' => 'expired',
+                'payment_status' => $order->payment_status,
+            ]);
+        }
+
+        // If payment is pending, check status directly from Midtrans
+        try {
+            $result = $this->paymentService->checkStatusFromMidtrans($order);
+
+            if ($result['paid'] ?? false) {
+                return response()->json([
+                    'paid' => true,
+                    'status' => 'paid',
+                    'transaction_status' => $result['transaction_status'] ?? 'settlement',
+                ]);
+            }
+
+            return response()->json([
+                'paid' => false,
+                'status' => $order->status,
+                'transaction_status' => $result['transaction_status'] ?? 'pending',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Midtrans status check failed', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'paid' => $order->payment_status === 'paid',
+                'status' => $order->status,
+                'payment_status' => $order->payment_status,
+            ]);
+        }
     }
 }

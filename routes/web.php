@@ -78,10 +78,16 @@ Route::get('/showroom', [BuyerPageController::class, 'showroom'])->name('buyer.s
 Route::get('/kegiatan-internal/{activity:slug}', [BuyerPageController::class, 'internalActivityShow'])->name('buyer.internal-activities.show');
 
 // Midtrans Payment Routes
-Route::post('/payment/midtrans/notification', [MidtransController::class, 'notification'])->name('payment.midtrans.notification');
+Route::post('/payment/midtrans/notification', [MidtransController::class, 'notification'])
+    ->name('payment.midtrans.notification')
+    ->middleware('throttle:midtrans-webhook');
 Route::get('/payment/midtrans/finish', [MidtransController::class, 'finish'])->name('payment.midtrans.finish');
 Route::get('/payment/midtrans/unfinish', [MidtransController::class, 'unfinish'])->name('payment.midtrans.unfinish');
 Route::get('/payment/midtrans/error', [MidtransController::class, 'error'])->name('payment.midtrans.error');
+
+Route::middleware(['auth', 'throttle:10,1'])->group(function () {
+    Route::get('/payment/midtrans/status/{order}', [MidtransController::class, 'status'])->name('payment.midtrans.status');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('auth.login');

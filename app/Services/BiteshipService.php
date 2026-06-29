@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class BiteshipService
 {
-    private string $apiKey;
+    private ?string $apiKey;
     private string $baseUrl;
 
     public function __construct()
