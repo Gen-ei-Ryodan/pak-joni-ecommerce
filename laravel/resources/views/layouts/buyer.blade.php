@@ -65,7 +65,7 @@
                             <div class="nav-dropdown-menu" data-dropdown-menu="lainnya">
                                 <a href="{{ route('buyer.about') }}">Tentang Kami</a>
                                 <a href="{{ route('buyer.showroom') }}">Showroom</a>
-                                <a href="{{ route('buyer.careers.index') }}">Karir</a>
+                                @auth<a href="{{ route('buyer.careers.index') }}">Karir</a>@else<a href="https://wa.me/{{ config('app.social.whatsapp_link') }}" target="_blank" rel="noopener">Karir</a>@endauth
                                 <a href="{{ route('buyer.internal-activities.index') }}">Kegiatan Internal</a>
                             </div>
                         </div>
@@ -154,7 +154,7 @@
                                 <li><a href="{{ route('buyer.about') }}">Tentang Kami</a></li>
                                 <li><a href="{{ route('buyer.news.index') }}">Berita</a></li>
                                 <li><a href="{{ route('buyer.events.index') }}">Acara</a></li>
-                                <li><a href="{{ route('buyer.careers.index') }}">Karir</a></li>
+                                <li>@auth<a href="{{ route('buyer.careers.index') }}">Karir</a>@else<a href="https://wa.me/{{ config('app.social.whatsapp_link') }}" target="_blank" rel="noopener">Karir</a>@endauth</li>
                                 <li><a href="{{ route('buyer.csr.index') }}">CSR</a></li>
                             </ul>
                         </div>
