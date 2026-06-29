@@ -58,7 +58,11 @@ class CartCheckoutTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post('/cart/items', ['variant_id' => $variant->id, 'quantity' => 2])
+            ->post('/cart/items', [
+                'itemable_type' => 'part_variant',
+                'itemable_id' => $variant->id,
+                'quantity' => 2,
+            ])
             ->assertRedirect('/cart');
 
         $this->assertDatabaseHas('cart_items', [

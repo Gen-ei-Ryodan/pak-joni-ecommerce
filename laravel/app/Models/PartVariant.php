@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-#[Fillable(['part_id', 'sku', 'name', 'price', 'stock', 'is_default'])]
+#[Fillable(['part_id', 'sku', 'name', 'price', 'stock', 'weight', 'is_default'])]
 class PartVariant extends Model
 {
     use HasFactory;
 
-        protected $fillable = ['part_id', 'sku', 'name', 'price', 'stock', 'is_default', 'stock_updated_at'];
+        protected $fillable = ['part_id', 'sku', 'name', 'price', 'stock', 'weight', 'is_default', 'stock_updated_at'];
 
     protected function casts(): array
     {

@@ -6,10 +6,13 @@ use App\Filament\Resources\NewsResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditNews extends EditRecord
+
+use App\Filament\Traits\RedirectsToList;class EditNews extends EditRecord
 {
     protected static string $resource = NewsResource::class;
 
+
+    use RedirectsToList;
     protected function getHeaderActions(): array
     {
         return [

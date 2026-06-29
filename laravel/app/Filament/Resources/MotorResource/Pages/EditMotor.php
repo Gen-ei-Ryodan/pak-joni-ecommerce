@@ -8,10 +8,13 @@ use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Str;
 
-class EditMotor extends EditRecord
+
+use App\Filament\Traits\RedirectsToList;class EditMotor extends EditRecord
 {
     protected static string $resource = MotorResource::class;
 
+
+    use RedirectsToList;
     private array $galleryPaths = [];
 
     protected function mutateFormDataBeforeFill(array $data): array

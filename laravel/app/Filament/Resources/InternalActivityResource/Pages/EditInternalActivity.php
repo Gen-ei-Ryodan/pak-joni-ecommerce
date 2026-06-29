@@ -6,10 +6,13 @@ use App\Filament\Resources\InternalActivityResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditInternalActivity extends EditRecord
+
+use App\Filament\Traits\RedirectsToList;class EditInternalActivity extends EditRecord
 {
     protected static string $resource = InternalActivityResource::class;
 
+
+    use RedirectsToList;
     protected function getHeaderActions(): array
     {
         return [

@@ -7,10 +7,13 @@ use App\Models\MotorImage;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
 
-class CreateMotor extends CreateRecord
+
+use App\Filament\Traits\RedirectsToList;class CreateMotor extends CreateRecord
 {
     protected static string $resource = MotorResource::class;
 
+
+    use RedirectsToList;
     private array $galleryPaths = [];
 
     protected function mutateFormDataBeforeCreate(array $data): array

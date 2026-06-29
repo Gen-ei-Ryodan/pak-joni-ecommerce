@@ -10,6 +10,7 @@ use App\Models\MotorColor;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PartVariant;
+use App\Services\BiteshipService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,7 @@ class CheckoutController extends Controller
 {
     public function __construct(
         private PaymentService $paymentService,
+        private BiteshipService $biteshipService,
     ) {}
 
     public function address(Request $request)
@@ -90,15 +92,54 @@ class CheckoutController extends Controller
             'courier' => ['required', 'string', 'max:255'],
             'service' => ['required', 'string', 'max:255'],
             'shipping_cost' => ['required', 'numeric', 'min:0'],
+            'courier_name' => ['nullable', 'string', 'max:255'],
+            'service_name' => ['nullable', 'string', 'max:255'],
         ]);
 
         $request->session()->put('checkout.shipping', [
             'courier' => $validated['courier'],
             'service' => $validated['service'],
             'shipping_cost' => (float) $validated['shipping_cost'],
+            'courier_name' => $validated['courier_name'] ?? $validated['courier'],
+            'service_name' => $validated['service_name'] ?? $validated['service'],
         ]);
 
         return redirect('/checkout/payment');
+    }
+
+    public function rates(Request $request)
+    {
+        $cart = $this->loadSelectedCart($request);
+
+        if ($cart->items->isEmpty()) {
+            return response()->json(['success' => false, 'error' => 'Cart kosong.']);
+        }
+
+        $addressId = (int) ($request->session()->get('checkout.address_id') ?? 0);
+        if (! $addressId) {
+            return response()->json(['success' => false, 'error' => 'Pilih alamat dulu.']);
+        }
+
+        $address = Address::query()->where('user_id', $request->user()->id)->find($addressId);
+        if (! $address) {
+            return response()->json(['success' => false, 'error' => 'Alamat tidak ditemukan.']);
+        }
+
+        if (empty($address->postal_code)) {
+            return response()->json(['success' => false, 'error' => 'Kode pos alamat tujuan belum diisi.']);
+        }
+
+        $items = $this->biteshipService->buildItemsFromCart($cart->items);
+        $couriers = $request->query('couriers');
+
+        $result = $this->biteshipService->getRates(
+            items: $items,
+            destinationPostalCode: $address->postal_code,
+            originPostalCode: null, // auto from store address
+            couriers: $couriers,
+        );
+
+        return response()->json($result);
     }
 
     public function payment(Request $request)

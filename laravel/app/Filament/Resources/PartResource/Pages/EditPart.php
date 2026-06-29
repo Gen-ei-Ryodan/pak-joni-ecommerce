@@ -7,10 +7,13 @@ use App\Models\PartImage;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Str;
 
-class EditPart extends EditRecord
+
+use App\Filament\Traits\RedirectsToList;class EditPart extends EditRecord
 {
     protected static string $resource = PartResource::class;
 
+
+    use RedirectsToList;
     private array $galleryPaths = [];
 
     protected function mutateFormDataBeforeFill(array $data): array

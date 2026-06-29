@@ -6,10 +6,13 @@ use App\Filament\Resources\CsrArticleResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditCsrArticle extends EditRecord
+
+use App\Filament\Traits\RedirectsToList;class EditCsrArticle extends EditRecord
 {
     protected static string $resource = CsrArticleResource::class;
 
+
+    use RedirectsToList;
     protected function getHeaderActions(): array
     {
         return [

@@ -1,1 +1,14 @@
-<?php namespace App\Filament\Resources\ProductHighlightResource\Pages; use App\Filament\Resources\ProductHighlightResource; use Filament\Resources\Pages\CreateRecord; class CreateProductHighlight extends CreateRecord { protected static string $resource = ProductHighlightResource::class; }
+<?php
+
+namespace App\Filament\Resources\ProductHighlightResource\Pages;
+
+use App\Filament\Resources\ProductHighlightResource;
+use App\Filament\Traits\RedirectsToList;
+use Filament\Resources\Pages\CreateRecord;
+
+class CreateProductHighlight extends CreateRecord
+{
+    use RedirectsToList;
+
+    protected static string $resource = ProductHighlightResource::class;
+}
