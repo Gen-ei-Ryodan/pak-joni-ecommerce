@@ -212,11 +212,6 @@
             if (overlay) overlay.remove();
         }
 
-        // Auto-show popup setiap kali guest buka halaman
-        @guest
-        setTimeout(function() { showAuthConfirm(null); }, 500);
-        @endguest
-
         // Password show/hide toggle
         document.querySelectorAll('.password-toggle').forEach(function(btn) {
             btn.addEventListener('click', function() {

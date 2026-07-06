@@ -333,6 +333,11 @@
 
 @push('scripts')
     <script>
+        // Popup untuk guest setiap kali buka home
+        @guest
+        setTimeout(function() { showAuthConfirm(null); }, 500);
+        @endguest
+
         (function () {
             const carousel = document.querySelector('[data-carousel]');
             if (!carousel) return;
