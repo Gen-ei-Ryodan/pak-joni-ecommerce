@@ -13,7 +13,11 @@
 
             <div class="grid grid-2" style="max-width:900px;margin:0 auto;">
                 @forelse($careers as $career)
-                    <a class="card" href="{{ route('buyer.careers.show', $career) }}" style="text-decoration:none;">
+                    @if($career->slug)
+                        <a class="card" href="{{ route('buyer.careers.show', $career->slug) }}" style="text-decoration:none;">
+                    @else
+                        <div class="card" style="cursor:default;">
+                    @endif
                         <div class="card-body">
                             <div class="card-meta">{{ $career->publish_date?->format('d M Y') }}</div>
                             <div class="card-title" style="font-size:16px;">{{ $career->title }}</div>
@@ -22,7 +26,11 @@
                             @endif
                             <span class="career-status" style="display:inline-block;margin-top:8px;padding:4px 10px;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;border-radius:4px;background:rgba(217,180,111,0.15);color:var(--accent);">Lowongan Aktif</span>
                         </div>
-                    </a>
+                    @if($career->slug)
+                        </a>
+                    @else
+                        </div>
+                    @endif
                 @empty
                     <div class="muted" style="text-align:center;grid-column:1/-1;padding:60px 0;">Belum ada lowongan tersedia saat ini.</div>
                 @endforelse

@@ -280,12 +280,18 @@ class DatabaseSeeder extends Seeder
             [['Mesin dan Performa', 'Tipe Mesin', '4 Langkah, SOHC, Pendingin Cairan'], ['Mesin dan Performa', 'Kapasitas', '149cc'], ['Mesin dan Performa', 'Tenaga Maks', '12 HP @ 8500 rpm'], ['Dimensi', 'Berat Kosong', '112 kg'], ['Sasis', 'Rangka', 'Underbone Steel'], ['Fitur', 'Sistem Kunci', 'Smart Keyless']],
         ];
 
+        // Estimated motorcycle weights in grams (matching $this->motorIds order)
+        $motorWeights = [148000, 195000, 112000, 150000, 170000, 230000, 120000, 190000, 180000, 130000, 100000, 85000];
+
         foreach ($this->motorIds as $i => $motorId) {
+            $weight = $motorWeights[$i] ?? 150000;
+
             for ($c = 0; $c < 3; $c++) {
                 MotorColor::create([
                     'motor_id' => $motorId,
                     'name' => $colors[($i + $c) % count($colors)],
                     'color_code' => $colorCodes[($i + $c) % count($colorCodes)],
+                    'weight' => $weight,
                     'sort_order' => $c,
                 ]);
             }
@@ -429,10 +435,23 @@ class DatabaseSeeder extends Seeder
         $vNames = ['Standard', 'Premium', 'Racing'];
         $mult = [1.0, 1.5, 0.85];
 
+        // Weight ranges (grams) per category group
+        $weightByGroup = [
+            'Permesinan' => [50, 500],
+            'Body' => [150, 2000],
+            'Roda dan Suspensi' => [150, 4000],
+            'Casis' => [400, 1500],
+            'Elektrikal' => [80, 2000],
+        ];
+
         foreach ($this->allPartIds as $i => $partId) {
-            $part = Part::find($partId);
+            $part = Part::with('category')->find($partId);
             if (! $part) continue;
             $bp = (float) $part->base_price;
+
+            // Determine weight range based on category group
+            $group = $part->category?->group ?? 'Permesinan';
+            [$wMin, $wMax] = $weightByGroup[$group] ?? [100, 1000];
 
             for ($v = 0; $v < 2; $v++) {
                 PartVariant::create([
@@ -441,6 +460,7 @@ class DatabaseSeeder extends Seeder
                     'name' => $vNames[array_rand($vNames)],
                     'price' => max(15000, round($bp * $mult[$v % 3])),
                     'stock' => rand(5, 200),
+                    'weight' => rand($wMin, $wMax),
                     'is_default' => $v === 0,
                 ]);
             }
@@ -656,6 +676,7 @@ class DatabaseSeeder extends Seeder
         foreach ($jobs as [$title, $loc, $desc, $deadline]) {
             Career::create([
                 'title' => $title,
+                'slug' => Str::slug($title),
                 'location' => $loc,
                 'description' => "<p>{$desc}</p><h3>Kualifikasi</h3><ul><li>Pengalaman minimal 2 tahun di bidang terkait</li><li>Pendidikan minimal SMA/SMK sederajat</li><li>Memiliki SIM C</li><li>Jujur dan pekerja keras</li></ul>",
                 'status' => 'active',

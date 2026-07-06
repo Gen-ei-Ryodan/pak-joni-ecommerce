@@ -20,25 +20,25 @@
 
             @if($career->thumbnail_path)
                 <div style="margin-bottom:24px;border-radius:var(--radius);overflow:hidden;">
-                    <img src="{{ image_url($career->thumbnail_path) }}" alt="{{ $career->title }}" style="width:100%;height:auto;max-height:400px;object-fit:cover;border-radius:var(--radius);">
+                    <img src="{{ image_url($career->thumbnail_path) }}" alt="{{ $career->title }}" style="width:100%;height:auto;display:block;border-radius:var(--radius);">
                 </div>
             @endif
 
-            @if($career->description)
+            @if($career->description && trim(strip_tags($career->description)))
                 <div style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:24px;">
                     <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">Deskripsi Pekerjaan</h3>
                     <div style="color:var(--muted);line-height:1.8;font-size:14px;">{!! $career->description !!}</div>
                 </div>
             @endif
 
-            @if($career->requirements)
+            @if($career->requirements && trim(strip_tags($career->requirements)))
                 <div style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:24px;">
                     <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">Persyaratan</h3>
                     <div style="color:var(--muted);line-height:1.8;font-size:14px;">{!! $career->requirements !!}</div>
                 </div>
             @endif
 
-            <a href="https://wa.me/{{ config('app.social.whatsapp_link') }}" target="_blank" rel="noopener" class="btn btn-accent btn-full" style="max-width:300px;text-decoration:none;display:inline-block;text-align:center;">Lamar Sekarang</a>
+            <a href="https://wa.me/{{ config('app.social.whatsapp_link') }}?text={{ urlencode('Halo, saya tertarik dengan lowongan ' . $career->title . ' di ' . config('app.name') . '.') }}" target="_blank" rel="noopener" class="btn btn-accent btn-full" style="max-width:300px;">Lamar Sekarang</a>
         </div>
     </section>
 @endsection

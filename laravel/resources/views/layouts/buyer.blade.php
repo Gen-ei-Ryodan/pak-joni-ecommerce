@@ -17,6 +17,7 @@
         <link rel="stylesheet" href="{{ asset('assets/css/card.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}">
 
         @stack('head')
     </head>
@@ -65,7 +66,7 @@
                             <div class="nav-dropdown-menu" data-dropdown-menu="lainnya">
                                 <a href="{{ route('buyer.about') }}">Tentang Kami</a>
                                 <a href="{{ route('buyer.showroom') }}">Showroom</a>
-                                @auth<a href="{{ route('buyer.careers.index') }}">Karir</a>@else<a href="https://wa.me/{{ config('app.social.whatsapp_link') }}" target="_blank" rel="noopener">Karir</a>@endauth
+                                <a href="{{ route('buyer.careers.index') }}">Karir</a>
                                 <a href="{{ route('buyer.internal-activities.index') }}">Kegiatan Internal</a>
                             </div>
                         </div>
@@ -100,8 +101,6 @@
                                     </form>
                                 </div>
                             </div>
-                        @else
-                            <a class="btn-login" href="{{ route('auth.login') }}">Login</a>
                         @endauth
                     </div>
                 </div>
@@ -154,7 +153,7 @@
                                 <li><a href="{{ route('buyer.about') }}">Tentang Kami</a></li>
                                 <li><a href="{{ route('buyer.news.index') }}">Berita</a></li>
                                 <li><a href="{{ route('buyer.events.index') }}">Acara</a></li>
-                                <li>@auth<a href="{{ route('buyer.careers.index') }}">Karir</a>@else<a href="https://wa.me/{{ config('app.social.whatsapp_link') }}" target="_blank" rel="noopener">Karir</a>@endauth</li>
+                                <li><a href="{{ route('buyer.careers.index') }}">Karir</a></li>
                                 <li><a href="{{ route('buyer.csr.index') }}">CSR</a></li>
                             </ul>
                         </div>
@@ -190,6 +189,48 @@
         </div>
 
         <script src="{{ asset('assets/js/app.js') }}" defer></script>
+        <script>
+        function showAuthConfirm(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            var overlay = document.createElement('div');
+            overlay.className = 'auth-confirm-overlay';
+            overlay.innerHTML = '<div class="auth-confirm-modal">' +
+                '<h3>Selamat Datang di {{ config('app.name') }}</h3>' +
+                '<p>Apakah Anda sudah memiliki akun?</p>' +
+                '<div class="auth-confirm-buttons">' +
+                    '<a href="{{ route('auth.login') }}" class="btn btn-primary">Ya, saya sudah memiliki akun</a>' +
+                    '<button class="btn btn-outline" onclick="dismissGuestPopup(event)">Saya pengunjung baru</button>' +
+                '</div>' +
+            '</div>';
+            // Popup hanya bisa ditutup lewat tombol, tidak dengan klik di luar
+            document.body.appendChild(overlay);
+        }
+
+        function dismissGuestPopup(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            var overlay = document.querySelector('.auth-confirm-overlay');
+            if (overlay) overlay.remove();
+        }
+
+        // Password show/hide toggle
+        document.querySelectorAll('.password-toggle').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var targetId = this.getAttribute('data-toggle');
+                var input = document.getElementById(targetId);
+                var eyeOpen = this.querySelector('.eye-open');
+                var eyeClosed = this.querySelector('.eye-closed');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    eyeOpen.style.display = 'none';
+                    eyeClosed.style.display = 'block';
+                } else {
+                    input.type = 'password';
+                    eyeOpen.style.display = 'block';
+                    eyeClosed.style.display = 'none';
+                }
+            });
+        });
+        </script>
         @stack('scripts')
     </body>
 </html>
