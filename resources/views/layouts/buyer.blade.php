@@ -202,11 +202,7 @@
                     '<button class="btn btn-outline" onclick="dismissGuestPopup(event)">Saya pengunjung baru</button>' +
                 '</div>' +
             '</div>';
-            overlay.addEventListener('click', function(ev) {
-                if (ev.target === overlay) {
-                    dismissGuestPopup(ev);
-                }
-            });
+            // Popup hanya bisa ditutup lewat tombol, tidak dengan klik di luar
             document.body.appendChild(overlay);
         }
 
@@ -218,15 +214,15 @@
         }
 
         // Auto-show popup for first-time guests
-        document.addEventListener('DOMContentLoaded', function() {
-            @guest
+        @guest
+        (function() {
             var visited = false;
-            try { visited = localStorage.getItem('guest_visited') === '1'; } catch(ex) {}
+            try { visited = localStorage.getItem('guest_visited') === '1'; } catch(e) {}
             if (!visited) {
                 setTimeout(function() { showAuthConfirm(null); }, 500);
             }
-            @endguest
-        });
+        })();
+        @endguest
 
         // Password show/hide toggle
         document.querySelectorAll('.password-toggle').forEach(function(btn) {
