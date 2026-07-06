@@ -208,20 +208,13 @@
 
         function dismissGuestPopup(e) {
             if (e && e.preventDefault) e.preventDefault();
-            try { localStorage.setItem('guest_visited', '1'); } catch(ex) {}
             var overlay = document.querySelector('.auth-confirm-overlay');
             if (overlay) overlay.remove();
         }
 
-        // Auto-show popup for first-time guests
+        // Auto-show popup setiap kali guest buka halaman
         @guest
-        (function() {
-            var visited = false;
-            try { visited = localStorage.getItem('guest_visited') === '1'; } catch(e) {}
-            if (!visited) {
-                setTimeout(function() { showAuthConfirm(null); }, 500);
-            }
-        })();
+        setTimeout(function() { showAuthConfirm(null); }, 500);
         @endguest
 
         // Password show/hide toggle
