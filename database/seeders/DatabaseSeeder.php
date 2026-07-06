@@ -676,6 +676,7 @@ class DatabaseSeeder extends Seeder
         foreach ($jobs as [$title, $loc, $desc, $deadline]) {
             Career::create([
                 'title' => $title,
+                'slug' => Str::slug($title),
                 'location' => $loc,
                 'description' => "<p>{$desc}</p><h3>Kualifikasi</h3><ul><li>Pengalaman minimal 2 tahun di bidang terkait</li><li>Pendidikan minimal SMA/SMK sederajat</li><li>Memiliki SIM C</li><li>Jujur dan pekerja keras</li></ul>",
                 'status' => 'active',

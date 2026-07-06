@@ -19,7 +19,7 @@ use App\Filament\Traits\RedirectsToList;class EditCareer extends EditRecord
             Actions\Action::make('preview')
                 ->label('Lihat di Website')
                 ->icon('heroicon-o-eye')
-                ->url(fn() => route('buyer.careers.show', $this->record))
+                ->url(fn() => $this->record->slug ? route('buyer.careers.show', $this->record->slug) : '#')
                 ->openUrlInNewTab(),
             Actions\DeleteAction::make(),
         ];

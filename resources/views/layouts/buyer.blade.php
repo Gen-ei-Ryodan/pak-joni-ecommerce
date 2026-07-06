@@ -17,6 +17,7 @@
         <link rel="stylesheet" href="{{ asset('assets/css/card.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}">
 
         @stack('head')
     </head>
@@ -100,8 +101,6 @@
                                     </form>
                                 </div>
                             </div>
-                        @else
-                            <a class="btn-login" href="{{ route('auth.login') }}">Login</a>
                         @endauth
                     </div>
                 </div>
@@ -190,6 +189,64 @@
         </div>
 
         <script src="{{ asset('assets/js/app.js') }}" defer></script>
+        <script>
+        function showAuthConfirm(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            var overlay = document.createElement('div');
+            overlay.className = 'auth-confirm-overlay';
+            overlay.innerHTML = '<div class="auth-confirm-modal">' +
+                '<h3>Selamat Datang di {{ config('app.name') }}</h3>' +
+                '<p>Apakah Anda sudah memiliki akun?</p>' +
+                '<div class="auth-confirm-buttons">' +
+                    '<a href="{{ route('auth.login') }}" class="btn btn-primary">Ya, saya sudah memiliki akun</a>' +
+                    '<button class="btn btn-outline" onclick="dismissGuestPopup(event)">Saya pengunjung baru</button>' +
+                '</div>' +
+            '</div>';
+            overlay.addEventListener('click', function(ev) {
+                if (ev.target === overlay) {
+                    dismissGuestPopup(ev);
+                }
+            });
+            document.body.appendChild(overlay);
+        }
+
+        function dismissGuestPopup(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            try { localStorage.setItem('guest_visited', '1'); } catch(ex) {}
+            var overlay = document.querySelector('.auth-confirm-overlay');
+            if (overlay) overlay.remove();
+        }
+
+        // Auto-show popup for first-time guests
+        document.addEventListener('DOMContentLoaded', function() {
+            @guest
+            var visited = false;
+            try { visited = localStorage.getItem('guest_visited') === '1'; } catch(ex) {}
+            if (!visited) {
+                setTimeout(function() { showAuthConfirm(null); }, 500);
+            }
+            @endguest
+        });
+
+        // Password show/hide toggle
+        document.querySelectorAll('.password-toggle').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var targetId = this.getAttribute('data-toggle');
+                var input = document.getElementById(targetId);
+                var eyeOpen = this.querySelector('.eye-open');
+                var eyeClosed = this.querySelector('.eye-closed');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    eyeOpen.style.display = 'none';
+                    eyeClosed.style.display = 'block';
+                } else {
+                    input.type = 'password';
+                    eyeOpen.style.display = 'block';
+                    eyeClosed.style.display = 'none';
+                }
+            });
+        });
+        </script>
         @stack('scripts')
     </body>
 </html>
