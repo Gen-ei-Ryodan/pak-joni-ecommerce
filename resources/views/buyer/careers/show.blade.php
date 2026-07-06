@@ -24,14 +24,14 @@
                 </div>
             @endif
 
-            @if($career->description)
+            @if($career->description && trim(strip_tags($career->description)))
                 <div style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:24px;">
                     <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">Deskripsi Pekerjaan</h3>
                     <div style="color:var(--muted);line-height:1.8;font-size:14px;">{!! $career->description !!}</div>
                 </div>
             @endif
 
-            @if($career->requirements)
+            @if($career->requirements && trim(strip_tags($career->requirements)))
                 <div style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:24px;">
                     <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">Persyaratan</h3>
                     <div style="color:var(--muted);line-height:1.8;font-size:14px;">{!! $career->requirements !!}</div>
