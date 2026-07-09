@@ -92,3 +92,43 @@
 .text-link:hover {
   color: var(--text);
 }
+
+/* Auth confirmation modal */
+.auth-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+.auth-confirm-modal {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  max-width: 400px;
+  width: calc(100% - 32px);
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.auth-confirm-modal h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.auth-confirm-modal p {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.auth-confirm-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.auth-confirm-buttons .btn {
+  min-width: 120px;
+}
