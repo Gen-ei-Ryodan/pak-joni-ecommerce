@@ -16,6 +16,7 @@ use App\Filament\Traits\RedirectsToList;class CreatePart extends CreateRecord
     use RedirectsToList;
     private array $motorIds = [];
     private array $galleryPaths = [];
+    private array $compatibleItemIds = [];
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
@@ -26,7 +27,14 @@ use App\Filament\Traits\RedirectsToList;class CreatePart extends CreateRecord
             unset($data['motor_ids']);
         }
 
-        // Filament FileUpload di public disk — path sudah relatif (misal parts/thumbnails/foo.jpg)
+        $this->compatibleItemIds = [];
+        foreach ($data as $key => $value) {
+            if (str_starts_with($key, '_compatible_items_') && is_array($value)) {
+                $this->compatibleItemIds = array_merge($this->compatibleItemIds, $value);
+                unset($data[$key]);
+            }
+        }
+
         $data['thumbnail_path'] = $data['thumbnail'] ?? null;
         unset($data['thumbnail']);
 
@@ -52,6 +60,10 @@ use App\Filament\Traits\RedirectsToList;class CreatePart extends CreateRecord
 
         if (! empty($this->motorIds)) {
             $part->motors()->sync($this->motorIds);
+        }
+
+        if (! empty($this->compatibleItemIds)) {
+            $part->items()->sync($this->compatibleItemIds);
         }
     }
 }

@@ -15,10 +15,22 @@ use App\Filament\Traits\RedirectsToList;class EditPart extends EditRecord
 
     use RedirectsToList;
     private array $galleryPaths = [];
+    private array $compatibleItemIds = [];
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $data['motor_ids'] = $this->record->motors()->pluck('id')->toArray();
+
+        $itemIds = $this->record->items()->pluck('items.id')->toArray();
+        if (! empty($itemIds)) {
+            $itemsByType = \App\Models\Item::whereIn('id', $itemIds)
+                ->get()
+                ->groupBy('category_type_id');
+
+            foreach ($itemsByType as $typeId => $items) {
+                $data['_compatible_items_' . $typeId] = $items->pluck('id')->toArray();
+            }
+        }
 
         if ($this->record->thumbnail_path) {
             $data['thumbnail'] = str_replace('storage/', '', $this->record->thumbnail_path);
@@ -47,6 +59,14 @@ use App\Filament\Traits\RedirectsToList;class EditPart extends EditRecord
         $this->galleryPaths = $data['gallery'] ?? [];
         unset($data['gallery']);
 
+        $this->compatibleItemIds = [];
+        foreach ($data as $key => $value) {
+            if (str_starts_with($key, '_compatible_items_') && is_array($value)) {
+                $this->compatibleItemIds = array_merge($this->compatibleItemIds, $value);
+                unset($data[$key]);
+            }
+        }
+
         return $data;
     }
 
@@ -67,6 +87,10 @@ use App\Filament\Traits\RedirectsToList;class EditPart extends EditRecord
 
         if (isset($this->data['motor_ids'])) {
             $part->motors()->sync($this->data['motor_ids']);
+        }
+
+        if (isset($this->compatibleItemIds)) {
+            $part->items()->sync($this->compatibleItemIds);
         }
     }
 }

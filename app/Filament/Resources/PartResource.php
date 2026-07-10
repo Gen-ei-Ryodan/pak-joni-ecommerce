@@ -3,6 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PartResource\Pages;
+use App\Models\CategoryType;
+use App\Models\Item;
 use App\Models\Motor;
 use App\Models\Part;
 use App\Models\PartCategory;
@@ -30,15 +32,13 @@ class PartResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static ?string $navigationLabel = 'Parts';
-
     protected static string|UnitEnum|null $navigationGroup = 'Catalog';
 
     protected static ?int $navigationSort = 3;
 
     public static function shouldRegisterNavigation(): bool
     {
-        return true;
+        return false;
     }
 
     public static function table(Table $table): Table
@@ -253,15 +253,47 @@ class PartResource extends Resource
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp']),
                     ]),
 
-                Section::make('Compatible Motors')
-                    ->schema([
-                        Forms\Components\Select::make('motor_ids')
-                            ->label('')
+                Section::make('Compatible Products')
+                    ->schema(function (?Part $record) {
+                        $fields = [];
+
+                        $fields[] = Forms\Components\Select::make('motor_ids')
+                            ->label('Motor')
                             ->relationship('motors', 'name')
                             ->multiple()
                             ->searchable()
-                            ->preload(),
-                    ]),
+                            ->preload();
+
+                        $otherTypes = CategoryType::query()
+                            ->where('is_active', true)
+                            ->whereNotIn('slug', ['motor', 'sparepart'])
+                            ->orderBy('sort_order')
+                            ->get();
+
+                        foreach ($otherTypes as $ct) {
+                            $options = Item::query()
+                                ->where('category_type_id', $ct->id)
+                                ->where('is_active', true)
+                                ->with('brand')
+                                ->orderBy('name')
+                                ->get()
+                                ->mapWithKeys(fn ($i) => [$i->id => ($i->brand ? $i->brand->name . ' - ' : '') . $i->name]);
+
+                            $currentIds = $record
+                                ? $record->items()->where('category_type_id', $ct->id)->pluck('items.id')->toArray()
+                                : [];
+
+                            $fields[] = Forms\Components\Select::make('_compatible_items_' . $ct->id)
+                                ->label($ct->name)
+                                ->options($options)
+                                ->multiple()
+                                ->searchable()
+                                ->default($currentIds);
+                        }
+
+                        return $fields;
+                    })
+                    ->columns(2),
 
                 Section::make('Foto 360° Produk')
                     ->description('Upload foto produk dari berbagai sudut secara berurutan (searah jarum jam) agar fitur rotasi 360° dapat berjalan dengan baik. Minimal 4 foto.')

@@ -256,20 +256,44 @@
                 </div>
             @endif
 
-            {{-- Compatible Motors --}}
-            @if($part->motors->count())
+            {{-- Compatible Products (ALL types) --}}
+            @if(isset($allCompatibles) && $allCompatibles->count())
                 <div class="compatible-section">
-                    <h2 class="section-title-text" style="margin-bottom:16px;">Kompatibel Dengan Motor</h2>
-                    <div class="compatible-list">
-                        @foreach($part->motors as $m)
-                            <a href="{{ route('buyer.motors.show', $m->slug) }}" class="compatible-tag">
-                                @if($m->brand)
-                                    <span class="compatible-brand">{{ $m->brand->name }}</span>
-                                @endif
-                                {{ $m->name }}
-                            </a>
-                        @endforeach
-                    </div>
+                    <h2 class="section-title-text" style="margin-bottom:16px;">Kompatibel Dengan</h2>
+
+                    @php $compatMotors = $allCompatibles->where('compatible_type', 'motor'); @endphp
+                    @if($compatMotors->count())
+                        <div style="margin-bottom:12px;">
+                            <h4 style="font-size:14px;font-weight:600;color:var(--muted);margin-bottom:8px;">Motor</h4>
+                            <div class="compatible-list">
+                                @foreach($compatMotors as $m)
+                                    <a href="{{ route('buyer.motors.show', $m->slug) }}" class="compatible-tag">
+                                        @if($m->brand)
+                                            <span class="compatible-brand">{{ $m->brand->name }}</span>
+                                        @endif
+                                        {{ $m->name }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    @php $compatItems = $allCompatibles->where('compatible_type', 'item')->groupBy('type.name'); @endphp
+                    @foreach($compatItems as $typeName => $items)
+                        <div style="margin-bottom:12px;">
+                            <h4 style="font-size:14px;font-weight:600;color:var(--muted);margin-bottom:8px;">{{ $typeName }}</h4>
+                            <div class="compatible-list">
+                                @foreach($items as $item)
+                                    <span class="compatible-tag" style="cursor:default;">
+                                        @if($item->brand)
+                                            <span class="compatible-brand">{{ $item->brand->name }}</span>
+                                        @endif
+                                        {{ $item->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             @endif
 
