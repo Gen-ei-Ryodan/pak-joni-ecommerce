@@ -339,15 +339,15 @@ class OrderResource extends Resource
                     ])
                     ->visible(fn ($record) => $record?->is_indent ?? false),
 
-                Section::make('Shipping Address')
+                Section::make('Alamat Pengiriman')
                     ->schema([
                         Infolists\Components\TextEntry::make('address_snapshot.recipient_name')
-                            ->label('Recipient'),
+                            ->label('Penerima'),
                         Infolists\Components\TextEntry::make('address_snapshot.phone')
-                            ->label('Phone'),
-                        Infolists\Components\TextEntry::make('address')
-                            ->label('Address')
-                            ->formatStateUsing(fn ($record) => collect([
+                            ->label('Telepon'),
+                        Infolists\Components\TextEntry::make('full_address')
+                            ->label('Alamat')
+                            ->getStateUsing(fn (Order $record) => collect([
                                 $record->address_snapshot['address_line1'] ?? '',
                                 $record->address_snapshot['address_line2'] ?? '',
                                 $record->address_snapshot['city'] ?? '',
@@ -356,8 +356,7 @@ class OrderResource extends Resource
                             ])->filter()->implode(', '))
                             ->columnSpanFull(),
                     ]),
-
-                Section::make('Shipping Info')
+                Section::make('Info Kurir')
                     ->schema([
                         Grid::make(3)
                             ->schema([
