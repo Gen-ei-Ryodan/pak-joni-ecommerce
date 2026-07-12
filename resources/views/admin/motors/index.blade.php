@@ -45,7 +45,7 @@
                             <td style="padding:10px;">{{ $motor->year ?? '-' }}</td>
                             <td style="padding:10px;">{{ $motor->status }}</td>
                             <td style="padding:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                                <a class="btn" href="{{ route('buyer.motors.show', $motor->slug) }}" target="_blank">Preview</a>
+                                <a class="btn" href="{{ route('buyer.motors.show', ['categoryType' => $motor->type->slug ?? 'motor', 'slug' => $motor->slug]) }}" target="_blank">Preview</a>
                                 <a class="btn" href="{{ route('admin.motors.edit', $motor) }}">Edit</a>
                                 <form method="post" action="{{ route('admin.motors.destroy', $motor) }}" onsubmit="return confirm('Hapus motor?')">
                                     @csrf

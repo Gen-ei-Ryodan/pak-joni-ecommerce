@@ -5,7 +5,7 @@
 @section('dashboard-content')
     <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
         <div style="font-size:16px;font-weight:600;">Wishlist</div>
-        <a class="btn" href="{{ route('buyer.parts.index') }}">Browse Parts</a>
+        <a class="btn" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Browse Parts</a>
     </div>
 
     <div style="height:14px;"></div>

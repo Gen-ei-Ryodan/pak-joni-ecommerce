@@ -39,14 +39,33 @@
 
                         @php
                             use App\Models\CategoryType;
-                            $categoryTypes = CategoryType::where('is_active', true)->orderBy('sort_order')->get();
+                            use App\Models\Brand;
+                            $navCategoryTypes = CategoryType::where('is_active', true)->orderBy('sort_order')->get();
                         @endphp
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" data-dropdown-toggle="produk">Produk <span class="dd-arrow">&#9662;</span></button>
                             <div class="nav-dropdown-menu" data-dropdown-menu="produk">
-                                <a href="{{ route('buyer.products') }}">Semua Produk</a>
-                                @foreach($categoryTypes as $ct)
-                                    <a href="{{ route('buyer.products', ['type' => $ct->slug]) }}">{{ $ct->name }}</a>
+                                @foreach($navCategoryTypes as $ct)
+                                    @php
+                                        $ctBrands = Brand::whereHas('items', fn($q) => $q->where('category_type_id', $ct->id)->where('status', 'active')->where('is_active', true))
+                                            ->where('is_active', true)
+                                            ->orderBy('sort_order')
+                                            ->get();
+                                    @endphp
+                                    @if($ctBrands->isNotEmpty())
+                                        <div class="nav-submenu">
+                                            <span class="nav-submenu-toggle">{{ $ct->name }} <span class="sub-arrow">&#9656;</span></span>
+                                            <div class="nav-submenu-menu">
+                                                @foreach($ctBrands as $brand)
+                                                    <a href="{{ route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => $brand->slug]) }}">{{ $brand->name }}</a>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @elseif($ct->slug === 'sparepart')
+                                        <a href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">{{ $ct->name }}</a>
+                                    @else
+                                        <a href="{{ route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => 'all']) }}">{{ $ct->name }}</a>
+                                    @endif
                                 @endforeach
                                 <hr style="border-color:var(--line);margin:4px 0;">
                                 <a href="{{ route('buyer.price-list') }}">Daftar Harga</a>
@@ -85,7 +104,7 @@
                         </button>
 
                         @auth
-                            @php($cartCount = auth()->user()->cart?->items()->count() ?? 0)
+                            @php $cartCount = auth()->user()->cart?->items()->count() ?? 0; @endphp
                             <a class="nav-cart-icon" href="{{ route('buyer.cart.index') }}">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
@@ -145,7 +164,7 @@
                             <h4 class="footer-heading">Link Cepat</h4>
                             <ul class="footer-links">
                                 <li><a href="{{ route('buyer.home') }}">Beranda</a></li>
-                                <li><a href="{{ route('buyer.products') }}">Produk</a></li>
+                                <li><a href="{{ route('buyer.home') }}#produk">Produk</a></li>
                                 <li><a href="{{ route('buyer.price-list') }}">Daftar Harga</a></li>
                                 <li><a href="{{ route('buyer.part-catalog') }}">Part Katalog</a></li>
                                 <li><a href="{{ route('buyer.showroom') }}">Showroom</a></li>

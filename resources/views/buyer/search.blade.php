@@ -141,14 +141,14 @@
                 <div class="grid grid-3">
                     @forelse($items as $item)
                         <div class="card motor-card">
-                            <a class="card-media-link" href="{{ route('buyer.motors.show', $item->slug) }}" style="display:block;text-decoration:none;">
+                            <a class="card-media-link" href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" style="display:block;text-decoration:none;">
                                 <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                             </a>
                             <div class="card-body">
                                 @if($item->brand)
                                     <div class="card-meta">{{ $item->brand->name }}</div>
                                 @endif
-                                <a href="{{ route('buyer.motors.show', $item->slug) }}" style="text-decoration:none;color:inherit;">
+                                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" style="text-decoration:none;color:inherit;">
                                     <div class="card-title">{{ $item->name }}</div>
                                 </a>
                                 @if($item->price)
@@ -156,8 +156,8 @@
                                 @endif
                             </div>
                             <div class="card-actions">
-                                <a href="{{ route('buyer.motors.show', $item->slug) }}" class="card-action-btn primary">Lihat Motor</a>
-                                <a href="{{ route('buyer.motors.show', ['slug' => $item->slug, 'tab' => 'parts']) }}" class="card-action-btn">Sparepart</a>
+                                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" class="card-action-btn primary">Lihat {{ $item->type->name }}</a>
+                                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts']) }}" class="card-action-btn">Sparepart</a>
                             </div>
                         </div>
                     @empty

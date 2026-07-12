@@ -28,7 +28,7 @@
 
                     <nav class="nav-links">
                         <a href="{{ route('buyer.home') }}">Beranda</a>
-                        <a href="{{ route('buyer.products') }}">Produk</a>
+                        <a href="{{ route('buyer.category-brand', ['categoryType' => 'motor', 'brand' => 'all']) }}">Motor</a>
                     </nav>
 
                     <div class="nav-cta">

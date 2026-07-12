@@ -107,7 +107,7 @@
 
                     {{-- Link ke item --}}
                     @if($part->items->count())
-                        <a href="{{ route('buyer.motors.show', $part->items->first()->slug) }}" 
+                        <a href="{{ route('buyer.motors.show', ['categoryType' => $part->items->first()->type->slug ?? 'motor', 'slug' => $part->items->first()->slug]) }}" 
                            class="motor-link-btn">
                             Lihat {{ $part->items->first()->name }} &rarr;
                         </a>
@@ -267,7 +267,7 @@
                             <h4 style="font-size:14px;font-weight:600;color:var(--muted);margin-bottom:8px;">{{ $typeName }}</h4>
                             <div class="compatible-list">
                                 @foreach($items as $compatItem)
-                                    <a href="{{ route('buyer.motors.show', $compatItem->slug) }}" class="compatible-tag">
+                                    <a href="{{ route('buyer.motors.show', ['categoryType' => $compatItem->type->slug, 'slug' => $compatItem->slug]) }}" class="compatible-tag">
                                         @if($compatItem->brand)
                                             <span class="compatible-brand">{{ $compatItem->brand->name }}</span>
                                         @endif
