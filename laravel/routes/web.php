@@ -130,15 +130,15 @@ Route::middleware('auth')->group(function () {
     Route::put('/account/addresses/{address}', [BuyerAddressController::class, 'update'])->name('buyer.addresses.update');
     Route::delete('/account/addresses/{address}', [BuyerAddressController::class, 'destroy'])->name('buyer.addresses.destroy');
 
-    Route::get('/checkout', [AppHttpControllersBuyerCheckoutController::class, 'address'])->name('buyer.checkout.address');
-    Route::get('/checkout/address', fn() => redirect('/checkout'));
-    Route::post('/checkout/address', [BuyerCheckoutController::class, 'setAddress'])->name('buyer.checkout.setAddress');
-    Route::get('/checkout/shipping', [BuyerCheckoutController::class, 'shipping'])->name('buyer.checkout.shipping');
-    Route::get('/checkout/shipping/rates', [BuyerCheckoutController::class, 'rates'])->name('buyer.checkout.rates');
-    Route::post('/checkout/shipping', [BuyerCheckoutController::class, 'setShipping'])->name('buyer.checkout.setShipping');
-    Route::get('/checkout/payment', [BuyerCheckoutController::class, 'payment'])->name('buyer.checkout.payment');
-    Route::post('/checkout/place', [BuyerCheckoutController::class, 'placeOrder'])->name('buyer.checkout.place');
-    Route::get('/checkout/finish/{order}', [BuyerCheckoutController::class, 'finish'])->name('buyer.checkout.finish');
+    Route::get('/checkout', [\App\Http\Controllers\Buyer\CheckoutController::class, 'address'])->name('buyer.checkout.address');
+    Route::get('/checkout/address', fn() => redirect()->route('buyer.checkout.address'));
+    Route::post('/checkout/address', [\App\Http\Controllers\Buyer\CheckoutController::class, 'setAddress'])->name('buyer.checkout.setAddress');
+    Route::get('/checkout/shipping', [\App\Http\Controllers\Buyer\CheckoutController::class, 'shipping'])->name('buyer.checkout.shipping');
+    Route::get('/checkout/shipping/rates', [\App\Http\Controllers\Buyer\CheckoutController::class, 'rates'])->name('buyer.checkout.rates');
+    Route::post('/checkout/shipping', [\App\Http\Controllers\Buyer\CheckoutController::class, 'setShipping'])->name('buyer.checkout.setShipping');
+    Route::get('/checkout/payment', [\App\Http\Controllers\Buyer\CheckoutController::class, 'payment'])->name('buyer.checkout.payment');
+    Route::post('/checkout/place', [\App\Http\Controllers\Buyer\CheckoutController::class, 'placeOrder'])->name('buyer.checkout.place');
+    Route::get('/checkout/finish/{order}', [\App\Http\Controllers\Buyer\CheckoutController::class, 'finish'])->name('buyer.checkout.finish');
 
     Route::get('/my/orders', [BuyerOrderController::class, 'index'])->name('buyer.orders.index');
     Route::get('/my/orders/{order:order_no}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
