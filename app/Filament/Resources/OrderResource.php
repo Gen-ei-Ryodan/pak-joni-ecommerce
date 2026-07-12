@@ -361,9 +361,13 @@ class OrderResource extends Resource
                     ->schema([
                         Grid::make(3)
                             ->schema([
-                                Infolists\Components\TextEntry::make('shipping_courier')
-                                    ->label('Kurir (Diinput Admin)')
-                                    ->placeholder('-'),
+                                Infolists\Components\TextEntry::make('courier_name')
+                                    ->label('Kurir')
+                                    ->getStateUsing(fn (Order $record) => collect([
+                                        strtoupper($record->shipping_snapshot['courier'] ?? ''),
+                                        strtoupper($record->shipping_snapshot['service'] ?? ''),
+                                    ])->filter()->implode(' - ') ?: '-')
+                                    ->visible(fn (Order $record) => !empty($record->shipping_snapshot)),
                                 Infolists\Components\TextEntry::make('shipping_receipt')
                                     ->label('No Resi')
                                     ->placeholder('-'),
@@ -372,13 +376,6 @@ class OrderResource extends Resource
                                     ->dateTime('d M Y H:i')
                                     ->placeholder('-'),
                             ]),
-                        Infolists\Components\TextEntry::make('shipping_snapshot')
-                            ->label('Kurir Dipilih Customer')
-                            ->formatStateUsing(fn ($state) => collect([
-                                strtoupper($state['courier'] ?? ''),
-                                strtoupper($state['service'] ?? ''),
-                            ])->filter()->implode(' - ') ?: '-')
-                            ->visible(fn ($state) => !empty($state)),
                     ]),
 
                 Section::make('Order Items')
