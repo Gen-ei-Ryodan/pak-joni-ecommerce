@@ -12,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasColumn('careers', 'expired_date')) {
+            return;
+        }
+
         // Backfill display_end_date with existing expired_date values before dropping
         DB::table('careers')
             ->whereNull('display_end_date')
@@ -23,13 +27,12 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('careers', function (Blueprint $table) {
-            $table->dateTime('expired_date')->nullable()->after('publish_date');
-        });
+        if (!Schema::hasColumn('careers', 'expired_date')) {
+            Schema::table('careers', function (Blueprint $table) {
+                $table->dateTime('expired_date')->nullable()->after('publish_date');
+            });
+        }
     }
 };
