@@ -6,19 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\Brand;
 use App\Models\Career;
+use App\Models\CategoryType;
 use App\Models\CompanyProfile;
 use App\Models\CsrArticle;
 use App\Models\Dealer;
 use App\Models\Event;
 use App\Models\InternalActivity;
-use App\Models\Motor;
-use App\Models\MotorCategory;
+use App\Models\Item;
+use App\Models\ItemPriceList;
+use App\Models\ItemPartCatalog;
 use App\Models\News;
 use App\Models\Part;
-use App\Models\PartCatalog;
 use App\Models\PartCategory;
-use App\Models\PriceList;
-use App\Models\ProductHighlight;
 use App\Models\ShowroomGallery;
 use App\Models\WhyChooseUs;
 use Illuminate\Http\Request;
@@ -34,20 +33,17 @@ class PageController extends Controller
 
         $latestNews = News::query()->where('is_active', true)->orderByDesc('publish_date')->take(4)->get();
 
-        $highlight = ProductHighlight::query()
-            ->with('motor')
-            ->where('is_active', true)
-            ->first();
-
         $brands = Brand::query()->where('is_active', true)->orderBy('sort_order')->get();
 
         $whyChooseUs = WhyChooseUs::query()->where('is_active', true)->orderBy('sort_order')->get();
 
         $latestEvents = Event::query()->where('is_active', true)->orderByDesc('event_date')->take(3)->get();
 
-        $motors = Motor::query()
-            ->with(['brand', 'category'])
+        // Ambil items dari semua category types (8 terbaru)
+        $items = Item::query()
+            ->with(['brand', 'category', 'type'])
             ->where('status', 'active')
+            ->where('is_active', true)
             ->orderByDesc('id')
             ->take(8)
             ->get();
@@ -61,8 +57,8 @@ class PageController extends Controller
 
         return view('buyer.home', compact(
             'heroBanners', 'promoBanners', 'launchingBanners', 'kegiatanBanners',
-            'latestNews', 'highlight', 'brands', 'whyChooseUs', 'latestEvents',
-            'motors', 'parts'
+            'latestNews', 'brands', 'whyChooseUs', 'latestEvents',
+            'items', 'parts'
         ));
     }
 
@@ -80,11 +76,19 @@ class PageController extends Controller
         $selectedCategory = $request->query('category');
         $productType = $request->query('type'); // null = show all, 'motor' or 'sparepart'
 
-        // Get categories filtered by brand
-        $categories = MotorCategory::query()
-            ->when($selectedBrand, fn($q) => $q->whereHas('brand', fn($b) => $b->where('slug', $selectedBrand)))
-            ->orderBy('sort_order')
-            ->get();
+        // Get motor category type
+        $motorType = CategoryType::where('slug', 'motor')->where('is_active', true)->first();
+
+        // Get categories for motor type
+        $categories = collect();
+        if ($motorType) {
+            $categories = \App\Models\Category::query()
+                ->where('category_type_id', $motorType->id)
+                ->where('is_active', true)
+                ->when($selectedBrand, fn($q) => $q->whereHas('items.brand', fn($b) => $b->where('slug', $selectedBrand)))
+                ->orderBy('sort_order')
+                ->get();
+        }
 
         $sparepartGroups = PartCategory::query()
             ->orderBy('group')
@@ -95,15 +99,22 @@ class PageController extends Controller
 
         $selectedSparepartGroup = $request->query('part_group');
 
-        // Always fetch motors when type is null or 'motor'
-        $motors = collect();
+        // Always fetch items when type is null or 'motor'
+        $items = collect();
         if ($productType === null || $productType === 'motor') {
-            $motors = Motor::query()
-                ->with(['brand', 'category', 'images', 'colors'])
+            $query = Item::query()
+                ->with(['brand', 'category', 'images', 'colors', 'type'])
                 ->where('status', 'active')
-                ->when($selectedBrand, fn($q) => $q->whereHas('brand', fn($b) => $b->where('slug', $selectedBrand)))
-                ->when($selectedCategory, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $selectedCategory)))
-                ->orderByDesc('id')
+                ->where('is_active', true);
+
+            if ($motorType && $productType === 'motor') {
+                $query->where('category_type_id', $motorType->id);
+            }
+
+            $query->when($selectedBrand, fn($q) => $q->whereHas('brand', fn($b) => $b->where('slug', $selectedBrand)))
+                ->when($selectedCategory, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $selectedCategory)));
+
+            $items = $query->orderByDesc('id')
                 ->paginate(12)
                 ->withQueryString();
         }
@@ -112,10 +123,9 @@ class PageController extends Controller
         $parts = collect();
         if ($productType === null || $productType === 'sparepart') {
             $parts = Part::query()
-                ->with(['category', 'defaultVariant', 'variants', 'motors.brand'])
+                ->with(['category', 'defaultVariant', 'variants'])
                 ->where('status', 'active')
-                ->when($selectedBrand, fn($q) => $q->whereHas('motors', fn($mq) => $mq->whereHas('brand', fn($b) => $b->where('slug', $selectedBrand))))
-                ->when($selectedCategory, fn($q) => $q->whereHas('motors', fn($mq) => $mq->whereHas('category', fn($c) => $c->where('slug', $selectedCategory))))
+                ->when($selectedBrand, fn($q) => $q->whereHas('items.brand', fn($b) => $b->where('slug', $selectedBrand)))
                 ->when($selectedSparepartGroup, fn($q) => $q->whereHas('category', fn($c) => $c->where('group', $selectedSparepartGroup)))
                 ->orderByDesc('id')
                 ->paginate(12)
@@ -124,7 +134,7 @@ class PageController extends Controller
 
         return view('buyer.products', compact(
             'brands', 'categories', 'sparepartGroups',
-            'motors', 'parts',
+            'items', 'parts',
             'selectedBrand', 'selectedCategory', 'productType', 'selectedSparepartGroup'
         ));
     }
@@ -154,112 +164,12 @@ class PageController extends Controller
         return view('buyer.dealer', compact('dealers', 'q', 'province', 'city', 'provinces', 'cities'));
     }
 
-    public function news(Request $request)
-    {
-        $news = News::query()
-            ->where('is_active', true)
-            ->orderByDesc('publish_date')
-            ->paginate(9)
-            ->withQueryString();
-
-        return view('buyer.news.index', compact('news'));
-    }
-
-    public function newsShow(News $news)
-    {
-        $related = News::query()
-            ->where('is_active', true)
-            ->where('id', '!=', $news->id)
-            ->orderByDesc('publish_date')
-            ->take(4)
-            ->get();
-
-        return view('buyer.news.show', compact('news', 'related'));
-    }
-
-    public function events(Request $request)
-    {
-        $events = Event::query()
-            ->with('galleries')
-            ->where('is_active', true)
-            ->orderByDesc('event_date')
-            ->paginate(9)
-            ->withQueryString();
-
-        return view('buyer.events.index', compact('events'));
-    }
-
-    public function eventShow(Event $event)
-    {
-        $event->load('galleries');
-
-        return view('buyer.events.show', compact('event'));
-    }
-
-    public function csr(Request $request)
-    {
-        $articles = CsrArticle::query()
-            ->where('is_active', true)
-            ->orderByDesc('publish_date')
-            ->paginate(9)
-            ->withQueryString();
-
-        return view('buyer.csr.index', compact('articles'));
-    }
-
-    public function csrShow(CsrArticle $article)
-    {
-        return view('buyer.csr.show', compact('article'));
-    }
-
-    public function careers(Request $request)
-    {
-        $now = now()->startOfDay();
-
-        $careers = Career::query()
-            ->where('is_active', true)
-            ->where('status', 'active')
-            ->where(function ($q) use ($now) {
-                $q->whereNull('display_start_date')
-                  ->orWhere('display_start_date', '<=', $now);
-            })
-            ->where(function ($q) use ($now) {
-                $q->whereNull('display_end_date')
-                  ->orWhere('display_end_date', '>=', $now);
-            })
-            ->orderByDesc('publish_date')
-            ->paginate(9)
-            ->withQueryString();
-
-        return view('buyer.careers.index', compact('careers'));
-    }
-
-    public function careerShow(Career $career)
-    {
-        return view('buyer.careers.show', compact('career'));
-    }
-
-    public function internalActivities(Request $request)
-    {
-        $activities = InternalActivity::query()
-            ->where('is_active', true)
-            ->orderByDesc('publish_date')
-            ->paginate(9)
-            ->withQueryString();
-
-        return view('buyer.internal-activities.index', compact('activities'));
-    }
-
-    public function internalActivityShow(InternalActivity $activity)
-    {
-        return view('buyer.internal-activities.show', compact('activity'));
-    }
-
     public function priceList(Request $request)
     {
         $q = trim((string) $request->query('q', ''));
-        $priceLists = PriceList::query()
-            ->when($q !== '', fn($query) => $query->where('title', 'like', '%'.$q.'%'))
+        $priceLists = ItemPriceList::query()
+            ->with('item')
+            ->when($q !== '', fn($query) => $query->where('name', 'like', '%'.$q.'%'))
             ->orderByDesc('id')
             ->paginate(12)
             ->withQueryString();
@@ -270,19 +180,14 @@ class PageController extends Controller
     public function partCatalog(Request $request)
     {
         $q = trim((string) $request->query('q', ''));
-        $catalogs = PartCatalog::query()
-            ->when($q !== '', fn($query) => $query->where('title', 'like', '%'.$q.'%'))
+        $catalogs = ItemPartCatalog::query()
+            ->with('item')
+            ->when($q !== '', fn($query) => $query->where('name', 'like', '%'.$q.'%'))
             ->orderByDesc('id')
             ->paginate(12)
             ->withQueryString();
 
         return view('buyer.spareparts.part-catalog', compact('catalogs', 'q'));
-    }
-
-    public function showroom()
-    {
-        $images = ShowroomGallery::query()->where('is_active', true)->orderBy('sort_order')->get();
-        return view('buyer.showroom', compact('images'));
     }
 
     public function search(Request $request)
@@ -299,13 +204,17 @@ class PageController extends Controller
             ->orderBy('group')
             ->pluck('group');
 
-        $motors = collect();
+        $motorType = CategoryType::where('slug', 'motor')->where('is_active', true)->first();
+
+        $items = collect();
         $parts = collect();
 
         if ($type === null || $type === 'motor') {
-            $motors = Motor::query()
-                ->with(['brand', 'category'])
+            $items = Item::query()
+                ->with(['brand', 'category', 'type'])
                 ->where('status', 'active')
+                ->where('is_active', true)
+                ->when($motorType && $type === 'motor', fn($q) => $q->where('category_type_id', $motorType->id))
                 ->when($q !== '', fn($query) => $query->where(function($q2) use ($q) {
                     $q2->where('name', 'like', '%'.$q.'%')
                        ->orWhere('short_description', 'like', '%'.$q.'%');
@@ -318,14 +227,14 @@ class PageController extends Controller
 
         if ($type === null || $type === 'sparepart') {
             $parts = Part::query()
-                ->with(['category', 'defaultVariant', 'motors.brand'])
+                ->with(['category', 'defaultVariant'])
                 ->where('status', 'active')
                 ->when($q !== '', fn($query) => $query->where(function($q2) use ($q) {
                     $q2->where('name', 'like', '%'.$q.'%')
                        ->orWhere('sku', 'like', '%'.$q.'%')
                        ->orWhere('short_description', 'like', '%'.$q.'%');
                 }))
-                ->when($brand, fn($query) => $query->whereHas('motors', fn($mq) => $mq->whereHas('brand', fn($b) => $b->where('slug', $brand))))
+                ->when($brand, fn($query) => $query->whereHas('items.brand', fn($b) => $b->where('slug', $brand)))
                 ->when($partGroup, fn($query) => $query->whereHas('category', fn($c) => $c->where('group', $partGroup)))
                 ->orderByDesc('id')
                 ->paginate(12, ['*'], 'part_page')
@@ -333,14 +242,126 @@ class PageController extends Controller
         }
 
         $totalResults = 0;
-        if ($type === null || $type === 'motor') $totalResults += $motors->total();
+        if ($type === null || $type === 'motor') $totalResults += $items->total();
         if ($type === null || $type === 'sparepart') $totalResults += $parts->total();
 
         return view('buyer.search', compact(
             'q', 'type', 'brand', 'partGroup',
             'brands', 'partGroups',
-            'motors', 'parts',
+            'items', 'parts',
             'totalResults'
         ));
+    }
+
+    public function news(Request $request)
+    {
+        $news = \App\Models\News::query()
+            ->where('is_active', true)
+            ->orderByDesc('publish_date')
+            ->paginate(9);
+
+        return view('buyer.news.index', compact('news'));
+    }
+
+    public function newsShow(\App\Models\News $news)
+    {
+        $relatedNews = \App\Models\News::query()
+            ->where('is_active', true)
+            ->where('id', '!=', $news->id)
+            ->orderByDesc('publish_date')
+            ->take(3)
+            ->get();
+
+        return view('buyer.news.show', compact('news', 'relatedNews'));
+    }
+
+    public function events(Request $request)
+    {
+        $events = \App\Models\Event::query()
+            ->where('is_active', true)
+            ->orderByDesc('event_date')
+            ->paginate(9);
+
+        return view('buyer.events.index', compact('events'));
+    }
+
+    public function eventShow(\App\Models\Event $event)
+    {
+        $event->load('galleries');
+        $relatedEvents = \App\Models\Event::query()
+            ->where('is_active', true)
+            ->where('id', '!=', $event->id)
+            ->orderByDesc('event_date')
+            ->take(3)
+            ->get();
+
+        return view('buyer.events.show', compact('event', 'relatedEvents'));
+    }
+
+    public function csr(Request $request)
+    {
+        $articles = \App\Models\CsrArticle::query()
+            ->where('is_active', true)
+            ->orderByDesc('publish_date')
+            ->paginate(9);
+
+        return view('buyer.csr.index', compact('articles'));
+    }
+
+    public function csrShow(\App\Models\CsrArticle $article)
+    {
+        $relatedArticles = \App\Models\CsrArticle::query()
+            ->where('is_active', true)
+            ->where('id', '!=', $article->id)
+            ->orderByDesc('publish_date')
+            ->take(3)
+            ->get();
+
+        return view('buyer.csr.show', compact('article', 'relatedArticles'));
+    }
+
+    public function careers(Request $request)
+    {
+        $careers = \App\Models\Career::query()
+            ->where('is_active', true)
+            ->where('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('publish_date')
+                  ->orWhere('publish_date', '<=', now());
+            })
+            ->orderByDesc('publish_date')
+            ->paginate(9);
+
+        return view('buyer.careers.index', compact('careers'));
+    }
+
+    public function careerShow(\App\Models\Career $career)
+    {
+        return view('buyer.careers.show', compact('career'));
+    }
+
+    public function internalActivities(Request $request)
+    {
+        $activities = \App\Models\InternalActivity::query()
+            ->where('is_active', true)
+            ->orderByDesc('publish_date')
+            ->paginate(9);
+
+        return view('buyer.internal-activities.index', compact('activities'));
+    }
+
+    public function internalActivityShow(\App\Models\InternalActivity $activity)
+    {
+        $activity->load('galleries');
+        return view('buyer.internal-activities.show', compact('activity'));
+    }
+
+    public function showroom()
+    {
+        $images = \App\Models\ShowroomGallery::query()
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('buyer.showroom', compact('images'));
     }
 }

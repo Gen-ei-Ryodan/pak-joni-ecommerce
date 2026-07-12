@@ -15,7 +15,7 @@ class PartController extends Controller
         $category = $request->query('category');
 
         $parts = Part::query()
-            ->with(['category', 'defaultVariant', 'motors.brand'])
+            ->with(['category', 'defaultVariant'])
             ->where('status', 'active')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($q2) use ($q) {
@@ -41,7 +41,7 @@ class PartController extends Controller
 
     public function show(Part $part)
     {
-        $part->load(['images', 'variants', 'category', 'motors.brand', 'specifications', 'items.brand', 'items.type']);
+        $part->load(['images', 'variants', 'category', 'specifications', 'items.brand', 'items.type']);
 
         $specGroups = $part->specifications->groupBy('group');
 

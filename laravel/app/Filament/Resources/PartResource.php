@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PartResource\Pages;
 use App\Models\CategoryType;
 use App\Models\Item;
-use App\Models\Motor;
 use App\Models\Part;
 use App\Models\PartCategory;
 use App\Models\Part360Image;
@@ -15,6 +14,7 @@ use App\Services\ImageService;
 use BackedEnum;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Navigation\NavigationItem;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -32,13 +32,35 @@ class PartResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Catalog';
+    protected static ?string $navigationLabel = 'Parts';
 
-    protected static ?int $navigationSort = 3;
+    protected static string|UnitEnum|null $navigationGroup = 'Parts';
+
+    protected static ?int $navigationSort = 2;
 
     public static function shouldRegisterNavigation(): bool
     {
-        return true;
+        return false;
+    }
+
+    public static function getNavigationItems(): array
+    {
+        $items = [];
+        $types = CategoryType::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        foreach ($types as $type) {
+            $items[] = NavigationItem::make('parts-' . $type->id)
+                ->label('Parts ' . $type->name)
+                ->group($type->name)
+                ->icon('heroicon-o-cog-6-tooth')
+                ->sort(20)
+                ->url(static::getUrl('byType', ['categoryType' => $type->id]));
+        }
+
+        return $items;
     }
 
     public static function table(Table $table): Table
@@ -51,6 +73,8 @@ class PartResource extends Resource
                     ->square()
                     ->size(40)
                     ->getStateUsing(fn ($record) => $record?->thumbnail_path ? Storage::disk('public')->url($record->thumbnail_path) : null),
+
+                Tables\Columns\TextColumn::make('type.name')->label('Tipe')->sortable(),
 
                 Tables\Columns\TextColumn::make('sku')
                     ->label('SKU')
@@ -114,12 +138,15 @@ class PartResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('category_type_id')
+                    ->label('Tipe')
+                    ->relationship('type', 'name')
+                    ->preload(),
                 Tables\Filters\SelectFilter::make('part_category_id')
                     ->label('Category')
                     ->relationship('category', 'name')
                     ->searchable()
                     ->preload(),
-
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
                     ->options([
@@ -174,6 +201,28 @@ class PartResource extends Resource
             ->schema([
                 Section::make('Basic Information')
                     ->schema([
+
+                        Forms\Components\Select::make('category_type_id')
+                            ->label('Tipe Kategori')
+                            ->relationship('type', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(fn (callable $set) => $set('part_category_id', null)),
+
+                        Forms\Components\Select::make('part_category_id')
+                            ->label('Category')
+                            ->options(fn ($get) => PartCategory::query()
+                                ->when($get('category_type_id'), fn ($q, $typeId) => $q->where('category_type_id', $typeId))
+                                ->orderBy('name')
+                                ->get()
+                                ->mapWithKeys(fn ($cat) => [$cat->id => $cat->group . ' - ' . $cat->name])
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+
                         Forms\Components\TextInput::make('sku')
                             ->required()
                             ->maxLength(64)
@@ -182,13 +231,6 @@ class PartResource extends Resource
                         Forms\Components\TextInput::make('name')
                             ->required()
                             ->maxLength(255),
-
-                        Forms\Components\Select::make('part_category_id')
-                            ->label('Category')
-                            ->relationship('category', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->required(),
 
                         Forms\Components\Select::make('status')
                             ->options([
@@ -258,20 +300,12 @@ class PartResource extends Resource
                     ->schema(function (?Part $record) {
                         $fields = [];
 
-                        $fields[] = Forms\Components\Select::make('motor_ids')
-                            ->label('Motor')
-                            ->relationship('motors', 'name')
-                            ->multiple()
-                            ->searchable()
-                            ->preload();
-
-                        $otherTypes = CategoryType::query()
+                        $types = CategoryType::query()
                             ->where('is_active', true)
-                            ->whereNotIn('slug', ['motor', 'sparepart'])
                             ->orderBy('sort_order')
                             ->get();
 
-                        foreach ($otherTypes as $ct) {
+                        foreach ($types as $ct) {
                             $options = Item::query()
                                 ->where('category_type_id', $ct->id)
                                 ->where('is_active', true)
@@ -295,34 +329,6 @@ class PartResource extends Resource
                         return $fields;
                     })
                     ->columns(2),
-
-                Section::make('Foto 360° Produk')
-                    ->description('Upload foto produk dari berbagai sudut secara berurutan (searah jarum jam) agar fitur rotasi 360° dapat berjalan dengan baik. Minimal 4 foto.')
-                    ->schema([
-                        Forms\Components\Repeater::make('images360')
-                            ->relationship('images360')
-                            ->schema([
-                                Forms\Components\FileUpload::make('image_path')
-                                    ->label('Frame Image')
-                                    ->image()
-                                    ->imagePreviewHeight('120')
-                                    ->disk('public')
-                                    ->directory('parts/360frames')
-                                    ->maxSize(2048)
-                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                                    ->required(),
-                                Forms\Components\TextInput::make('sort_order')
-                                    ->numeric()
-                                    ->default(0)
-                                    ->hidden(),
-                            ])
-                            ->orderColumn('sort_order')
-                            ->defaultItems(0)
-                            ->collapsible()
-                            ->addActionLabel('Tambah Foto 360°'),
-                    ])
-                    ->collapsible()
-                    ->collapsed(),
 
                 Section::make('Foto 360° Produk')
                     ->description('Upload foto produk dari berbagai sudut secara berurutan (searah jarum jam) agar fitur rotasi 360° dapat berjalan dengan baik. Minimal 4 foto.')
@@ -394,6 +400,7 @@ class PartResource extends Resource
     {
         return [
             'index' => Pages\ListParts::route('/'),
+            'byType' => Pages\ListParts::route('/type/{categoryType}'),
             'create' => Pages\CreatePart::route('/create'),
             'edit' => Pages\EditPart::route('/{record}/edit'),
         ];

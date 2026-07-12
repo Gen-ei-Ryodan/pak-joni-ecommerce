@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 
 #[Fillable([
+    'category_type_id',
     'sku',
     'name',
     'slug',
@@ -27,13 +28,18 @@ class Part extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['sku', 'name', 'slug', 'part_category_id', 'thumbnail_path', 'short_description', 'description', 'specification', 'base_price', 'status', 'stock_status', 'stock_updated_at'];
+    protected $fillable = ['category_type_id', 'sku', 'name', 'slug', 'part_category_id', 'thumbnail_path', 'short_description', 'description', 'specification', 'base_price', 'status', 'stock_status', 'stock_updated_at'];
 
     protected function casts(): array
     {
         return [
             'base_price' => 'decimal:2',
         ];
+    }
+
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(CategoryType::class, 'category_type_id');
     }
 
     public function category(): BelongsTo
@@ -56,11 +62,6 @@ class Part extends Model
         return $this->hasOne(PartVariant::class)->where('is_default', true);
     }
 
-    public function motors(): BelongsToMany
-    {
-        return $this->belongsToMany(Motor::class)->withTimestamps();
-    }
-
     public function items(): BelongsToMany
     {
         return $this->belongsToMany(Item::class)->withTimestamps();
@@ -68,17 +69,10 @@ class Part extends Model
 
     public function allCompatibles(): Collection
     {
-        $motors = $this->motors()->with('brand')->get()->map(function ($m) {
-            $m->compatible_type = 'motor';
-            return $m;
-        });
-
-        $items = $this->items()->with(['brand', 'type'])->get()->map(function ($i) {
+        return $this->items()->with(['brand', 'type'])->get()->map(function ($i) {
             $i->compatible_type = 'item';
             return $i;
         });
-
-        return $motors->merge($items);
     }
 
     public function specifications(): HasMany

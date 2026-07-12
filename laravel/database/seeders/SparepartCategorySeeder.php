@@ -21,6 +21,7 @@ class SparepartCategorySeeder extends Seeder
         foreach ($categories as $group => $names) {
             foreach ($names as $name) {
                 DB::table('part_categories')->insertOrIgnore([
+                    'category_type_id' => null, // default ke sparepart type
                     'group' => $group,
                     'name' => $name,
                     'slug' => Str::slug($group.' '.$name),

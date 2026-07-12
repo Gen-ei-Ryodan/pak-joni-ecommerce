@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Cart;
 use App\Models\CartItem;
-use App\Models\MotorColor;
+use App\Models\ItemColor;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PartVariant;
@@ -342,9 +342,9 @@ class CheckoutController extends Controller
             $indentQty = (int) ($it->indent_quantity ?? 0);
             if ($indentQty > 0) continue; // already counted
 
-            if ($it->itemable_type === MotorColor::class) {
-                $color = MotorColor::with('motor')->find($it->itemable_id);
-                if ($color && $color->motor && $color->motor->stock_status === 'indent') {
+            if ($it->itemable_type === ItemColor::class) {
+                $color = ItemColor::with('item')->find($it->itemable_id);
+                if ($color && $color->item && $color->item->stock_status === 'indent') {
                     $indentSubtotal += (float) $it->price_snapshot * (int) $it->quantity;
                 }
             }
@@ -370,9 +370,9 @@ class CheckoutController extends Controller
             if ((int) ($it->indent_quantity ?? 0) > 0) {
                 return true;
             }
-            if ($it->itemable_type === MotorColor::class) {
-                $color = MotorColor::with('motor')->find($it->itemable_id);
-                if ($color && $color->motor && $color->motor->stock_status === 'indent') {
+            if ($it->itemable_type === ItemColor::class) {
+                $color = ItemColor::with('item')->find($it->itemable_id);
+                if ($color && $color->item && $color->item->stock_status === 'indent') {
                     return true;
                 }
             }
@@ -399,8 +399,8 @@ class CheckoutController extends Controller
         foreach ($cart->items as $item) {
             if ($item->itemable_type === PartVariant::class) {
                 $item->loadMissing(['itemable.part']);
-            } elseif ($item->itemable_type === MotorColor::class) {
-                $item->loadMissing(['itemable.motor']);
+            } elseif ($item->itemable_type === ItemColor::class) {
+                $item->loadMissing(['itemable.item']);
             }
         }
 

@@ -29,7 +29,7 @@ Route::get('/regions/districts/{regencyCode}', [RegionController::class, 'distri
 Route::get('/regions/villages/{districtCode}', [RegionController::class, 'villages']);
 
 Route::get('/motors', [BuyerMotorController::class, 'index'])->name('buyer.motors.index');
-Route::get('/motors/{motor:slug}', [BuyerMotorController::class, 'show'])->name('buyer.motors.show');
+Route::get('/motors/{slug}', [BuyerMotorController::class, 'show'])->name('buyer.motors.show');
 
 Route::get('/parts', [BuyerPartController::class, 'index'])->name('buyer.parts.index');
 Route::get('/parts/{part:slug}', [BuyerPartController::class, 'show'])->name('buyer.parts.show');
@@ -47,9 +47,9 @@ Route::get('/part-katalog', [BuyerPageController::class, 'partCatalog'])->name('
 Route::get('/whatsapp/{type}/{id}', function ($type, $id) {
     $phone = config('app.whatsapp_number', '6281234567890');
     if ($type === 'motor') {
-        $motor = \App\Models\Motor::findOrFail($id);
-        $msg = "Halo, saya tertarik dengan motor {$motor->name} ({$motor->brand?->name})%0A%0A".
-               "Link: ".route('buyer.motors.show', $motor->slug)."%0A%0A".
+        $item = \App\Models\Item::with('brand')->findOrFail($id);
+        $msg = "Halo, saya tertarik dengan {$item->name} ({$item->brand?->name})%0A%0A".
+               "Link: ".route('buyer.motors.show', $item->slug)."%0A%0A".
                "Mohon info lebih lanjut.";
     } else {
         $part = \App\Models\Part::with('category')->findOrFail($id);

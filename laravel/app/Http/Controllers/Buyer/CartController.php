@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Buyer;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartItem;
-use App\Models\MotorColor;
+use App\Models\ItemColor;
 use App\Models\PartVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,8 +20,8 @@ class CartController extends Controller
         foreach ($cart->items as $item) {
             if ($item->itemable_type === PartVariant::class) {
                 $item->loadMissing(['itemable.part.category']);
-            } elseif ($item->itemable_type === MotorColor::class) {
-                $item->loadMissing(['itemable.motor.brand']);
+            } elseif ($item->itemable_type === ItemColor::class) {
+                $item->loadMissing(['itemable.item.brand']);
             }
         }
 
@@ -33,7 +33,7 @@ class CartController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'itemable_type' => ['required', 'string', 'in:part_variant,motor_color'],
+            'itemable_type' => ['required', 'string', 'in:part_variant,item_color'],
             'itemable_id' => ['required', 'integer'],
             'quantity' => ['required', 'integer', 'min:1'],
             'indent_mode' => ['nullable', 'string', 'in:split,full'],
@@ -48,8 +48,8 @@ class CartController extends Controller
             return $this->addPartVariant($request, $id, $qty, $indentMode);
         }
 
-        if ($type === 'motor_color') {
-            return $this->addMotorColor($request, $id, $qty);
+        if ($type === 'item_color') {
+            return $this->addItemColor($request, $id, $qty);
         }
 
         return back()->withErrors(['type' => 'Invalid item type.']);
@@ -145,37 +145,37 @@ class CartController extends Controller
         return "Item added. {$indent} item akan dipesan indent (DP 50%).";
     }
 
-    private function addMotorColor(Request $request, int $colorId, int $qty)
+    private function addItemColor(Request $request, int $colorId, int $qty)
     {
-        $color = MotorColor::query()->with('motor')->findOrFail($colorId);
-        $motor = $color->motor;
+        $color = ItemColor::query()->with('item')->findOrFail($colorId);
+        $item = $color->item;
 
-        $result = DB::transaction(function () use ($request, $color, $motor, $qty) {
+        $result = DB::transaction(function () use ($request, $color, $item, $qty) {
             $cart = $this->cart($request);
 
-            $item = CartItem::query()
+            $cartItem = CartItem::query()
                 ->where('cart_id', $cart->id)
-                ->where('itemable_type', MotorColor::class)
+                ->where('itemable_type', ItemColor::class)
                 ->where('itemable_id', $color->id)
                 ->first();
 
-            if ($item) {
-                $item->quantity = $item->quantity + $qty;
-                $item->save();
+            if ($cartItem) {
+                $cartItem->quantity = $cartItem->quantity + $qty;
+                $cartItem->save();
             } else {
                 CartItem::create([
                     'cart_id' => $cart->id,
-                    'itemable_type' => MotorColor::class,
+                    'itemable_type' => ItemColor::class,
                     'itemable_id' => $color->id,
                     'quantity' => $qty,
-                    'price_snapshot' => $motor->price ?? 0,
-                    'product_name' => $motor->name,
+                    'price_snapshot' => $item->price ?? 0,
+                    'product_name' => $item->name,
                     'variant_name' => $color->name,
-                    'image_path' => $color->image_path ?: $motor->thumbnail_path,
+                    'image_path' => $color->image_path ?: $item->thumbnail_path,
                 ]);
             }
             $cartCount = $cart->items()->count();
-            return ['success' => true, 'message' => 'Motor added to cart.', 'cartCount' => $cartCount];
+            return ['success' => true, 'message' => 'Produk added to cart.', 'cartCount' => $cartCount];
         });
 
         if ($request->expectsJson()) {

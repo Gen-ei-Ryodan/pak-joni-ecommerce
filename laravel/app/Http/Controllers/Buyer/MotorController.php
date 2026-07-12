@@ -2,84 +2,95 @@
 
 namespace App\Http\Controllers\Buyer;
 
-use App\Http\Controllers\Controller;
-use App\Models\Motor;
-use App\Models\MotorCategory;
-use App\Models\PartCategory;
+use App\Models\CategoryType;
+use App\Models\Item;
 use Illuminate\Http\Request;
 
-class MotorController extends Controller
+class MotorController
 {
     public function index(Request $request)
     {
-        $q = trim((string) $request->query('q', ''));
+        $type = CategoryType::where('slug', 'motor')->where('is_active', true)->first();
 
-        $motors = Motor::query()
-            ->with(['brand', 'category'])
-            ->where('status', 'active')
-            ->when($q !== '', fn ($query) => $query->where('name', 'like', '%'.$q.'%'))
-            ->orderByDesc('id')
-            ->paginate(12)
-            ->withQueryString();
-
-        return view('buyer.motors.index', compact('motors', 'q'));
-    }
-
-    public function show(Motor $motor, Request $request)
-    {
-        $motor->load([
-            'brand',
-            'category',
-            'images',
-            'colors',
-            'specifications',
-            'images360',
-        ]);
-
-        $tab = $request->query('tab', 'detail');
-        $selectedPartGroup = $request->query('part_group');
-
-        $partGroups = PartCategory::query()
-            ->select('group')
-            ->distinct()
-            ->orderBy('group')
-            ->pluck('group');
-
-        $partsQuery = $motor->parts()
-            ->with(['category', 'defaultVariant', 'motors.brand'])
-            ->where('status', 'active');
-
-        if ($selectedPartGroup) {
-            $partsQuery->whereHas('category', fn($q) => $q->where('group', $selectedPartGroup));
+        if (!$type) {
+            abort(404, 'Category type not found');
         }
 
-        $parts = $partsQuery
-            ->orderBy('name')
-            ->paginate(12)
-            ->withQueryString();
-
-        $partsGrouped = $motor->parts()
-            ->with(['category', 'defaultVariant'])
+        $query = Item::with(['brand', 'category'])
+            ->where('category_type_id', $type->id)
             ->where('status', 'active')
+            ->where('is_active', true);
+
+        $q = $request->q;
+        if ($q) {
+            $query->where(function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")
+                  ->orWhere('short_description', 'like', "%{$q}%");
+            });
+        }
+
+        $items = $query->orderBy('sort_order')->orderBy('name')->paginate(12);
+
+        return view('buyer.motors.index', compact('items', 'q'));
+    }
+
+    public function show($slug, Request $request)
+    {
+        $type = CategoryType::where('slug', 'motor')->where('is_active', true)->first();
+
+        if (!$type) {
+            abort(404);
+        }
+
+        $item = Item::with([
+            'brand', 'category', 'images', 'colors',
+            'specifications', 'images360', 'parts' => function ($q) {
+                $q->where('status', 'active');
+            }, 'parts.category', 'priceLists', 'partCatalogs',
+        ])
+            ->where('category_type_id', $type->id)
+            ->where('slug', $slug)
+            ->where('status', 'active')
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $tab = $request->tab === 'parts' ? 'parts' : 'detail';
+
+        // Filter parts by group
+        $partGroup = $request->part_group;
+        $partsQuery = $item->parts();
+
+        $groups = $item->parts()
+            ->with('category')
             ->get()
-            ->groupBy(fn($p) => $p->category?->group ?? 'Lainnya');
+            ->groupBy(fn ($p) => $p->category->group ?? 'Lainnya')
+            ->map->count();
 
-        $relatedMotors = Motor::query()
-            ->with(['brand'])
+        if ($partGroup && $partGroup !== 'all') {
+            $partsQuery->whereHas('category', fn ($q) => $q->where('group', $partGroup));
+        }
+
+        $parts = $partsQuery->with(['category', 'defaultVariant'])->paginate(12);
+
+        // Related items
+        $relatedItems = Item::with('brand')
+            ->where('category_type_id', $type->id)
+            ->where('id', '!=', $item->id)
             ->where('status', 'active')
-            ->where('id', '!=', $motor->id)
-            ->where(function($q) use ($motor) {
-                $q->where('brand_id', $motor->brand_id)
-                  ->orWhere('category_id', $motor->category_id);
+            ->where('is_active', true)
+            ->where(function ($q) use ($item) {
+                $q->where('brand_id', $item->brand_id)
+                  ->orWhere('category_id', $item->category_id);
             })
-            ->take(4)
+            ->limit(4)
             ->get();
 
-        $specGroups = $motor->specifications->groupBy('group');
+        $specsGrouped = $item->specifications->groupBy('group');
 
-        return view('buyer.motors.show', compact(
-            'motor', 'partGroups', 'parts', 'partsGrouped',
-            'relatedMotors', 'specGroups', 'tab', 'selectedPartGroup'
-        ));
+        $partsGrouped = $groups;
+        $selectedPartGroup = $partGroup;
+        $partGroups = $groups->keys();
+
+        return view('buyer.motors.show', compact('item', 'tab', 'parts', 'partsGrouped', 'selectedPartGroup', 'partGroups', 'relatedItems', 'specsGrouped'));
     }
 }
