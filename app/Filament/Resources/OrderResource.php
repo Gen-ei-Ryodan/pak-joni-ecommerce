@@ -361,7 +361,7 @@ class OrderResource extends Resource
                         Grid::make(3)
                             ->schema([
                                 Infolists\Components\TextEntry::make('shipping_courier')
-                                    ->label('Courier')
+                                    ->label('Courier (Admin)')
                                     ->placeholder('-'),
                                 Infolists\Components\TextEntry::make('shipping_receipt')
                                     ->label('Receipt Number')
@@ -371,6 +371,13 @@ class OrderResource extends Resource
                                     ->dateTime('d M Y H:i')
                                     ->placeholder('-'),
                             ]),
+                        Infolists\Components\TextEntry::make('shipping_snapshot')
+                            ->label('Shipping Dipilih Customer')
+                            ->formatStateUsing(fn ($record) => collect([
+                                $record->shipping_snapshot ? strtoupper($record->shipping_snapshot['courier'] ?? '') : null,
+                                $record->shipping_snapshot ? strtoupper($record->shipping_snapshot['service'] ?? '') : null,
+                            ])->filter()->implode(' - ') ?: '-')
+                            ->visible(fn ($record) => !empty($record->shipping_snapshot)),
                     ]),
 
                 Section::make('Order Items')
