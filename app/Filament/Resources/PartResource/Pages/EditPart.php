@@ -8,10 +8,10 @@ use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Str;
 
 
-use App\Filament\Traits\RedirectsToList;class EditPart extends EditRecord
+use App\Filament\Traits\RedirectsToList;
+class EditPart extends EditRecord
 {
     protected static string $resource = PartResource::class;
-
 
     use RedirectsToList;
     private array $galleryPaths = [];
@@ -19,8 +19,6 @@ use App\Filament\Traits\RedirectsToList;class EditPart extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $data['motor_ids'] = $this->record->motors()->pluck('id')->toArray();
-
         $itemIds = $this->record->items()->pluck('items.id')->toArray();
         if (! empty($itemIds)) {
             $itemsByType = \App\Models\Item::whereIn('id', $itemIds)
@@ -85,12 +83,17 @@ use App\Filament\Traits\RedirectsToList;class EditPart extends EditRecord
             }
         }
 
-        if (isset($this->data['motor_ids'])) {
-            $part->motors()->sync($this->data['motor_ids']);
-        }
-
         if (isset($this->compatibleItemIds)) {
             $part->items()->sync($this->compatibleItemIds);
         }
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        $typeId = $this->record->category_type_id;
+        if ($typeId) {
+            return $this->getResource()::getUrl('byType', ['categoryType' => $typeId]);
+        }
+        return $this->getResource()::getUrl('index');
     }
 }

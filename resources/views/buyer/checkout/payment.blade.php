@@ -40,8 +40,8 @@
                                     @if ($it->itemable_type === 'App\Models\PartVariant')
                                         <div style="font-weight:600;">{{ $it->itemable->part->name ?? 'N/A' }}</div>
                                         <div class="muted" style="margin-top:6px;">{{ $it->variant_name }} — {{ $it->itemable->sku ?? 'N/A' }}</div>
-                                    @elseif ($it->itemable_type === 'App\Models\MotorColor')
-                                        <div style="font-weight:600;">{{ $it->itemable->motor->name ?? 'N/A' }}</div>
+                                    @elseif ($it->itemable_type === 'App\Models\ItemColor')
+                                        <div style="font-weight:600;">{{ $it->itemable->item->name ?? 'N/A' }}</div>
                                         <div class="muted" style="margin-top:6px;">{{ $it->variant_name }}</div>
                                     @endif
                                 </div>

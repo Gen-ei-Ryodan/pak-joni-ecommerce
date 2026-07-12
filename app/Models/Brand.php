@@ -19,13 +19,8 @@ class Brand extends Model
         ];
     }
 
-    public function motors(): HasMany
+    public function items(): HasMany
     {
-        return $this->hasMany(Motor::class)->orderBy('name');
-    }
-
-    public function categories(): HasMany
-    {
-        return $this->hasMany(MotorCategory::class)->orderBy('name');
+        return $this->hasMany(Item::class)->orderBy('name');
     }
 }

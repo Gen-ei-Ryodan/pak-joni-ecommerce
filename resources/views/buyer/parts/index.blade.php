@@ -91,7 +91,7 @@
                     <a class="card" href="{{ route('buyer.parts.show', $p->slug) }}">
                         <div class="card-media" style="background-image:url('{{ $p->thumbnail_path ? image_url($p->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
                         <div class="card-body">
-                            @php $pBrand = $p->motors->first()?->brand; @endphp
+                            @php $pBrand = $p->items()->first()?->brand; @endphp
                             @if($pBrand)
                                 <div class="card-meta">{{ $pBrand->name }}</div>
                             @endif

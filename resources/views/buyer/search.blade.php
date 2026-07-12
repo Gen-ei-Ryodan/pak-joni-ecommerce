@@ -131,33 +131,33 @@
 
             {{-- ========== MOTOR RESULTS ========== --}}
             @if($type === null || $type === 'motor')
-                @if($type === null && $motors->count())
+                @if($type === null && $items->count())
                     <div class="search-section-header">
                         <h3 class="search-section-title">Motor</h3>
-                        <span class="search-section-count">{{ $motors->total() }} ditemukan</span>
+                        <span class="search-section-count">{{ $items->total() }} ditemukan</span>
                     </div>
                 @endif
 
                 <div class="grid grid-3">
-                    @forelse($motors as $m)
+                    @forelse($items as $item)
                         <div class="card motor-card">
-                            <a class="card-media-link" href="{{ route('buyer.motors.show', $m->slug) }}" style="display:block;text-decoration:none;">
-                                <div class="card-media" style="background-image:url('{{ $m->thumbnail_path ? image_url($m->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
+                            <a class="card-media-link" href="{{ route('buyer.motors.show', $item->slug) }}" style="display:block;text-decoration:none;">
+                                <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                             </a>
                             <div class="card-body">
-                                @if($m->brand)
-                                    <div class="card-meta">{{ $m->brand->name }}</div>
+                                @if($item->brand)
+                                    <div class="card-meta">{{ $item->brand->name }}</div>
                                 @endif
-                                <a href="{{ route('buyer.motors.show', $m->slug) }}" style="text-decoration:none;color:inherit;">
-                                    <div class="card-title">{{ $m->name }}</div>
+                                <a href="{{ route('buyer.motors.show', $item->slug) }}" style="text-decoration:none;color:inherit;">
+                                    <div class="card-title">{{ $item->name }}</div>
                                 </a>
-                                @if($m->price)
-                                    <div class="price">Rp {{ number_format($m->price, 0, ',', '.') }}</div>
+                                @if($item->price)
+                                    <div class="price">Rp {{ number_format($item->price, 0, ',', '.') }}</div>
                                 @endif
                             </div>
                             <div class="card-actions">
-                                <a href="{{ route('buyer.motors.show', $m->slug) }}" class="card-action-btn primary">Lihat Motor</a>
-                                <a href="{{ route('buyer.motors.show', ['motor' => $m->slug, 'tab' => 'parts']) }}" class="card-action-btn">Sparepart</a>
+                                <a href="{{ route('buyer.motors.show', $item->slug) }}" class="card-action-btn primary">Lihat Motor</a>
+                                <a href="{{ route('buyer.motors.show', ['slug' => $item->slug, 'tab' => 'parts']) }}" class="card-action-btn">Sparepart</a>
                             </div>
                         </div>
                     @empty
@@ -167,8 +167,8 @@
                     @endforelse
                 </div>
 
-                @if($motors->hasPages())
-                    <div class="pagination-wrap">{{ $motors->appends(request()->except('motor_page'))->links('pagination.simple-dark') }}</div>
+                @if($items->hasPages())
+                    <div class="pagination-wrap">{{ $items->appends(request()->except('motor_page'))->links('pagination.simple-dark') }}</div>
                 @endif
             @endif
 
@@ -186,7 +186,7 @@
                         <a class="card" href="{{ route('buyer.parts.show', $p->slug) }}">
                             <div class="card-media" style="background-image:url('{{ $p->thumbnail_path ? image_url($p->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                             <div class="card-body">
-                                @php $pBrand = $p->motors->first()?->brand; @endphp
+                                @php $pBrand = $p->items()->first()?->brand; @endphp
                                 @if($pBrand)
                                     <div class="card-meta">{{ $pBrand->name }}</div>
                                 @endif
@@ -220,7 +220,7 @@
             @endif
 
             {{-- Initial empty state --}}
-            @if(!$q && !$type && !$brand && !$partGroup && $motors->isEmpty() && $parts->isEmpty())
+            @if(!$q && !$type && !$brand && !$partGroup && $items->isEmpty() && $parts->isEmpty())
                 <div class="search-initial-state">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--line);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     <p>Masukkan kata kunci untuk mencari motor atau sparepart.</p>

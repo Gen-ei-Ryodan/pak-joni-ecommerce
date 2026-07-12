@@ -6,21 +6,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class PriceList extends Model
+class ItemPartCatalog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['motor_id', 'name', 'pdf_path', 'is_active', 'sort_order'];
+    protected $fillable = ['item_id', 'name', 'pdf_path', 'is_active', 'sort_order'];
 
     protected function casts(): array
     {
-        return [
-            'is_active' => 'boolean',
-        ];
+        return ['is_active' => 'boolean'];
     }
 
-    public function motor(): BelongsTo
+    public function item(): BelongsTo
     {
-        return $this->belongsTo(Motor::class);
+        return $this->belongsTo(Item::class);
     }
 }

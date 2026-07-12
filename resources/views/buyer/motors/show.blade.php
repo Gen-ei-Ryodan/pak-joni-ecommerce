@@ -1,28 +1,28 @@
 @extends('layouts.buyer')
 
-@section('title', $motor->name)
+@section('title', $item->name)
 
 @section('content')
     <section class="section">
         <div class="container">
             {{-- Header --}}
             <div class="motor-header">
-                @if($motor->brand)
-                    <div class="motor-brand">{{ $motor->brand->name }}</div>
+                @if($item->brand)
+                    <div class="motor-brand">{{ $item->brand->name }}</div>
                 @endif
-                <h1 class="motor-name">{{ $motor->name }}</h1>
-                @if($motor->price)
-                    <div class="motor-price">Rp {{ number_format($motor->price, 0, ',', '.') }}</div>
+                <h1 class="motor-name">{{ $item->name }}</h1>
+                @if($item->price)
+                    <div class="motor-price">Rp {{ number_format($item->price, 0, ',', '.') }}</div>
                 @endif
             </div>
 
             {{-- Tab Navigation --}}
             <div class="motor-tabs">
-                <a href="{{ route('buyer.motors.show', ['motor' => $motor->slug]) }}" 
+                <a href="{{ route('buyer.motors.show', ['slug' => $item->slug]) }}" 
                    class="motor-tab {{ $tab === 'detail' ? 'active' : '' }}">
                     Detail Motor
                 </a>
-                <a href="{{ route('buyer.motors.show', ['motor' => $motor->slug, 'tab' => 'parts']) }}" 
+                <a href="{{ route('buyer.motors.show', ['slug' => $item->slug, 'tab' => 'parts']) }}" 
                    class="motor-tab {{ $tab === 'parts' ? 'active' : '' }}">
                     Sparepart Motor
                 </a>
@@ -32,13 +32,13 @@
             @if($tab === 'detail')
                 {{-- Gallery Atas --}}
                 <div class="motor-gallery-section">
-                    <div class="gallery-main" id="galleryMain" style="background-image:url('{{ $motor->thumbnail_path ? image_url($motor->thumbnail_path) : '' }}');background-size:cover;background-position:center;">
-                        @if(!$motor->thumbnail_path)
+                    <div class="gallery-main" id="galleryMain" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;">
+                        @if(!$item->thumbnail_path)
                             <span style="color:var(--muted);">No Image</span>
                         @endif
                     </div>
                     @php
-                        $galleryImages = $motor->images->filter(fn($img) => !str_starts_with($img->path, 'http'));
+                        $galleryImages = $item->images->filter(fn($img) => !str_starts_with($img->path, 'http'));
                     @endphp
                     @if($galleryImages->count())
                         <div class="gallery-thumbs">
@@ -51,18 +51,18 @@
 
                 {{-- Info & Variants Bawah --}}
                 <div class="motor-info-section">
-                    @if($motor->short_description)
-                        <p class="motor-short-desc">{{ $motor->short_description }}</p>
+                    @if($item->short_description)
+                        <p class="motor-short-desc">{{ $item->short_description }}</p>
                     @endif
 
                     {{-- Stock Info --}}
                     <div style="text-align:center;margin-bottom:16px;">
-                        @if($motor->stock_status === 'ready')
+                        @if($item->stock_status === 'ready')
                             <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:rgba(34,197,94,0.1);color:#22c55e;">
                                 <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>
                                 Ready Stock - Available
                             </span>
-                        @elseif($motor->stock_status === 'indent')
+                        @elseif($item->stock_status === 'indent')
                             <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:#fef3c7;color:#92400e;">
                                 <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span>
                                 Indent - DP 50%
@@ -70,16 +70,16 @@
                         @endif
                     </div>
 
-                    @if($motor->colors->count())
+                    @if($item->colors->count())
                         <div class="motor-colors">
                             <div class="motor-colors-label">Varian Warna:</div>
                             <div class="motor-colors-list">
-                                @foreach($motor->colors as $loopIdx => $color)
+                                @foreach($item->colors as $loopIdx => $color)
                                     <button type="button" class="color-item color-btn {{ $loopIdx === 0 ? 'active' : '' }}"
                                         @if($color->image_path)
                                             data-img="{{ image_url($color->image_path) }}"
                                         @else
-                                            data-img="{{ $motor->thumbnail_path ? image_url($motor->thumbnail_path) : '' }}"
+                                            data-img="{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}"
                                         @endif
                                         onclick="var main=document.getElementById('galleryMain');if(this.dataset.img){main.style.backgroundImage='url('+this.dataset.img+')';}document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelector('[data-color-id]').value='{{ $color->id }}';">
                                         <span class="color-dot" style="background:{{ $color->color_code ?: '#666' }};"></span>
@@ -91,11 +91,11 @@
 
                         <form method="post" action="{{ route('buyer.cart.store') }}" style="margin-top:20px;display:grid;gap:10px;">
                             @csrf
-                            <input type="hidden" name="itemable_type" value="motor_color">
-                            <input type="hidden" name="itemable_id" value="{{ $motor->colors->first()->id ?? '' }}" data-color-id>
+                            <input type="hidden" name="itemable_type" value="item_color">
+                            <input type="hidden" name="itemable_id" value="{{ $item->colors->first()->id ?? '' }}" data-color-id>
                             <input type="hidden" name="quantity" value="1">
                             <button type="submit" class="btn btn-primary" style="width:100%;">
-                                @if($motor->stock_status === 'indent')
+                                @if($item->stock_status === 'indent')
                                     Pre-Order (Indent) - DP 50%
                                 @else
                                     Add to Cart
@@ -103,7 +103,7 @@
                             </button>
                         </form>
 
-                        @if($motor->stock_status === 'indent')
+                        @if($item->stock_status === 'indent')
                             <div class="indent-notice">
                                 Produk ini tersedia secara indent. DP 50% akan dibayarkan saat checkout.
                             </div>
@@ -111,12 +111,12 @@
                     @endif
                 </div>
 
-                @if($motor->images360->count() >= 4)
+                @if($item->images360->count() >= 4)
                     <div class="motor-360-section">
                         <h2 class="section-title-text" style="margin-bottom:20px;">Frame 360&deg;</h2>
                         <div class="viewer-360" data-360-viewer>
                             <div class="viewer-360-frame">
-                                <img src="{{ image_url($motor->images360->first()->path) }}" alt="360 view" id="viewer360Img" draggable="false">
+                                <img src="{{ image_url($item->images360->first()->path) }}" alt="360 view" id="viewer360Img" draggable="false">
                             </div>
                             <div class="viewer-360-controls" style="pointer-events:none;">
                                 <span>&#8592; Drag untuk memutar 360&deg; &#8594;</span>
@@ -125,7 +125,7 @@
                     </div>
                 @endif
 
-                @if($motor->specifications->count())
+                @if($item->specifications->count())
                     <div class="motor-specs-section">
                         <div style="max-width:700px;margin:0 auto;">
                             <h2 class="section-title-text" style="margin-bottom:20px;text-align:center;">Spesifikasi</h2>
@@ -148,28 +148,28 @@
                     </div>
                 @endif
 
-                @if($motor->description)
+                @if($item->description)
                     <div class="motor-desc-section">
                         <h2 class="section-title-text" style="margin-bottom:16px;">Deskripsi</h2>
-                        <div class="desc-content">{!! $motor->description !!}</div>
+                        <div class="desc-content">{!! $item->description !!}</div>
                     </div>
                 @endif
 
-                @if(!empty($relatedMotors) && $relatedMotors->count())
+                @if(!empty($relatedItems) && $relatedItems->count())
                     <div class="related-section">
                         <div class="section-header">
                             <h2 class="section-title-text">Produk Terkait</h2>
                             <div class="section-line"></div>
                         </div>
                         <div class="grid grid-4">
-                            @foreach($relatedMotors as $rm)
-                                <a class="card" href="{{ route('buyer.motors.show', $rm->slug) }}">
-                                    <div class="card-media" style="background-image:url('{{ $rm->thumbnail_path ? image_url($rm->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
+                            @foreach($relatedItems as $ri)
+                                <a class="card" href="{{ route('buyer.motors.show', $ri->slug) }}">
+                                    <div class="card-media" style="background-image:url('{{ $ri->thumbnail_path ? image_url($ri->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
                                     <div class="card-body">
-                                        @if($rm->brand)
-                                            <div class="card-meta">{{ $rm->brand->name }}</div>
+                                        @if($ri->brand)
+                                            <div class="card-meta">{{ $ri->brand->name }}</div>
                                         @endif
-                                        <div class="card-title">{{ $rm->name }}</div>
+                                        <div class="card-title">{{ $ri->name }}</div>
                                     </div>
                                 </a>
                             @endforeach
@@ -180,11 +180,11 @@
             @else
                 {{-- ============ TAB: SPAREPART MOTOR ============ --}}
                 <div class="parts-tab-section">
-                    <p style="color:var(--muted);margin-bottom:20px;text-align:center;">Sparepart yang kompatibel dengan <strong>{{ $motor->name }}</strong></p>
+                    <p style="color:var(--muted);margin-bottom:20px;text-align:center;">Sparepart yang kompatibel dengan <strong>{{ $item->name }}</strong></p>
 
                     {{-- Golongan Filter --}}
                     <div class="parts-filter">
-                        <a href="{{ route('buyer.motors.show', ['motor' => $motor->slug, 'tab' => 'parts']) }}"
+                        <a href="{{ route('buyer.motors.show', ['slug' => $item->slug, 'tab' => 'parts']) }}"
                            class="parts-filter-tag {{ !$selectedPartGroup ? 'active' : '' }}">
                             Semua Sparepart
                             <span class="parts-filter-count">{{ $partsGrouped->flatten()->count() }}</span>
@@ -192,7 +192,7 @@
                         @foreach($partGroups as $group)
                             @php $count = $partsGrouped->get($group)?->count() ?? 0; @endphp
                             @if($count > 0)
-                                <a href="{{ route('buyer.motors.show', ['motor' => $motor->slug, 'tab' => 'parts', 'part_group' => $group]) }}"
+                                <a href="{{ route('buyer.motors.show', ['slug' => $item->slug, 'tab' => 'parts', 'part_group' => $group]) }}"
                                    class="parts-filter-tag {{ $selectedPartGroup === $group ? 'active' : '' }}">
                                     {{ $group }}
                                     <span class="parts-filter-count">{{ $count }}</span>
@@ -534,7 +534,7 @@
     </style>
 @endpush
 
-@if($motor->images360->count() >= 4 && $tab === 'detail')
+@if($item->images360->count() >= 4 && $tab === 'detail')
     @push('scripts')
         <script>
             (function() {
@@ -542,8 +542,8 @@
                 if (!viewer) return;
                 const img = document.getElementById('viewer360Img');
                 const images = [
-                    @foreach($motor->images360 as $img)
-                        "{{ image_url($img->path) }}",
+                    @foreach($item->images360 as $img360)
+                        "{{ image_url($img360->path) }}",
                     @endforeach
                 ];
                 let currentFrame = 0;

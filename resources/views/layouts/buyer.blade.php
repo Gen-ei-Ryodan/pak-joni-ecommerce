@@ -37,12 +37,17 @@
                     <nav class="nav-links" data-nav-menu>
                         <a href="{{ route('buyer.home') }}">Beranda</a>
 
+                        @php
+                            use App\Models\CategoryType;
+                            $categoryTypes = CategoryType::where('is_active', true)->orderBy('sort_order')->get();
+                        @endphp
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" data-dropdown-toggle="produk">Produk <span class="dd-arrow">&#9662;</span></button>
                             <div class="nav-dropdown-menu" data-dropdown-menu="produk">
                                 <a href="{{ route('buyer.products') }}">Semua Produk</a>
-                                <a href="{{ route('buyer.products', ['type' => 'motor']) }}">Motor</a>
-                                <a href="{{ route('buyer.products', ['type' => 'sparepart']) }}">Sparepart</a>
+                                @foreach($categoryTypes as $ct)
+                                    <a href="{{ route('buyer.products', ['type' => $ct->slug]) }}">{{ $ct->name }}</a>
+                                @endforeach
                                 <hr style="border-color:var(--line);margin:4px 0;">
                                 <a href="{{ route('buyer.price-list') }}">Daftar Harga</a>
                                 <a href="{{ route('buyer.part-catalog') }}">Part Katalog</a>

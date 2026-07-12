@@ -6,14 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class MotorSpecification extends Model
+class ItemSpecification extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['motor_id', 'group', 'key', 'value', 'sort_order'];
+    protected $fillable = ['item_id', 'group', 'key', 'value', 'sort_order'];
 
-    public function motor(): BelongsTo
+    public function item(): BelongsTo
     {
-        return $this->belongsTo(Motor::class);
+        return $this->belongsTo(Item::class);
     }
 }

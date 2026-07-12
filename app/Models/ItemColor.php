@@ -7,15 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-class MotorColor extends Model
+class ItemColor extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['motor_id', 'name', 'color_code', 'image_path', 'weight', 'sort_order'];
+    protected $fillable = ['item_id', 'name', 'color_code', 'image_path', 'weight', 'sort_order'];
 
-    public function motor(): BelongsTo
+    public function item(): BelongsTo
     {
-        return $this->belongsTo(Motor::class);
+        return $this->belongsTo(Item::class);
     }
 
     public function cartItems(): MorphMany
