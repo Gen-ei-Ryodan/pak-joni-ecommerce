@@ -227,10 +227,6 @@ class PageController extends Controller
                 $q->whereNull('display_end_date')
                   ->orWhere('display_end_date', '>=', $now);
             })
-            ->where(function ($q) {
-                $q->whereNull('expired_date')
-                  ->orWhere('expired_date', '>=', now());
-            })
             ->orderByDesc('publish_date')
             ->paginate(9)
             ->withQueryString();

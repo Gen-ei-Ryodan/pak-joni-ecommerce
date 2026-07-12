@@ -13,7 +13,7 @@ class Career extends Model
 
     protected $fillable = [
         'title', 'slug', 'location', 'description', 'requirements',
-        'thumbnail_path', 'publish_date', 'expired_date',
+        'thumbnail_path', 'publish_date',
         'display_start_date', 'display_end_date',
         'status', 'is_active',
     ];
@@ -22,7 +22,6 @@ class Career extends Model
     {
         return [
             'publish_date' => 'datetime',
-            'expired_date' => 'datetime',
             'display_start_date' => 'date',
             'display_end_date' => 'date',
             'is_active' => 'boolean',

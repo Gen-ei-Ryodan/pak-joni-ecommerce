@@ -63,7 +63,6 @@ class CareerResource extends Resource
             Forms\Components\DateTimePicker::make('publish_date')->default(now()),
             Forms\Components\DatePicker::make('display_start_date')->label('Tanggal Mulai Tampil'),
             Forms\Components\DatePicker::make('display_end_date')->label('Tanggal Akhir Tampil'),
-            Forms\Components\DateTimePicker::make('expired_date')->label('Tanggal Kedaluwarsa'),
             Forms\Components\FileUpload::make('thumbnail_path')->label('Image')->image()->disk('public')->directory('careers')->maxSize(3072),
             Forms\Components\RichEditor::make('description')->columnSpanFull(),
             Forms\Components\RichEditor::make('requirements')->columnSpanFull(),
