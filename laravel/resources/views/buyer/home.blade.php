@@ -144,31 +144,7 @@
         </section>
     @endif
 
-    @if ($highlight && $highlight->motor)
-        <section class="section">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title-text">Produk Unggulan</h2>
-                    <div class="section-line"></div>
-                </div>
-                <div class="highlight-card">
-                    <div class="highlight-image" style="background-image:url('{{ $highlight->motor->thumbnail_path ? image_url($highlight->motor->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
-                    <div class="highlight-body">
-                        @if($highlight->motor->brand)
-                            <div class="highlight-brand">{{ $highlight->motor->brand->name }}</div>
-                        @endif
-                        <h3 class="highlight-title">{{ $highlight->motor->name }}</h3>
-                        @if($highlight->motor->price)
-                            <div class="highlight-price">Rp {{ number_format($highlight->motor->price, 0, ',', '.') }}</div>
-                        @endif
-                        <p class="highlight-desc">{{ $highlight->motor->short_description }}</p>
-                        <a href="{{ route('buyer.motors.show', $highlight->motor->slug) }}" class="btn btn-accent">Lihat Detail</a>
-                        <a href="{{ route('buyer.motors.show', ['motor' => $highlight->motor->slug, 'tab' => 'parts']) }}" class="btn btn-outline" style="margin-left:8px;">Sparepart</a>
-                    </div>
-                </div>
-            </div>
-        </section>
-    @endif
+
 
     @if (!empty($brands) && $brands->count())
         <section class="section section-dark">
@@ -263,33 +239,33 @@
         </div>
     </section>
 
-    @if (!empty($motors) && $motors->count())
+    @if (!empty($items) && $items->count())
         <section class="section section-dark">
             <div class="container">
                 <div class="section-header">
-                    <h2 class="section-title-text">Motor Terbaru</h2>
+                    <h2 class="section-title-text">Produk Terbaru</h2>
                     <a href="{{ route('buyer.products') }}" class="btn btn-outline">Lihat Semua</a>
                 </div>
                 <div class="grid grid-4">
-                    @foreach ($motors as $m)
+                    @foreach ($items as $item)
                         <div class="card motor-card">
-                            <a class="card-media-link" href="{{ route('buyer.motors.show', $m->slug) }}" style="display:block;text-decoration:none;">
-                                <div class="card-media" style="background-image:url('{{ $m->thumbnail_path ? image_url($m->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
+                            <a class="card-media-link" href="{{ route('buyer.motors.show', $item->slug) }}" style="display:block;text-decoration:none;">
+                                <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
                             </a>
                             <div class="card-body">
-                                @if($m->brand)
-                                    <div class="card-meta">{{ $m->brand->name }}</div>
+                                @if($item->brand)
+                                    <div class="card-meta">{{ $item->brand->name }}</div>
                                 @endif
-                                <a href="{{ route('buyer.motors.show', $m->slug) }}" style="text-decoration:none;color:inherit;">
-                                    <div class="card-title">{{ $m->name }}</div>
+                                <a href="{{ route('buyer.motors.show', $item->slug) }}" style="text-decoration:none;color:inherit;">
+                                    <div class="card-title">{{ $item->name }}</div>
                                 </a>
-                                @if($m->price)
-                                    <div class="price">Rp {{ number_format($m->price, 0, ',', '.') }}</div>
+                                @if($item->price)
+                                    <div class="price">Rp {{ number_format($item->price, 0, ',', '.') }}</div>
                                 @endif
                             </div>
                             <div class="card-actions">
-                                <a href="{{ route('buyer.motors.show', $m->slug) }}" class="card-action-btn primary">Lihat Motor</a>
-                                <a href="{{ route('buyer.motors.show', ['motor' => $m->slug, 'tab' => 'parts']) }}" class="card-action-btn">Sparepart</a>
+                                <a href="{{ route('buyer.motors.show', $item->slug) }}" class="card-action-btn primary">Lihat Detail</a>
+                                <a href="{{ route('buyer.motors.show', ['slug' => $item->slug, 'tab' => 'parts']) }}" class="card-action-btn">Sparepart</a>
                             </div>
                         </div>
                     @endforeach

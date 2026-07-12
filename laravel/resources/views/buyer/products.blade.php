@@ -61,30 +61,30 @@
                 @endif
 
                 <div class="grid grid-3">
-                    @forelse ($motors as $m)
+                    @forelse ($items as $item)
                         <div class="card motor-card">
-                            <a class="card-media-link" href="{{ route('buyer.motors.show', $m->slug) }}" style="display:block;text-decoration:none;">
-                                <div class="card-media" style="background-image:url('{{ $m->thumbnail_path ? image_url($m->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:220px;"></div>
+                            <a class="card-media-link" href="{{ route('buyer.motors.show', $item->slug) }}" style="display:block;text-decoration:none;">
+                                <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:220px;"></div>
                             </a>
                             <div class="card-body">
-                                @if($m->brand)
-                                    <div class="card-meta">{{ $m->brand->name }}</div>
+                                @if($item->brand)
+                                    <div class="card-meta">{{ $item->brand->name }}</div>
                                 @endif
-                                <a href="{{ route('buyer.motors.show', $m->slug) }}" style="text-decoration:none;color:inherit;">
-                                    <div class="card-title">{{ $m->name }}</div>
+                                <a href="{{ route('buyer.motors.show', $item->slug) }}" style="text-decoration:none;color:inherit;">
+                                    <div class="card-title">{{ $item->name }}</div>
                                 </a>
-                                @if($m->price)
-                                    <div class="price">Rp {{ number_format($m->price, 0, ',', '.') }}</div>
+                                @if($item->price)
+                                    <div class="price">Rp {{ number_format($item->price, 0, ',', '.') }}</div>
                                 @endif
-                                @if($m->stock_status === 'indent')
+                                @if($item->stock_status === 'indent')
                                     <span class="stock-badge indent">Indent</span>
-                                @elseif($m->stock_status === 'ready')
+                                @elseif($item->stock_status === 'ready')
                                     <span class="stock-badge ready">Ready Stock</span>
                                 @endif
                             </div>
                             <div class="card-actions">
-                                <a href="{{ route('buyer.motors.show', $m->slug) }}" class="card-action-btn primary">Lihat Motor</a>
-                                <a href="{{ route('buyer.motors.show', ['motor' => $m->slug, 'tab' => 'parts']) }}" class="card-action-btn">Sparepart</a>
+                                <a href="{{ route('buyer.motors.show', $item->slug) }}" class="card-action-btn primary">Lihat Motor</a>
+                                <a href="{{ route('buyer.motors.show', ['slug' => $item->slug, 'tab' => 'parts']) }}" class="card-action-btn">Sparepart</a>
                             </div>
                         </div>
                     @empty
@@ -92,8 +92,8 @@
                     @endforelse
                 </div>
 
-                @if(method_exists($motors, 'links'))
-                    <div style="margin-top:30px;">{{ $motors->links('pagination.simple-dark') }}</div>
+                @if(method_exists($items, 'links'))
+                    <div style="margin-top:30px;">{{ $items->links('pagination.simple-dark') }}</div>
                 @endif
             @endif
 
@@ -133,7 +133,7 @@
                         <a class="card" href="{{ route('buyer.parts.show', $p->slug) }}">
                             <div class="card-media" style="background-image:url('{{ $p->thumbnail_path ? image_url($p->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:220px;"></div>
                             <div class="card-body">
-                                @php $pBrand = $p->motors->first()?->brand; @endphp
+                                @php $pBrand = $p->items()->first()?->brand; @endphp
                                 @if($pBrand)
                                     <div class="card-meta">{{ $pBrand->name }}</div>
                                 @endif

@@ -107,12 +107,12 @@
                                     </div>
 
                                     <div style="flex:1;min-width:0;">
-                                        <span style="font-weight:500;">{{ $it->product_name ?? $it->itemable?->motor?->name ?? $it->itemable?->part?->name ?? '-' }}</span>
+                                        <span style="font-weight:500;">{{ $it->product_name ?? $it->itemable?->item?->name ?? $it->itemable?->part?->name ?? '-' }}</span>
                                         <div class="muted" style="margin-top:4px;font-size:12px;">{{ $it->variant_name ?? $it->itemable?->name ?? '-' }}</div>
                                         @php
                                             $itemType = class_basename($it->itemable_type);
-                                            $isMotor = $itemType === 'MotorColor';
-                                            $stockLabel = $isMotor ? ($it->itemable?->motor?->stock_status === 'indent' ? 'Indent' : 'Ready') : 'Stock: '.($it->itemable?->stock ?? 0);
+                                            $isMotor = $itemType === 'ItemColor';
+                                            $stockLabel = $isMotor ? ($it->itemable?->item?->stock_status === 'indent' ? 'Indent' : 'Ready') : 'Stock: '.($it->itemable?->stock ?? 0);
                                         @endphp
                                         <div style="margin-top:2px;font-size:11px;{{ $stockLabel === 'Ready' ? '' : 'color:#ca8a04;' }}">
                                             {{ $isMotor ? $stockLabel : $stockLabel }}

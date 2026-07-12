@@ -37,10 +37,10 @@
 
                 {{-- Sidebar Info --}}
                 <div class="part-info">
-                    @if($part->motors->count())
-                        @php $firstMotor = $part->motors->first(); @endphp
-                        @if($firstMotor->brand)
-                            <div class="part-brand">{{ $firstMotor->brand->name }}</div>
+                    @if($part->items->count())
+                        @php $firstItem = $part->items->first(); @endphp
+                        @if($firstItem->brand)
+                            <div class="part-brand">{{ $firstItem->brand->name }}</div>
                         @endif
                     @endif
 
@@ -105,11 +105,11 @@
                         @endif
                     @endif
 
-                    {{-- Link ke motor --}}
-                    @if($part->motors->count())
-                        <a href="{{ route('buyer.motors.show', $part->motors->first()->slug) }}" 
+                    {{-- Link ke item --}}
+                    @if($part->items->count())
+                        <a href="{{ route('buyer.motors.show', $part->items->first()->slug) }}" 
                            class="motor-link-btn">
-                            Lihat Motor {{ $part->motors->first()->name }} &rarr;
+                            Lihat {{ $part->items->first()->name }} &rarr;
                         </a>
                     @endif
                 </div>
@@ -256,40 +256,23 @@
                 </div>
             @endif
 
-            {{-- Compatible Products (ALL types) --}}
+            {{-- Compatible Products --}}
             @if(isset($allCompatibles) && $allCompatibles->count())
                 <div class="compatible-section">
                     <h2 class="section-title-text" style="margin-bottom:16px;">Kompatibel Dengan</h2>
 
-                    @php $compatMotors = $allCompatibles->where('compatible_type', 'motor'); @endphp
-                    @if($compatMotors->count())
-                        <div style="margin-bottom:12px;">
-                            <h4 style="font-size:14px;font-weight:600;color:var(--muted);margin-bottom:8px;">Motor</h4>
-                            <div class="compatible-list">
-                                @foreach($compatMotors as $m)
-                                    <a href="{{ route('buyer.motors.show', $m->slug) }}" class="compatible-tag">
-                                        @if($m->brand)
-                                            <span class="compatible-brand">{{ $m->brand->name }}</span>
-                                        @endif
-                                        {{ $m->name }}
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    @php $compatItems = $allCompatibles->where('compatible_type', 'item')->groupBy('type.name'); @endphp
+                    @php $compatItems = $allCompatibles->groupBy('type.name'); @endphp
                     @foreach($compatItems as $typeName => $items)
                         <div style="margin-bottom:12px;">
                             <h4 style="font-size:14px;font-weight:600;color:var(--muted);margin-bottom:8px;">{{ $typeName }}</h4>
                             <div class="compatible-list">
-                                @foreach($items as $item)
-                                    <span class="compatible-tag" style="cursor:default;">
-                                        @if($item->brand)
-                                            <span class="compatible-brand">{{ $item->brand->name }}</span>
+                                @foreach($items as $compatItem)
+                                    <a href="{{ route('buyer.motors.show', $compatItem->slug) }}" class="compatible-tag">
+                                        @if($compatItem->brand)
+                                            <span class="compatible-brand">{{ $compatItem->brand->name }}</span>
                                         @endif
-                                        {{ $item->name }}
-                                    </span>
+                                        {{ $compatItem->name }}
+                                    </a>
                                 @endforeach
                             </div>
                         </div>

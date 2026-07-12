@@ -99,9 +99,9 @@
                                     @if($it->itemable && $it->itemable->part && $it->itemable->part->thumbnail_path)
                                         <img src="{{ image_url($it->itemable->part->thumbnail_path) }}" alt="">
                                     @endif
-                                @elseif($it->itemable_type === 'App\Models\MotorColor')
-                                    @if($it->itemable && $it->itemable->motor && $it->itemable->motor->thumbnail_path)
-                                        <img src="{{ image_url($it->itemable->motor->thumbnail_path) }}" alt="">
+                                @elseif($it->itemable_type === 'App\Models\ItemColor')
+                                    @if($it->itemable && $it->itemable->item && $it->itemable->item->thumbnail_path)
+                                        <img src="{{ image_url($it->itemable->item->thumbnail_path) }}" alt="">
                                     @endif
                                 @endif
                             </div>
