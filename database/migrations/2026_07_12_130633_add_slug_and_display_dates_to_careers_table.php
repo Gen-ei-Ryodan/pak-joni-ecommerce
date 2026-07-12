@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('careers', function (Blueprint $table) {
-            $table->date('display_start_date')->nullable()->after('expired_date');
+            $table->date('display_start_date')->nullable()->after('publish_date');
             $table->date('display_end_date')->nullable()->after('display_start_date');
         });
 
