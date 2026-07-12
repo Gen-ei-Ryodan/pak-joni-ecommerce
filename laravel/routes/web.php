@@ -130,7 +130,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/account/addresses/{address}', [BuyerAddressController::class, 'update'])->name('buyer.addresses.update');
     Route::delete('/account/addresses/{address}', [BuyerAddressController::class, 'destroy'])->name('buyer.addresses.destroy');
 
-    Route::get('/checkout', [BuyerCheckoutController::class, 'address'])->name('buyer.checkout.address');
+    Route::get('/checkout', [AppHttpControllersBuyerCheckoutController::class, 'address'])->name('buyer.checkout.address');
+    Route::get('/checkout/address', fn() => redirect('/checkout'));
     Route::post('/checkout/address', [BuyerCheckoutController::class, 'setAddress'])->name('buyer.checkout.setAddress');
     Route::get('/checkout/shipping', [BuyerCheckoutController::class, 'shipping'])->name('buyer.checkout.shipping');
     Route::get('/checkout/shipping/rates', [BuyerCheckoutController::class, 'rates'])->name('buyer.checkout.rates');
