@@ -9,15 +9,15 @@
 
         <link rel="icon" href="{{ asset('favicon.ico') }}">
 
-        <link rel="stylesheet" href="{{ asset('assets/css/reset.css') }}">
-        <link rel="stylesheet" href="{{ asset('assets/css/variables.css') }}">
-        <link rel="stylesheet" href="{{ asset('assets/css/layout.css') }}">
-        <link rel="stylesheet" href="{{ asset('assets/css/navbar.css') }}">
-        <link rel="stylesheet" href="{{ asset('assets/css/button.css') }}">
-        <link rel="stylesheet" href="{{ asset('assets/css/card.css') }}">
-        <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}">
-        <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}">
-        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/css/reset.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/variables.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/layout.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/navbar.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/button.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/card.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=2">
 
         @stack('head')
     </head>
