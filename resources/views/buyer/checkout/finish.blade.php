@@ -95,13 +95,6 @@
                             Cek Status Pembayaran
                         </button>
                     </div>
-                @else
-                    <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
-                        @csrf
-                        <button class="btn btn-primary" type="submit" style="width:100%;padding:14px;font-size:15px;">
-                            Bayar (Simulasi) — Rp {{ number_format((float) $order->total, 0, ',', '.') }}
-                        </button>
-                    </form>
                 @endif
 
                 <div style="height:12px;"></div>

@@ -57,7 +57,8 @@ class NewsResource extends Resource
             Forms\Components\TextInput::make('category')->maxLength(100),
             Forms\Components\DateTimePicker::make('publish_date')->default(now()),
             Forms\Components\FileUpload::make('thumbnail_path')->label('Thumbnail')->image()->disk('public')->directory('news')->maxSize(3072),
-            Forms\Components\RichEditor::make('content')->required()->columnSpanFull(),
+            Forms\Components\RichEditor::make('content')->required()->columnSpanFull()
+                ->disableToolbarButtons(['link', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table', 'attachFiles']),
             Forms\Components\TextInput::make('external_url')->label('URL External')->url()->maxLength(255)->placeholder('https://example.com'),
             Forms\Components\Toggle::make('is_active')->default(true),
         ]);

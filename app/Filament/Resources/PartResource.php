@@ -219,7 +219,8 @@ class PartResource extends Resource
                             ->columnSpanFull(),
 
                         Forms\Components\RichEditor::make('description')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->disableToolbarButtons(['link', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table', 'attachFiles']),
 
                         Forms\Components\Textarea::make('specification')
                             ->rows(4)

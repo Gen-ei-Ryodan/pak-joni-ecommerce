@@ -26,11 +26,6 @@
             </div>
             @if($snapToken)
                 <button id="pay-button" class="btn btn-primary" type="button" style="flex-shrink:0;">Bayar Sekarang</button>
-            @else
-                <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
-                    @csrf
-                    <button class="btn btn-primary" type="submit" style="flex-shrink:0;">Bayar (Simulasi)</button>
-                </form>
             @endif
         </div>
         @if($snapToken)
@@ -191,11 +186,6 @@
                 @if($order->status === 'unpaid' && $order->payment_status === 'pending')
                     @if($snapToken)
                         <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
-                    @else
-                        <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
-                            @csrf
-                            <button class="action-btn-primary" type="submit">Bayar (Simulasi)</button>
-                        </form>
                     @endif
                     <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Continue Shopping</a>
                 @elseif($order->status === 'shipped')

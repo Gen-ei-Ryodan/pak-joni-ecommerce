@@ -45,21 +45,6 @@ class OrderController extends Controller
         return view('buyer.orders.show', compact('order', 'timeline'));
     }
 
-    public function simulatePayment(Request $request, Order $order)
-    {
-        if ($order->user_id !== $request->user()->id) {
-            abort(403);
-        }
-
-        if ($order->status !== 'unpaid' || $order->payment_status !== 'pending') {
-            return back()->withErrors(['payment' => 'Order tidak bisa disimulasikan.']);
-        }
-
-        $this->paymentService->simulateSuccessPayment($order);
-
-        return redirect()->route('buyer.orders.show', $order)->with('status', 'Pembayaran berhasil disimulasikan.');
-    }
-
     public function confirmReceived(Request $request, Order $order)
     {
         if ($order->user_id !== $request->user()->id) {

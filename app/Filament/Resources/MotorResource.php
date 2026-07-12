@@ -168,7 +168,8 @@ class MotorResource extends Resource
                             ->columnSpanFull(),
 
                         Forms\Components\RichEditor::make('description')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->disableToolbarButtons(['link', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table', 'attachFiles']),
                     ])
                     ->columns(2),
 

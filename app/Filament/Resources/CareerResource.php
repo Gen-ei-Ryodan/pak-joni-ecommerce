@@ -64,8 +64,10 @@ class CareerResource extends Resource
             Forms\Components\DatePicker::make('display_start_date')->label('Tanggal Mulai Tampil'),
             Forms\Components\DatePicker::make('display_end_date')->label('Tanggal Akhir Tampil'),
             Forms\Components\FileUpload::make('thumbnail_path')->label('Image')->image()->disk('public')->directory('careers')->maxSize(3072),
-            Forms\Components\RichEditor::make('description')->columnSpanFull(),
-            Forms\Components\RichEditor::make('requirements')->columnSpanFull(),
+            Forms\Components\RichEditor::make('description')->columnSpanFull()
+                ->disableToolbarButtons(['link', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table', 'attachFiles']),
+            Forms\Components\RichEditor::make('requirements')->columnSpanFull()
+                ->disableToolbarButtons(['link', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table', 'attachFiles']),
             Forms\Components\Toggle::make('is_active')->default(true),
         ]);
     }
