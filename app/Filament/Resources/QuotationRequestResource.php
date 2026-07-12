@@ -22,6 +22,7 @@ class QuotationRequestResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-envelope';
     protected static string|UnitEnum|null $navigationGroup = 'Inbox';
     protected static ?int $navigationSort = 15;
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function table(Table $table): Table
     {
