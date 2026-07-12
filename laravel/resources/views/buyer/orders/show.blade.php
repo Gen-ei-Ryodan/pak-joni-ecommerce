@@ -26,13 +26,13 @@
             </div>
             @if($snapToken)
                 <button id="pay-button" class="btn btn-primary" type="button" style="flex-shrink:0;">Bayar Sekarang</button>
-            @else
-                <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
-                    @csrf
-                    <button class="btn btn-primary" type="submit" style="flex-shrink:0;">Bayar (Simulasi)</button>
-                </form>
             @endif
         </div>
+        @if($snapToken)
+            <div id="reopen-hint" style="display:none;background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:13px;color:#856404;text-align:center;">
+                Pop-up pembayaran ditutup. Klik "Bayar Sekarang" untuk membukanya kembali.
+            </div>
+        @endif
     @endif
 
     <div class="order-detail-grid">
@@ -186,11 +186,6 @@
                 @if($order->status === 'unpaid' && $order->payment_status === 'pending')
                     @if($snapToken)
                         <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
-                    @else
-                        <form method="post" action="{{ route('buyer.orders.simulatePayment', $order) }}">
-                            @csrf
-                            <button class="action-btn-primary" type="submit">Bayar (Simulasi)</button>
-                        </form>
                     @endif
                     <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Continue Shopping</a>
                 @elseif($order->status === 'shipped')
@@ -222,8 +217,23 @@
 
     @push('scripts')
         <script>
-            function payWithMidtrans() {
-                snap.pay('{{ $snapToken }}', {
+            var snapToken = '{{ $snapToken }}';
+            var checkStatusUrl = '{{ route('payment.midtrans.status', $order) }}';
+            var isPaying = false;
+
+            function payWithMidtrans(el) {
+                if (isPaying) return;
+                isPaying = true;
+
+                if (el) {
+                    el.disabled = true;
+                    el.textContent = 'Memproses...';
+                }
+                // Disable all pay buttons
+                var allPayBtns = document.querySelectorAll('#pay-button, #pay-button-sidebar');
+                allPayBtns.forEach(function(b) { b.disabled = true; });
+
+                snap.pay(snapToken, {
                     onSuccess: function(result) {
                         window.location.reload();
                     },
@@ -231,15 +241,24 @@
                         window.location.reload();
                     },
                     onError: function(result) {
+                        isPaying = false;
+                        allPayBtns.forEach(function(b) { b.disabled = false; });
                         alert('Pembayaran gagal. Silakan coba lagi.');
+                    },
+                    onClose: function() {
+                        isPaying = false;
+                        allPayBtns.forEach(function(b) { b.disabled = false; });
+                        // Show reopen hint if it exists
+                        var reopenHint = document.getElementById('reopen-hint');
+                        if (reopenHint) reopenHint.style.display = 'block';
                     }
                 });
             }
 
             var payBtn = document.getElementById('pay-button');
             var payBtnSidebar = document.getElementById('pay-button-sidebar');
-            if (payBtn) payBtn.addEventListener('click', payWithMidtrans);
-            if (payBtnSidebar) payBtnSidebar.addEventListener('click', payWithMidtrans);
+            if (payBtn) payBtn.addEventListener('click', function() { payWithMidtrans(this); });
+            if (payBtnSidebar) payBtnSidebar.addEventListener('click', function() { payWithMidtrans(this); });
         </script>
     @endpush
 @endif

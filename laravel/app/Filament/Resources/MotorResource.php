@@ -21,11 +21,14 @@ class MotorResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-lifebuoy';
 
-    protected static ?string $navigationLabel = 'Motors';
-
     protected static string|UnitEnum|null $navigationGroup = 'Catalog';
 
     protected static ?int $navigationSort = 1;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     public static function table(Table $table): Table
     {
@@ -165,7 +168,8 @@ class MotorResource extends Resource
                             ->columnSpanFull(),
 
                         Forms\Components\RichEditor::make('description')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->disableToolbarButtons(['link', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table', 'attachFiles']),
                     ])
                     ->columns(2),
 

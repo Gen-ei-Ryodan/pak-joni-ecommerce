@@ -41,9 +41,11 @@ class PartController extends Controller
 
     public function show(Part $part)
     {
-        $part->load(['images', 'variants', 'category', 'motors.brand', 'specifications']);
+        $part->load(['images', 'variants', 'category', 'motors.brand', 'specifications', 'items.brand', 'items.type']);
 
         $specGroups = $part->specifications->groupBy('group');
+
+        $allCompatibles = $part->allCompatibles();
 
         $relatedParts = Part::query()
             ->with(['category', 'defaultVariant'])
@@ -53,7 +55,7 @@ class PartController extends Controller
             ->take(4)
             ->get();
 
-        return view('buyer.parts.show', compact('part', 'specGroups', 'relatedParts'));
+        return view('buyer.parts.show', compact('part', 'specGroups', 'relatedParts', 'allCompatibles'));
     }
 }
 

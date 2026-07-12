@@ -57,7 +57,8 @@ class EventResource extends Resource
             Forms\Components\TextInput::make('location')->maxLength(255),
             Forms\Components\DateTimePicker::make('event_date'),
             Forms\Components\FileUpload::make('thumbnail_path')->label('Thumbnail')->image()->disk('public')->directory('events')->maxSize(3072),
-            Forms\Components\RichEditor::make('content')->columnSpanFull(),
+            Forms\Components\RichEditor::make('content')->columnSpanFull()
+                ->disableToolbarButtons(['link', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table', 'attachFiles']),
             Forms\Components\Toggle::make('is_active')->default(true),
         ]);
     }

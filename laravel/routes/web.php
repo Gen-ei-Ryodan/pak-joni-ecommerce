@@ -70,7 +70,7 @@ Route::get('/csr', [BuyerPageController::class, 'csr'])->name('buyer.csr.index')
 Route::get('/csr/{article:slug}', [BuyerPageController::class, 'csrShow'])->name('buyer.csr.show');
 
 Route::get('/karir', [BuyerPageController::class, 'careers'])->name('buyer.careers.index');
-Route::get('/karir/{career}', [BuyerPageController::class, 'careerShow'])->name('buyer.careers.show');
+Route::get('/karir/{career:slug}', [BuyerPageController::class, 'careerShow'])->name('buyer.careers.show');
 
 Route::get('/kegiatan-internal', [BuyerPageController::class, 'internalActivities'])->name('buyer.internal-activities.index');
 
@@ -78,10 +78,16 @@ Route::get('/showroom', [BuyerPageController::class, 'showroom'])->name('buyer.s
 Route::get('/kegiatan-internal/{activity:slug}', [BuyerPageController::class, 'internalActivityShow'])->name('buyer.internal-activities.show');
 
 // Midtrans Payment Routes
-Route::post('/payment/midtrans/notification', [MidtransController::class, 'notification'])->name('payment.midtrans.notification');
+Route::post('/payment/midtrans/notification', [MidtransController::class, 'notification'])
+    ->name('payment.midtrans.notification')
+    ->middleware('throttle:midtrans-webhook');
 Route::get('/payment/midtrans/finish', [MidtransController::class, 'finish'])->name('payment.midtrans.finish');
 Route::get('/payment/midtrans/unfinish', [MidtransController::class, 'unfinish'])->name('payment.midtrans.unfinish');
 Route::get('/payment/midtrans/error', [MidtransController::class, 'error'])->name('payment.midtrans.error');
+
+Route::middleware(['auth', 'throttle:10,1'])->group(function () {
+    Route::get('/payment/midtrans/status/{order}', [MidtransController::class, 'status'])->name('payment.midtrans.status');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('auth.login');
@@ -130,7 +136,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/my/orders', [BuyerOrderController::class, 'index'])->name('buyer.orders.index');
     Route::get('/my/orders/{order:order_no}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
-    Route::post('/my/orders/{order:order_no}/simulate-payment', [BuyerOrderController::class, 'simulatePayment'])->name('buyer.orders.simulatePayment');
     Route::post('/my/orders/{order:order_no}/confirm-received', [BuyerOrderController::class, 'confirmReceived'])->name('buyer.orders.confirmReceived');
     Route::post('/my/orders/{order:order_no}/pay-remaining', [BuyerOrderController::class, 'payRemaining'])->name('buyer.orders.payRemaining');
 });

@@ -152,6 +152,30 @@ class Order extends Model
         };
     }
 
+    /**
+     * Calculate payment expiry time (24 hours from creation).
+     */
+    public function paymentExpiresAt(): \Illuminate\Support\Carbon
+    {
+        return $this->created_at->addHours(24);
+    }
+
+    /**
+     * Check if payment window has expired.
+     */
+    public function isPaymentExpired(): bool
+    {
+        return now()->greaterThan($this->paymentExpiresAt());
+    }
+
+    /**
+     * Get remaining payment time in seconds.
+     */
+    public function paymentRemainingSeconds(): int
+    {
+        return max(0, now()->diffInSeconds($this->paymentExpiresAt(), false));
+    }
+
     public function canTransitionTo(string $targetStatus): bool
     {
         $transitions = [

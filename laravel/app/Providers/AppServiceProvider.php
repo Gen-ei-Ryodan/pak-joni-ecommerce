@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,5 +23,13 @@ class AppServiceProvider extends ServiceProvider
         if (! is_dir($livewireTmp)) {
             mkdir($livewireTmp, 0755, true);
         }
+
+        RateLimiter::for('midtrans-webhook', function ($job) {
+            return Limit::perMinute(60);
+        });
+
+        RateLimiter::for('payment-actions', function ($job) {
+            return Limit::perMinute(10)->by($job->user()?->id ?: $job->ip());
+        });
     }
 }

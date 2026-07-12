@@ -9,7 +9,7 @@ class News extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'slug', 'thumbnail_path', 'content', 'author', 'category', 'publish_date', 'is_active'];
+    protected $fillable = ['title', 'slug', 'thumbnail_path', 'content', 'external_url', 'author', 'category', 'publish_date', 'is_active'];
 
     protected function casts(): array
     {

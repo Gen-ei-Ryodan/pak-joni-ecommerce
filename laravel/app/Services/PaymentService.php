@@ -76,9 +76,24 @@ class PaymentService
                 ];
             }
 
+            $grossAmount = (int) round((float) $order->total);
+
+            // Security: recalculate total from items to prevent manipulation
+            $calculatedTotal = 0;
+            foreach ($items as $item) {
+                $calculatedTotal += $item['price'] * $item['quantity'];
+            }
+            if ($calculatedTotal !== $grossAmount) {
+                Log::warning('Order total mismatch in getSnapToken', [
+                    'order_id' => $order->id,
+                    'order_total' => $grossAmount,
+                    'calculated_total' => $calculatedTotal,
+                ]);
+            }
+
             $transactionDetails = [
                 'order_id' => $order->order_no,
-                'gross_amount' => (int) round((float) $order->total),
+                'gross_amount' => $grossAmount,
             ];
 
             $customerDetails = [
@@ -92,7 +107,7 @@ class PaymentService
                 'item_details' => $items,
                 'customer_details' => $customerDetails,
                 'callbacks' => [
-                    'finish' => route('buyer.orders.show', [$order->order_no]),
+                    'finish' => route('buyer.orders.show', $order),
                 ],
             ];
 
@@ -125,6 +140,17 @@ class PaymentService
         try {
             $this->configureMidtrans();
 
+            // Verify webhook signature
+            if (! $this->verifyWebhookSignature($payload)) {
+                Log::warning('Midtrans webhook signature verification failed', ['payload' => $payload]);
+                return ['success' => false, 'message' => 'Invalid signature'];
+            }
+
+            // Idempotency check: prevent processing the same notification twice
+            $idempotencyKey = ($payload['transaction_id'] ?? '')
+                . '-' . ($payload['transaction_status'] ?? '')
+                . '-' . ($payload['status_code'] ?? '');
+
             $notif = new \Midtrans\Notification();
 
             $transactionStatus = $notif->transaction_status;
@@ -141,6 +167,16 @@ class PaymentService
                 return ['success' => false, 'message' => 'Order not found: '.$orderId];
             }
 
+            // Check idempotency: skip if this exact notification was already processed
+            $prevIdempotency = $order->payment?->payload['idempotency_key'] ?? null;
+            if ($prevIdempotency === $idempotencyKey) {
+                Log::info('Midtrans duplicate notification skipped', [
+                    'order_no' => $orderId,
+                    'idempotency_key' => $idempotencyKey,
+                ]);
+                return ['success' => true, 'message' => 'Duplicate notification skipped'];
+            }
+
             // Store raw notification in payment payload
             $order->payment()->update([
                 'provider_reference' => $notif->transaction_id ?? $notif->order_id,
@@ -152,6 +188,7 @@ class PaymentService
                     'transaction_time' => $notif->transaction_time,
                     'bank' => $notif->bank,
                     'va_numbers' => $notif->va_numbers,
+                    'idempotency_key' => $idempotencyKey,
                 ]),
             ]);
 
@@ -161,6 +198,7 @@ class PaymentService
 
             if (in_array($transactionStatus, $successStatuses)) {
                 if ($transactionStatus === 'capture' && $fraudStatus === 'challenge') {
+                    // Transaction is challenged, mark as pending review
                     return ['success' => true, 'message' => 'Payment challenged, pending review'];
                 }
                 $this->markPaymentSuccess($order, $notif);
@@ -290,6 +328,132 @@ class PaymentService
                 ['order_id' => $order->id],
                 ['status' => 'expired']
             );
+
+            // Return reserved stock
+            $this->returnStock($order);
         });
+    }
+
+    /**
+     * Check payment status directly from Midtrans API.
+     * Returns array with 'paid' and 'transaction_status' keys.
+     */
+    public function checkStatusFromMidtrans(Order $order): array
+    {
+        $this->configureMidtrans();
+
+        $url = \Midtrans\Config::$isProduction
+            ? 'https://api.midtrans.com/v2/' . $order->order_no . '/status'
+            : 'https://api.sandbox.midtrans.com/v2/' . $order->order_no . '/status';
+
+        $serverKey = config('services.midtrans.server_key');
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Accept: application/json',
+            'Authorization: Basic ' . base64_encode($serverKey . ':'),
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            Log::warning('Midtrans status check failed', [
+                'order_no' => $order->order_no,
+                'http_code' => $httpCode,
+                'response' => $response,
+            ]);
+            return ['paid' => false, 'transaction_status' => 'pending'];
+        }
+
+        $data = json_decode($response, true);
+
+        if (! $data) {
+            return ['paid' => false, 'transaction_status' => 'pending'];
+        }
+
+        $transactionStatus = $data['transaction_status'] ?? 'pending';
+        $paid = in_array($transactionStatus, ['settlement', 'capture']);
+
+        // If Midtrans says paid but local DB not updated yet, sync it
+        if ($paid && $order->payment_status !== 'paid') {
+            DB::transaction(function () use ($order, $data) {
+                $order->update([
+                    'payment_status' => 'paid',
+                    'status' => 'paid',
+                    'paid_at' => $data['settlement_time'] ?? now(),
+                    'payment_method' => $data['payment_type'] ?? 'unknown',
+                    'payment_provider' => 'midtrans',
+                    'payment_reference' => $data['transaction_id'] ?? null,
+                ]);
+
+                $order->payment()->updateOrCreate(
+                    ['order_id' => $order->id],
+                    [
+                        'provider' => 'midtrans',
+                        'provider_reference' => $data['transaction_id'] ?? null,
+                        'status' => 'success',
+                        'payload' => array_merge($order->payment?->payload ?? [], [
+                            'status_check' => $data,
+                        ]),
+                    ]
+                );
+            });
+        }
+
+        return [
+            'paid' => $paid,
+            'transaction_status' => $transactionStatus,
+        ];
+    }
+
+    /**
+     * Verify Midtrans webhook signature to prevent spoofed notifications.
+     */
+    private function verifyWebhookSignature(array $payload): bool
+    {
+        $serverKey = config('services.midtrans.server_key');
+        $orderId = $payload['order_id'] ?? '';
+        $statusCode = (string) ($payload['status_code'] ?? '');
+        $grossAmount = (string) ($payload['gross_amount'] ?? '');
+        $signatureKey = $payload['signature_key'] ?? '';
+
+        // Midtrans signature format: SHA512(order_id + status_code + gross_amount + server_key)
+        $computedSignature = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
+
+        if (! hash_equals($computedSignature, (string) $signatureKey)) {
+            Log::warning('Midtrans webhook signature mismatch', [
+                'order_id' => $orderId,
+                'computed' => $computedSignature,
+                'received' => $signatureKey,
+            ]);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Return reserved stock when payment expires.
+     */
+    private function returnStock(Order $order): void
+    {
+        foreach ($order->items as $item) {
+            if ($item->itemable_type === 'App\\Models\\PartVariant') {
+                $variant = \App\Models\PartVariant::lockForUpdate()->find($item->itemable_id);
+                if ($variant) {
+                    $readyQty = max(0, $item->quantity - (int)($item->indent_quantity ?? 0));
+                    if ($readyQty > 0) {
+                        $variant->stock += $readyQty;
+                        $variant->stock_updated_at = now();
+                        $variant->save();
+                    }
+                }
+            }
+        }
     }
 }

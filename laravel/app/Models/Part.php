@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 
 #[Fillable([
     'sku',
@@ -58,6 +59,26 @@ class Part extends Model
     public function motors(): BelongsToMany
     {
         return $this->belongsToMany(Motor::class)->withTimestamps();
+    }
+
+    public function items(): BelongsToMany
+    {
+        return $this->belongsToMany(Item::class)->withTimestamps();
+    }
+
+    public function allCompatibles(): Collection
+    {
+        $motors = $this->motors()->with('brand')->get()->map(function ($m) {
+            $m->compatible_type = 'motor';
+            return $m;
+        });
+
+        $items = $this->items()->with(['brand', 'type'])->get()->map(function ($i) {
+            $i->compatible_type = 'item';
+            return $i;
+        });
+
+        return $motors->merge($items);
     }
 
     public function specifications(): HasMany

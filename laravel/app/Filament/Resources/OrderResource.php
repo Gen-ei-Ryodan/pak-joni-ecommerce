@@ -356,7 +356,6 @@ class OrderResource extends Resource
                             ])->filter()->implode(', '))
                             ->columnSpanFull(),
                     ]),
-
                 Section::make('Info Kurir')
                     ->schema([
                         Grid::make(3)

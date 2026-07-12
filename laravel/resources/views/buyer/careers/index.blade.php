@@ -24,7 +24,14 @@
                             @if($career->location)
                                 <div class="card-meta" style="margin-top:4px;">&#x1F4CD; {{ $career->location }}</div>
                             @endif
-                            <span class="career-status" style="display:inline-block;margin-top:8px;padding:4px 10px;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;border-radius:4px;background:rgba(217,180,111,0.15);color:var(--accent);">Lowongan Aktif</span>
+                            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;">
+                                <span class="career-status" style="display:inline-block;padding:4px 10px;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;border-radius:4px;background:rgba(217,180,111,0.15);color:var(--accent);">Lowongan Aktif</span>
+                                @if($career->display_end_date)
+                                    <span style="display:inline-block;padding:4px 10px;font-size:10px;font-weight:500;border-radius:4px;background:rgba(100,100,100,0.1);color:var(--muted);">
+                                        Berakhir {{ $career->display_end_date->format('d M Y') }}
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     @if($career->slug)
                         </a>

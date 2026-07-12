@@ -54,7 +54,8 @@ class CsrArticleResource extends Resource
             Forms\Components\TextInput::make('slug')->required()->unique(ignoreRecord: true),
             Forms\Components\DateTimePicker::make('publish_date')->default(now()),
             Forms\Components\FileUpload::make('thumbnail_path')->label('Thumbnail')->image()->disk('public')->directory('csr')->maxSize(3072),
-            Forms\Components\RichEditor::make('content')->required()->columnSpanFull(),
+            Forms\Components\RichEditor::make('content')->required()->columnSpanFull()
+                ->disableToolbarButtons(['link', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table', 'attachFiles']),
             Forms\Components\Toggle::make('is_active')->default(true),
         ]);
     }

@@ -214,9 +214,19 @@ class PageController extends Controller
 
     public function careers(Request $request)
     {
+        $now = now()->startOfDay();
+
         $careers = Career::query()
             ->where('is_active', true)
             ->where('status', 'active')
+            ->where(function ($q) use ($now) {
+                $q->whereNull('display_start_date')
+                  ->orWhere('display_start_date', '<=', $now);
+            })
+            ->where(function ($q) use ($now) {
+                $q->whereNull('display_end_date')
+                  ->orWhere('display_end_date', '>=', $now);
+            })
             ->orderByDesc('publish_date')
             ->paginate(9)
             ->withQueryString();
