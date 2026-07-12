@@ -17,14 +17,21 @@ return new class extends Migration
         }
 
         // Backfill display_end_date with existing expired_date values before dropping
-        DB::table('careers')
-            ->whereNull('display_end_date')
-            ->whereNotNull('expired_date')
-            ->update(['display_end_date' => DB::raw('DATE(expired_date)')]);
+        try {
+            DB::table('careers')
+                ->whereNull('display_end_date')
+                ->whereNotNull('expired_date')
+                ->update(['display_end_date' => DB::raw('DATE(expired_date)')]);
+        } catch (\Exception $e) {
+            // Column might not actually exist despite hasColumn check — skip backfill
+        }
 
-        Schema::table('careers', function (Blueprint $table) {
-            $table->dropColumn('expired_date');
-        });
+        // Re-check before dropping
+        if (Schema::hasColumn('careers', 'expired_date')) {
+            Schema::table('careers', function (Blueprint $table) {
+                $table->dropColumn('expired_date');
+            });
+        }
     }
 
     public function down(): void
