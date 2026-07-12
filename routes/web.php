@@ -70,7 +70,7 @@ Route::get('/csr', [BuyerPageController::class, 'csr'])->name('buyer.csr.index')
 Route::get('/csr/{article:slug}', [BuyerPageController::class, 'csrShow'])->name('buyer.csr.show');
 
 Route::get('/karir', [BuyerPageController::class, 'careers'])->name('buyer.careers.index');
-Route::get('/karir/{career}', [BuyerPageController::class, 'careerShow'])->name('buyer.careers.show');
+Route::get('/karir/{career:slug}', [BuyerPageController::class, 'careerShow'])->name('buyer.careers.show');
 
 Route::get('/kegiatan-internal', [BuyerPageController::class, 'internalActivities'])->name('buyer.internal-activities.index');
 
