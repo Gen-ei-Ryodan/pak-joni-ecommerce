@@ -197,7 +197,8 @@ class OrderResource extends Resource
                     ->form([
                         Forms\Components\TextInput::make('courier')
                             ->label('Courier')
-                            ->required(),
+                            ->required()
+                            ->default(fn (Order $record) => strtoupper($record->shipping_snapshot['courier'] ?? '')),
                         Forms\Components\TextInput::make('receipt')
                             ->label('Receipt Number')
                             ->required(),
@@ -361,23 +362,23 @@ class OrderResource extends Resource
                         Grid::make(3)
                             ->schema([
                                 Infolists\Components\TextEntry::make('shipping_courier')
-                                    ->label('Courier (Admin)')
+                                    ->label('Kurir (Diinput Admin)')
                                     ->placeholder('-'),
                                 Infolists\Components\TextEntry::make('shipping_receipt')
-                                    ->label('Receipt Number')
+                                    ->label('No Resi')
                                     ->placeholder('-'),
                                 Infolists\Components\TextEntry::make('shipped_at')
-                                    ->label('Shipped At')
+                                    ->label('Waktu Kirim')
                                     ->dateTime('d M Y H:i')
                                     ->placeholder('-'),
                             ]),
                         Infolists\Components\TextEntry::make('shipping_snapshot')
-                            ->label('Shipping Dipilih Customer')
-                            ->formatStateUsing(fn ($record) => collect([
-                                $record->shipping_snapshot ? strtoupper($record->shipping_snapshot['courier'] ?? '') : null,
-                                $record->shipping_snapshot ? strtoupper($record->shipping_snapshot['service'] ?? '') : null,
+                            ->label('Kurir Dipilih Customer')
+                            ->formatStateUsing(fn ($state) => collect([
+                                strtoupper($state['courier'] ?? ''),
+                                strtoupper($state['service'] ?? ''),
                             ])->filter()->implode(' - ') ?: '-')
-                            ->visible(fn ($record) => !empty($record->shipping_snapshot)),
+                            ->visible(fn ($state) => !empty($state)),
                     ]),
 
                 Section::make('Order Items')
