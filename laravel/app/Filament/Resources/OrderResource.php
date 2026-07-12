@@ -197,7 +197,8 @@ class OrderResource extends Resource
                     ->form([
                         Forms\Components\TextInput::make('courier')
                             ->label('Courier')
-                            ->required(),
+                            ->required()
+                            ->default(fn (Order $record) => strtoupper($record->shipping_snapshot['courier'] ?? '')),
                         Forms\Components\TextInput::make('receipt')
                             ->label('Receipt Number')
                             ->required(),
@@ -338,15 +339,15 @@ class OrderResource extends Resource
                     ])
                     ->visible(fn ($record) => $record?->is_indent ?? false),
 
-                Section::make('Shipping Address')
+                Section::make('Alamat Pengiriman')
                     ->schema([
                         Infolists\Components\TextEntry::make('address_snapshot.recipient_name')
-                            ->label('Recipient'),
+                            ->label('Penerima'),
                         Infolists\Components\TextEntry::make('address_snapshot.phone')
-                            ->label('Phone'),
-                        Infolists\Components\TextEntry::make('address')
-                            ->label('Address')
-                            ->formatStateUsing(fn ($record) => collect([
+                            ->label('Telepon'),
+                        Infolists\Components\TextEntry::make('full_address')
+                            ->label('Alamat')
+                            ->getStateUsing(fn (Order $record) => collect([
                                 $record->address_snapshot['address_line1'] ?? '',
                                 $record->address_snapshot['address_line2'] ?? '',
                                 $record->address_snapshot['city'] ?? '',
@@ -356,18 +357,22 @@ class OrderResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
-                Section::make('Shipping Info')
+                Section::make('Info Kurir')
                     ->schema([
                         Grid::make(3)
                             ->schema([
-                                Infolists\Components\TextEntry::make('shipping_courier')
-                                    ->label('Courier')
-                                    ->placeholder('-'),
+                                Infolists\Components\TextEntry::make('courier_name')
+                                    ->label('Kurir')
+                                    ->getStateUsing(fn (Order $record) => collect([
+                                        strtoupper($record->shipping_snapshot['courier'] ?? ''),
+                                        strtoupper($record->shipping_snapshot['service'] ?? ''),
+                                    ])->filter()->implode(' - ') ?: '-')
+                                    ->visible(fn (Order $record) => !empty($record->shipping_snapshot)),
                                 Infolists\Components\TextEntry::make('shipping_receipt')
-                                    ->label('Receipt Number')
+                                    ->label('No Resi')
                                     ->placeholder('-'),
                                 Infolists\Components\TextEntry::make('shipped_at')
-                                    ->label('Shipped At')
+                                    ->label('Waktu Kirim')
                                     ->dateTime('d M Y H:i')
                                     ->placeholder('-'),
                             ]),
