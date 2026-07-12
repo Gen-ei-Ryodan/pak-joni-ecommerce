@@ -35,7 +35,6 @@ Route::get('/motors/{slug}', function ($slug) {
     if (!$item) abort(404);
     return redirect()->route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]);
 })->name('buyer.motors.redirect');
-Route::get('/{categoryType}/{slug}', [BuyerMotorController::class, 'show'])->name('buyer.motors.show');
 
 Route::redirect('/sparepart', '/kategori/sparepart/all', 301);
 Route::redirect('/parts', '/kategori/sparepart/all', 301);
@@ -145,3 +144,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/my/orders/{order:order_no}/confirm-received', [BuyerOrderController::class, 'confirmReceived'])->name('buyer.orders.confirmReceived');
     Route::post('/my/orders/{order:order_no}/pay-remaining', [BuyerOrderController::class, 'payRemaining'])->name('buyer.orders.payRemaining');
 });
+// Catch-all for item detail — MUST be at the end after all other routes
+Route::get('/{categoryType}/{slug}', [\App\Http\Controllers\Buyer\MotorController::class, 'show'])->name('buyer.motors.show');
+
