@@ -187,21 +187,21 @@
                     @if($snapToken)
                         <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
                     @endif
-                    <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Continue Shopping</a>
+                    <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Continue Shopping</a>
                 @elseif($order->status === 'shipped')
                     <form method="post" action="{{ route('buyer.orders.confirmReceived', $order) }}" onsubmit="return confirm('Konfirmasi barang sudah diterima?')">
                         @csrf
                         <button class="action-btn-primary" type="submit">Barang Sudah Diterima</button>
                     </form>
-                    <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Shop Again</a>
+                    <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Shop Again</a>
                 @elseif(in_array($order->status, ['paid', 'processing']))
                     <a class="action-btn-secondary" href="{{ route('buyer.orders.index') }}">Track Order</a>
-                    <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Shop Again</a>
+                    <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Shop Again</a>
                 @elseif($order->status === 'completed')
-                    <a class="action-btn-primary" href="{{ route('buyer.parts.index') }}">Buy Again</a>
-                    <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Browse More</a>
+                    <a class="action-btn-primary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Buy Again</a>
+                    <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Browse More</a>
                 @elseif($order->status === 'cancelled')
-                    <a class="action-btn-secondary" href="{{ route('buyer.parts.index') }}">Browse Parts</a>
+                    <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Browse Parts</a>
                 @else
                     <a class="action-btn-secondary" href="{{ route('buyer.orders.index') }}">Back to Orders</a>
                 @endif

@@ -34,25 +34,26 @@ class MotorController
         return view('buyer.motors.index', compact('items', 'q'));
     }
 
-    public function show($slug, Request $request)
+    public function show($categoryType, $slug, Request $request)
     {
-        $type = CategoryType::where('slug', 'motor')->where('is_active', true)->first();
-
-        if (!$type) {
-            abort(404);
-        }
-
         $item = Item::with([
-            'brand', 'category', 'images', 'colors',
+            'brand', 'category', 'type', 'images', 'colors',
             'specifications', 'images360', 'parts' => function ($q) {
                 $q->where('status', 'active');
             }, 'parts.category', 'priceLists', 'partCatalogs',
         ])
-            ->where('category_type_id', $type->id)
             ->where('slug', $slug)
             ->where('status', 'active')
             ->where('is_active', true)
             ->firstOrFail();
+
+        // Redirect if URL category type doesn't match item's actual type
+        if ($item->type->slug !== $categoryType) {
+            return redirect()->route('buyer.motors.show', [
+                'categoryType' => $item->type->slug,
+                'slug' => $item->slug,
+            ]);
+        }
 
         $tab = $request->tab === 'parts' ? 'parts' : 'detail';
 
@@ -73,8 +74,8 @@ class MotorController
         $parts = $partsQuery->with(['category', 'defaultVariant'])->paginate(12);
 
         // Related items
-        $relatedItems = Item::with('brand')
-            ->where('category_type_id', $type->id)
+        $relatedItems = Item::with(['brand', 'type'])
+            ->where('category_type_id', $item->category_type_id)
             ->where('id', '!=', $item->id)
             ->where('status', 'active')
             ->where('is_active', true)

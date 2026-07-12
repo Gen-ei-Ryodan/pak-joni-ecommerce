@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [BuyerPageController::class, 'home'])->name('buyer.home');
 Route::get('/about', [BuyerPageController::class, 'about'])->name('buyer.about');
-Route::get('/produk', [BuyerPageController::class, 'products'])->name('buyer.products');
+Route::get('/kategori/{categoryType}/{brand}', [BuyerPageController::class, 'categoryBrand'])->name('buyer.category-brand');
 Route::get('/cari', [BuyerPageController::class, 'search'])->name('buyer.search');
 
 Route::get('/regions/provinces', [RegionController::class, 'provinces']);
@@ -28,11 +28,17 @@ Route::get('/regions/regencies/{provinceCode}', [RegionController::class, 'regen
 Route::get('/regions/districts/{regencyCode}', [RegionController::class, 'districts']);
 Route::get('/regions/villages/{districtCode}', [RegionController::class, 'villages']);
 
-Route::get('/motors', [BuyerMotorController::class, 'index'])->name('buyer.motors.index');
-Route::get('/motors/{slug}', [BuyerMotorController::class, 'show'])->name('buyer.motors.show');
-
-Route::get('/parts', [BuyerPartController::class, 'index'])->name('buyer.parts.index');
+Route::redirect('/motors', '/kategori/motor/all', 301);
 Route::get('/parts/{part:slug}', [BuyerPartController::class, 'show'])->name('buyer.parts.show');
+Route::get('/motors/{slug}', function ($slug) {
+    $item = \App\Models\Item::where('slug', $slug)->where('status', 'active')->where('is_active', true)->first();
+    if (!$item) abort(404);
+    return redirect()->route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]);
+})->name('buyer.motors.redirect');
+Route::get('/{categoryType}/{slug}', [BuyerMotorController::class, 'show'])->name('buyer.motors.show');
+
+Route::redirect('/sparepart', '/kategori/sparepart/all', 301);
+Route::redirect('/parts', '/kategori/sparepart/all', 301);
 
 // Route Dealer disembunyikan sementara
 // Route::get('/diler', [BuyerPageController::class, 'dealer'])->name('buyer.dealer');

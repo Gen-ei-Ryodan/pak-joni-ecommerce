@@ -8,13 +8,12 @@ use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
 
 
-use App\Filament\Traits\RedirectsToList;class CreatePart extends CreateRecord
+use App\Filament\Traits\RedirectsToList;
+class CreatePart extends CreateRecord
 {
     protected static string $resource = PartResource::class;
 
-
     use RedirectsToList;
-    private array $motorIds = [];
     private array $galleryPaths = [];
     private array $compatibleItemIds = [];
 
@@ -22,9 +21,9 @@ use App\Filament\Traits\RedirectsToList;class CreatePart extends CreateRecord
     {
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
 
-        if (isset($data['motor_ids'])) {
-            $this->motorIds = $data['motor_ids'];
-            unset($data['motor_ids']);
+        // Auto-set category_type_id from query param
+        if (request()->query('category_type_id') && empty($data['category_type_id'])) {
+            $data['category_type_id'] = request()->query('category_type_id');
         }
 
         $this->compatibleItemIds = [];
@@ -58,12 +57,17 @@ use App\Filament\Traits\RedirectsToList;class CreatePart extends CreateRecord
             }
         }
 
-        if (! empty($this->motorIds)) {
-            $part->motors()->sync($this->motorIds);
-        }
-
         if (! empty($this->compatibleItemIds)) {
             $part->items()->sync($this->compatibleItemIds);
         }
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        $typeId = $this->record->category_type_id;
+        if ($typeId) {
+            return $this->getResource()::getUrl('byType', ['categoryType' => $typeId]);
+        }
+        return $this->getResource()::getUrl('index');
     }
 }

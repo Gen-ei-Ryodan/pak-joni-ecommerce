@@ -190,6 +190,113 @@ class PageController extends Controller
         return view('buyer.spareparts.part-catalog', compact('catalogs', 'q'));
     }
 
+    public function categoryBrand($categoryType, $brand, Request $request)
+    {
+        $type = CategoryType::where('slug', $categoryType)->where('is_active', true)->firstOrFail();
+
+        // Special handling for 'sparepart' — show full parts catalog with filters
+        if ($type->slug === 'sparepart') {
+            return $this->sparepartCatalog($request, $brand);
+        }
+
+        $brandModel = null;
+        if ($brand !== 'all') {
+            $brandModel = Brand::where('slug', $brand)->where('is_active', true)->firstOrFail();
+        }
+
+        // Categories within this category type and brand
+        $categories = \App\Models\Category::query()
+            ->where('category_type_id', $type->id)
+            ->where('is_active', true)
+            ->when($brandModel, fn($q) => $q->whereHas('items', fn($iq) => $iq
+                ->where('brand_id', $brandModel->id)
+                ->where('status', 'active')
+                ->where('is_active', true)
+            ))
+            ->orderBy('sort_order')
+            ->get();
+
+        $selectedCategory = $request->query('category');
+
+        // Items
+        $items = Item::query()
+            ->with(['brand', 'category', 'images', 'colors', 'type'])
+            ->where('category_type_id', $type->id)
+            ->where('status', 'active')
+            ->where('is_active', true)
+            ->when($brandModel, fn($q) => $q->where('brand_id', $brandModel->id))
+            ->when($selectedCategory, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $selectedCategory)))
+            ->orderByDesc('id')
+            ->paginate(12)
+            ->withQueryString();
+
+        // Spareparts compatible with items from this brand (regardless of part's own category_type)
+        $parts = Part::query()
+            ->with(['category', 'defaultVariant'])
+            ->where('status', 'active')
+            ->whereHas('items', fn($iq) => $iq
+                ->where('category_type_id', $type->id)
+                ->where('status', 'active')
+                ->where('is_active', true)
+                ->when($brandModel, fn($q) => $q->where('brand_id', $brandModel->id))
+            )
+            ->orderByDesc('id')
+            ->paginate(12, ['*'], 'part_page')
+            ->withQueryString();
+
+        $allBrands = Brand::whereHas('items', fn($q) => $q->where('category_type_id', $type->id)->where('status', 'active')->where('is_active', true))
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('buyer.category-brand', compact(
+            'type', 'brandModel', 'allBrands',
+            'categories', 'selectedCategory',
+            'items', 'parts'
+        ));
+    }
+
+    protected function sparepartCatalog(Request $request, string $routeBrand = 'all')
+    {
+        $q = trim((string) $request->query('q', ''));
+        $category = $request->query('category');
+        $group = $request->query('group');
+        $brandSlug = $request->query('brand') ?: ($routeBrand !== 'all' ? $routeBrand : '');
+
+        $parts = Part::query()
+            ->with(['category', 'defaultVariant'])
+            ->where('status', 'active')
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($q2) use ($q) {
+                    $q2->where('name', 'like', '%'.$q.'%')
+                        ->orWhere('sku', 'like', '%'.$q.'%')
+                        ->orWhere('short_description', 'like', '%'.$q.'%');
+                });
+            })
+            ->when($category, fn ($query) => $query->whereHas('category', fn ($q2) => $q2->where('slug', $category)))
+            ->when($group, fn ($query) => $query->whereHas('category', fn ($q2) => $q2->where('group', $group)))
+            ->when($brandSlug !== '' && $brandSlug !== 'all', fn ($query) => $query->whereHas('items.brand', fn ($q2) => $q2->where('slug', $brandSlug)))
+            ->orderByDesc('id')
+            ->paginate(12)
+            ->withQueryString();
+
+        $categories = PartCategory::query()->orderBy('group')->orderBy('sort_order')->orderBy('name')->get();
+        $brands = Brand::whereHas('items.parts')->where('is_active', true)->orderBy('sort_order')->get();
+        $groups = PartCategory::query()->select('group')->distinct()->orderBy('group')->pluck('group');
+
+        $selectedCategoryName = '';
+        if ($category) {
+            $cat = PartCategory::where('slug', $category)->first();
+            $selectedCategoryName = $cat ? ($cat->group.' — '.$cat->name) : '';
+        }
+
+        return view('buyer.parts.index', compact(
+            'parts', 'categories', 'brands', 'groups',
+            'q', 'category', 'group',
+            'brandSlug', 'selectedCategoryName'
+        ));
+    }
+
     public function search(Request $request)
     {
         $q = trim((string) $request->query('q', ''));

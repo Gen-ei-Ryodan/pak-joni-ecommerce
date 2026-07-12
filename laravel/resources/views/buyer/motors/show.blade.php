@@ -18,17 +18,17 @@
 
             {{-- Tab Navigation --}}
             <div class="motor-tabs">
-                <a href="{{ route('buyer.motors.show', ['slug' => $item->slug]) }}" 
+                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" 
                    class="motor-tab {{ $tab === 'detail' ? 'active' : '' }}">
-                    Detail Motor
+                    Detail {{ $item->type->name }}
                 </a>
-                <a href="{{ route('buyer.motors.show', ['slug' => $item->slug, 'tab' => 'parts']) }}" 
+                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts']) }}" 
                    class="motor-tab {{ $tab === 'parts' ? 'active' : '' }}">
-                    Sparepart Motor
+                    Sparepart {{ $item->type->name }}
                 </a>
             </div>
 
-            {{-- ============ TAB: DETAIL MOTOR ============ --}}
+            {{-- ============ TAB: DETAIL ============ --}}
             @if($tab === 'detail')
                 {{-- Gallery Atas --}}
                 <div class="motor-gallery-section">
@@ -163,7 +163,7 @@
                         </div>
                         <div class="grid grid-4">
                             @foreach($relatedItems as $ri)
-                                <a class="card" href="{{ route('buyer.motors.show', $ri->slug) }}">
+                                <a class="card" href="{{ route('buyer.motors.show', ['categoryType' => $ri->type->slug, 'slug' => $ri->slug]) }}">
                                     <div class="card-media" style="background-image:url('{{ $ri->thumbnail_path ? image_url($ri->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
                                     <div class="card-body">
                                         @if($ri->brand)
@@ -178,21 +178,21 @@
                 @endif
 
             @else
-                {{-- ============ TAB: SPAREPART MOTOR ============ --}}
+                {{-- ============ TAB: SPAREPART ============ --}}
                 <div class="parts-tab-section">
                     <p style="color:var(--muted);margin-bottom:20px;text-align:center;">Sparepart yang kompatibel dengan <strong>{{ $item->name }}</strong></p>
 
                     {{-- Golongan Filter --}}
                     <div class="parts-filter">
-                        <a href="{{ route('buyer.motors.show', ['slug' => $item->slug, 'tab' => 'parts']) }}"
+                        <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts']) }}"
                            class="parts-filter-tag {{ !$selectedPartGroup ? 'active' : '' }}">
                             Semua Sparepart
                             <span class="parts-filter-count">{{ $partsGrouped->flatten()->count() }}</span>
                         </a>
                         @foreach($partGroups as $group)
-                            @php $count = $partsGrouped->get($group)?->count() ?? 0; @endphp
+                            @php $count = $partsGrouped->get($group, 0); @endphp
                             @if($count > 0)
-                                <a href="{{ route('buyer.motors.show', ['slug' => $item->slug, 'tab' => 'parts', 'part_group' => $group]) }}"
+                                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts', 'part_group' => $group]) }}"
                                    class="parts-filter-tag {{ $selectedPartGroup === $group ? 'active' : '' }}">
                                     {{ $group }}
                                     <span class="parts-filter-count">{{ $count }}</span>
