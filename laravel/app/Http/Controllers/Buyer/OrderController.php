@@ -62,7 +62,7 @@ class OrderController extends Controller
 
     public function payRemaining(Request $request, Order $order)
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ((int) $order->user_id !== (int) $request->user()->id) {
             abort(403);
         }
 
@@ -74,29 +74,8 @@ class OrderController extends Controller
             return back()->withErrors(['indent' => 'Belum waktunya pelunasan.']);
         }
 
-        // Simulate full payment for the remaining amount
-        DB::transaction(function () use ($order) {
-            $order->update([
-                'payment_status' => 'paid',
-                'paid_at' => now(),
-                'total' => $order->subtotal + $order->shipping_cost,
-                'dp_amount' => $order->dp_amount,
-                'remaining_amount' => 0,
-                'indent_status' => 'paid_full',
-                'status' => 'paid',
-            ]);
-
-            // Update payment record
-            if ($payment = $order->payment) {
-                $payment->update([
-                    'amount' => $order->total,
-                    'status' => 'success',
-                    'paid_at' => now(),
-                ]);
-            }
-        });
-
-        return redirect()->route('buyer.orders.show', $order)->with('status', 'Pelunasan berhasil! Pesanan akan segera diproses.');
+        // Redirect to order page which will show the Midtrans Snap button
+        return redirect()->route('buyer.orders.show', $order);
     }
 
     private function buildTimeline(Order $order): array

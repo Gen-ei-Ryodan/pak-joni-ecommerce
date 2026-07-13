@@ -10,9 +10,16 @@
     @php
         $snapToken = null;
         $clientKey = null;
+        $remainingSnapToken = null;
         if ($order->status === 'unpaid' && $order->payment_status === 'pending') {
             try {
                 $snapToken = app(\App\Services\PaymentService::class)->getSnapToken($order);
+                $clientKey = config('services.midtrans.client_key');
+            } catch (\Exception $e) {}
+        }
+        if ($order->is_indent && $order->indent_status === 'waiting_payment') {
+            try {
+                $remainingSnapToken = app(\App\Services\PaymentService::class)->getRemainingSnapToken($order);
                 $clientKey = config('services.midtrans.client_key');
             } catch (\Exception $e) {}
         }
@@ -188,6 +195,11 @@
                         <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
                     @endif
                     <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Continue Shopping</a>
+                @elseif($order->is_indent && $order->indent_status === 'waiting_payment')
+                    @if($remainingSnapToken)
+                        <button id="pay-remaining-button" class="action-btn-primary" type="button">Bayar Sisa Rp {{ number_format((float) $order->remaining_amount, 0, ',', '.') }}</button>
+                    @endif
+                    <a class="action-btn-secondary" href="{{ route('buyer.orders.index') }}">Back to Orders</a>
                 @elseif($order->status === 'shipped')
                     <form method="post" action="{{ route('buyer.orders.confirmReceived', $order) }}" onsubmit="return confirm('Konfirmasi barang sudah diterima?')">
                         @csrf
@@ -259,6 +271,46 @@
             var payBtnSidebar = document.getElementById('pay-button-sidebar');
             if (payBtn) payBtn.addEventListener('click', function() { payWithMidtrans(this); });
             if (payBtnSidebar) payBtnSidebar.addEventListener('click', function() { payWithMidtrans(this); });
+        </script>
+    @endpush
+@endif
+
+@if($remainingSnapToken)
+    @push('head')
+        <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ $clientKey }}"></script>
+    @endpush
+
+    @push('scripts')
+        <script>
+            var remainingSnapToken = '{{ $remainingSnapToken }}';
+            var isPayingRemaining = false;
+
+            document.getElementById('pay-remaining-button').addEventListener('click', function() {
+                if (isPayingRemaining) return;
+                isPayingRemaining = true;
+                this.disabled = true;
+                this.textContent = 'Memproses...';
+
+                snap.pay(remainingSnapToken, {
+                    onSuccess: function(result) {
+                        window.location.reload();
+                    },
+                    onPending: function(result) {
+                        window.location.reload();
+                    },
+                    onError: function(result) {
+                        isPayingRemaining = false;
+                        document.getElementById('pay-remaining-button').disabled = false;
+                        document.getElementById('pay-remaining-button').textContent = 'Bayar Sisa Rp {{ number_format((float) $order->remaining_amount, 0, ',', '.') }}';
+                        alert('Pembayaran gagal. Silakan coba lagi.');
+                    },
+                    onClose: function() {
+                        isPayingRemaining = false;
+                        document.getElementById('pay-remaining-button').disabled = false;
+                        document.getElementById('pay-remaining-button').textContent = 'Bayar Sisa Rp {{ number_format((float) $order->remaining_amount, 0, ',', '.') }}';
+                    }
+                });
+            });
         </script>
     @endpush
 @endif

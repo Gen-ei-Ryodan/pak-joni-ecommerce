@@ -51,7 +51,11 @@ class MidtransController extends Controller
         }
 
         if ($orderId) {
-            return redirect()->route('buyer.orders.show', $orderId);
+            // Strip -LUNAS suffix for remaining indent payment redirect
+            $redirectOrderId = str_ends_with($orderId, '-LUNAS')
+                ? substr($orderId, 0, -6)
+                : $orderId;
+            return redirect()->route('buyer.orders.show', $redirectOrderId);
         }
 
         return redirect()->route('buyer.dashboard');
