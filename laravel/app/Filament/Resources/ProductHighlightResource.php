@@ -18,6 +18,11 @@ class ProductHighlightResource extends Resource
     protected static ?string $model = ProductHighlight::class;
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-star';
     protected static string|UnitEnum|null $navigationGroup = 'Homepage';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
     protected static ?int $navigationSort = 2;
 
     public static function table(Table $table): Table

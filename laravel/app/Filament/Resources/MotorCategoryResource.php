@@ -20,6 +20,11 @@ class MotorCategoryResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-tag';
     protected static ?string $navigationLabel = 'Kategori Motor';
     protected static string|UnitEnum|null $navigationGroup = 'Catalog';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
     protected static ?int $navigationSort = 1;
 
     public static function table(Table $table): Table
