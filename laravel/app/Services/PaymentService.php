@@ -57,12 +57,47 @@ class PaymentService
 
             $items = [];
             foreach ($order->items as $it) {
-                $items[] = [
-                    'id' => $it->sku ?: 'ITEM-'.$it->id,
-                    'price' => (int) round((float) $it->price),
-                    'quantity' => (int) $it->quantity,
-                    'name' => substr($it->name, 0, 50),
-                ];
+                $price = (int) round((float) $it->price);
+                $qty = (int) $it->quantity;
+                $indentQty = (int) ($it->indent_quantity ?? 0);
+                $name = substr($it->name, 0, 50);
+                $sku = $it->sku ?: 'ITEM-'.$it->id;
+
+                if ($indentQty > 0) {
+                    $readyQty = $qty - $indentQty;
+                    $dpPrice = (int) round($price * 0.5);
+
+                    if ($readyQty > 0) {
+                        // Split: ready items at full price, indent items at DP 50%
+                        $items[] = [
+                            'id' => $sku,
+                            'price' => $price,
+                            'quantity' => $readyQty,
+                            'name' => $name,
+                        ];
+                        $items[] = [
+                            'id' => $sku.'-DP',
+                            'price' => $dpPrice,
+                            'quantity' => $indentQty,
+                            'name' => $name.' (DP 50%)',
+                        ];
+                    } else {
+                        // Full indent: only DP price shown
+                        $items[] = [
+                            'id' => $sku,
+                            'price' => $dpPrice,
+                            'quantity' => $qty,
+                            'name' => $name.' (DP 50%)',
+                        ];
+                    }
+                } else {
+                    $items[] = [
+                        'id' => $sku,
+                        'price' => $price,
+                        'quantity' => $qty,
+                        'name' => $name,
+                    ];
+                }
             }
 
             // Add shipping as a separate item
