@@ -51,8 +51,8 @@ class CheckoutController extends Controller
 
         $address = Address::query()->findOrFail((int) $validated['address_id']);
 
-        if ($address->user_id !== $request->user()->id) {
-            abort(403);
+        if ((int) $address->user_id !== (int) $request->user()->id) {
+            abort(403, 'Alamat ini bukan milik Anda.');
         }
 
         $request->session()->put('checkout.address_id', $address->id);
