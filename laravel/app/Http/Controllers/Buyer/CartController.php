@@ -255,7 +255,7 @@ class CartController extends Controller
             'indent_mode' => ['required', 'string', 'in:split,full'],
         ]);
 
-        if ($cartItem->cart->user_id !== $request->user()->id) {
+        if ((int) $cartItem->cart->user_id !== (int) $request->user()->id) {
             abort(403);
         }
 
@@ -296,7 +296,7 @@ class CartController extends Controller
 
     public function destroy(Request $request, CartItem $cartItem)
     {
-        if ($cartItem->cart->user_id !== $request->user()->id) {
+        if ((int) $cartItem->cart->user_id !== (int) $request->user()->id) {
             abort(403);
         }
         $cartItem->delete();
