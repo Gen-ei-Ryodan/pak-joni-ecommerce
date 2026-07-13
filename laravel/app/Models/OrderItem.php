@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 #[Fillable([
     'order_id', 'part_id', 'part_variant_id',
     'itemable_type', 'itemable_id',
-    'sku', 'name', 'variant_name', 'price', 'quantity', 'line_total',
+    'sku', 'name', 'variant_name', 'price', 'quantity', 'indent_quantity', 'line_total',
 ])]
 class OrderItem extends Model
 {
@@ -20,7 +20,7 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id', 'part_id', 'part_variant_id',
         'itemable_type', 'itemable_id',
-        'sku', 'name', 'variant_name', 'price', 'quantity', 'line_total',
+        'sku', 'name', 'variant_name', 'price', 'quantity', 'indent_quantity', 'line_total',
     ];
 
     protected function casts(): array
