@@ -38,7 +38,7 @@ class CategoryTypeResource extends Resource
                 Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
+                Actions\BulkActionGroup::make([Actions\DeleteBulkAction::make()]),
             ]);
     }
 
