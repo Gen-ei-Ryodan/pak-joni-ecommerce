@@ -194,7 +194,7 @@ class CartController extends Controller
             'indent_mode' => ['nullable', 'string', 'in:split,full'],
         ]);
 
-        if ($cartItem->cart->user_id !== $request->user()->id) {
+        if ((int) $cartItem->cart->user_id !== (int) $request->user()->id) {
             abort(403);
         }
 

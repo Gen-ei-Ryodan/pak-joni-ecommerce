@@ -310,7 +310,7 @@ class CheckoutController extends Controller
 
     public function finish(Request $request, Order $order)
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ((int) $order->user_id !== (int) $request->user()->id) {
             abort(403);
         }
 

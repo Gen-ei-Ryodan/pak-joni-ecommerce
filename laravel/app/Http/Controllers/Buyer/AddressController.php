@@ -56,7 +56,7 @@ class AddressController extends Controller
 
     public function edit(Address $address, Request $request)
     {
-        if ($address->user_id !== $request->user()->id) {
+        if ((int) $address->user_id !== (int) $request->user()->id) {
             abort(403);
         }
 
@@ -65,7 +65,7 @@ class AddressController extends Controller
 
     public function update(Request $request, Address $address)
     {
-        if ($address->user_id !== $request->user()->id) {
+        if ((int) $address->user_id !== (int) $request->user()->id) {
             abort(403);
         }
 
@@ -97,7 +97,7 @@ class AddressController extends Controller
 
     public function destroy(Request $request, Address $address)
     {
-        if ($address->user_id !== $request->user()->id) {
+        if ((int) $address->user_id !== (int) $request->user()->id) {
             abort(403);
         }
 
