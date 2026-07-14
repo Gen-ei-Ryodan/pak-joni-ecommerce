@@ -11,6 +11,7 @@
   position: relative;
   width: 100%;
   height: 100vh;
+  z-index: 1;
 }
 
 .carousel-container-hero {
@@ -41,7 +42,7 @@
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(0, 85, 218, 0.5) 0%, rgba(255, 0, 82, 0.25) 50%, rgba(0, 198, 141, 0.25) 100%);
+  background: rgba(0, 0, 0, 0.45);
   z-index: 1;
 }
 
@@ -183,7 +184,7 @@
 .section-line {
   height: 3px;
   width: 50px;
-  background: linear-gradient(135deg, #FF0052, #0055DA);
+  background: #FF0052;
   margin-top: 14px;
   border-radius: 3px;
 }
@@ -204,13 +205,33 @@
   color: rgba(255,255,255,0.7);
 }
 
+/* ======= OVERLAPPING SECTIONS ======= */
+/*
+  Each content section slightly overlaps the previous one,
+  creating a layered card-stack feel as you scroll.
+*/
+.overlap-section {
+  position: relative;
+  margin-top: -40px;
+  z-index: 2;
+  border-radius: 40px 40px 0 0;
+}
+
+.overlap-section + .overlap-section {
+  margin-top: -40px;
+}
+
+.overlap-section.z3 { z-index: 3; }
+.overlap-section.z4 { z-index: 4; }
+.overlap-section.z5 { z-index: 5; }
+
 /* ======= PROMO SECTION ======= */
 .promo-section {
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: linear-gradient(180deg, #f8f9ff 0%, #fff 100%);
-  padding: 80px 0;
+  background: #f8f9ff;
+  padding: 100px 0 80px;
 }
 
 .promo-grid {
@@ -284,9 +305,9 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: linear-gradient(180deg, #003d9e 0%, #0055DA 100%);
+  background: #0055DA;
   color: #fff;
-  padding: 80px 0;
+  padding: 100px 0 80px;
 }
 
 .launch-news-grid {
@@ -396,7 +417,7 @@
   display: flex;
   align-items: center;
   background: #fff;
-  padding: 80px 0;
+  padding: 100px 0 80px;
 }
 
 .brand-why-grid {
@@ -445,7 +466,7 @@
 }
 
 .brand-item-new:hover {
-  border-color: var(--accent);
+  border-color: #FF0052;
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(255, 0, 82, 0.15);
 }
@@ -478,14 +499,15 @@
 
 .why-card-new {
   padding: 24px 20px;
-  background: linear-gradient(135deg, rgba(255, 0, 82, 0.04), rgba(0, 85, 218, 0.04));
-  border: 1px solid rgba(255, 0, 82, 0.1);
+  background: #fff;
+  border: 1px solid #FF0052;
   border-radius: 16px;
   transition: all 0.3s ease;
 }
 
 .why-card-new:hover {
-  border-color: var(--accent);
+  background: #fff;
+  border-color: #FF0052;
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(255, 0, 82, 0.1);
 }
@@ -523,8 +545,8 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: linear-gradient(180deg, #f8f9ff, #fff);
-  padding: 80px 0;
+  background: #f8f9ff;
+  padding: 100px 0 80px;
 }
 
 .contact-credit-grid {
@@ -565,7 +587,7 @@
 }
 
 .contact-item:hover {
-  border-color: var(--accent);
+  border-color: #FF0052;
   box-shadow: 0 4px 16px rgba(255, 0, 82, 0.08);
 }
 
@@ -573,7 +595,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FF0052, #0055DA);
+  background: #FF0052;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -596,7 +618,7 @@
 }
 
 .contact-item-info a:hover {
-  color: var(--accent);
+  color: #FF0052;
 }
 
 .contact-qr {
@@ -663,15 +685,15 @@
 
 .credit-form-input:focus,
 .credit-form-select:focus {
-  border-color: var(--accent);
+  border-color: #FF0052;
 }
 
 .credit-result {
   margin-top: 20px;
   padding: 20px;
-  background: linear-gradient(135deg, rgba(255, 0, 82, 0.06), rgba(0, 85, 218, 0.06));
+  background: #fff;
   border-radius: 14px;
-  border: 1px solid rgba(255, 0, 82, 0.15);
+  border: 1px solid #FF0052;
 }
 
 .credit-result-row {
@@ -714,7 +736,7 @@
 
 .delivery-option:hover,
 .delivery-option.selected {
-  border-color: var(--accent);
+  border-color: #FF0052;
   background: rgba(255, 0, 82, 0.04);
 }
 
@@ -746,7 +768,7 @@
   letter-spacing: 0.6px;
   text-decoration: none;
   color: #fff;
-  background: linear-gradient(135deg, #FF0052, #0055DA);
+  background: #FF0052;
   border: none;
   border-radius: 30px;
   cursor: pointer;
@@ -754,6 +776,7 @@
 }
 
 .btn-accent:hover {
+  background: #cc0042;
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(255, 0, 82, 0.35);
   color: #fff;
@@ -774,8 +797,8 @@
 }
 
 .btn-outline:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: #FF0052;
+  color: #FF0052;
 }
 
 .btn-outline-white {
@@ -832,7 +855,7 @@
 
 .form-input:focus,
 .form-select:focus {
-  border-color: var(--accent);
+  border-color: #FF0052;
 }
 
 .form-input::placeholder {
@@ -848,6 +871,29 @@
   font-size: 14px;
   margin-bottom: 18px;
   text-align: center;
+}
+
+/* ======= SCROLL REVEAL ANIMATIONS ======= */
+.reveal {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* Scroll velocity parallax for hero backgrounds */
+.parallax-bg {
+  will-change: transform;
 }
 
 /* ======= RESPONSIVE ======= */
@@ -869,6 +915,11 @@
 
   .why-items {
     grid-template-columns: 1fr;
+  }
+
+  .overlap-section {
+    margin-top: -20px;
+    border-radius: 24px 24px 0 0;
   }
 }
 
@@ -894,5 +945,10 @@
 
   .section-header {
     margin-bottom: 24px;
+  }
+
+  .overlap-section {
+    margin-top: -12px;
+    border-radius: 16px 16px 0 0;
   }
 }

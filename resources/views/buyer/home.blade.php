@@ -39,10 +39,10 @@
 
     {{-- PROMO SECTION - 100vh, auto proporsional --}}
     @if (!empty($promoBanners) && $promoBanners->count())
-        <section class="promo-section">
+        <section class="promo-section overlap-section z3">
             <div class="container">
                 <div class="section-header center">
-                    <div>
+                    <div class="reveal">
                         <div class="section-title">Penawaran Terbaik</div>
                         <h2 class="section-title-text">Promo Spesial</h2>
                         <div class="section-line center-line"></div>
@@ -50,7 +50,7 @@
                 </div>
                 <div class="promo-grid {{ $promoBanners->count() === 1 ? 'single' : 'multiple' }}">
                     @foreach ($promoBanners as $banner)
-                        <a class="promo-card" href="{{ $banner->link_url ?: '#' }}" style="background-image:url('{{ image_url($banner->image_path) }}');">
+                        <a class="promo-card reveal reveal-delay-{{ $loop->index + 1 }}" href="{{ $banner->link_url ?: '#' }}" style="background-image:url('{{ image_url($banner->image_path) }}');">
                             <div class="promo-card-body">
                                 <h3 class="promo-card-title">{{ $banner->title }}</h3>
                                 @if($banner->subtitle)
@@ -66,10 +66,10 @@
 
     {{-- LAUNCHING PRODUK + BERITA INFORMASI - Combined 100vh --}}
     @if ((!empty($launchingBanners) && $launchingBanners->count()) || (!empty($latestNews) && $latestNews->count()))
-        <section class="launch-news-section">
+        <section class="launch-news-section overlap-section z4">
             <div class="container">
                 <div class="section-header center dark-text">
-                    <div>
+                    <div class="reveal">
                         <div class="section-title">Update Terkini</div>
                         <h2 class="section-title-text">Launching Produk & Berita</h2>
                         <div class="section-line center-line"></div>
@@ -77,7 +77,7 @@
                 </div>
                 <div class="launch-news-grid">
                     {{-- Kolom Launching --}}
-                    <div class="launch-col">
+                    <div class="launch-col reveal reveal-delay-1">
                         @if (!empty($launchingBanners) && $launchingBanners->count())
                             @php $lb = $launchingBanners->first(); @endphp
                             <div class="launch-card-full" style="background-image:url('{{ image_url($lb->image_path) }}');">
@@ -95,7 +95,7 @@
                     </div>
 
                     {{-- Kolom Berita --}}
-                    <div class="news-col">
+                    <div class="news-col reveal reveal-delay-2">
                         @if (!empty($latestNews) && $latestNews->count())
                             @foreach ($latestNews->take(4) as $item)
                                 <a class="news-card" href="{{ $item->external_url ?: route('buyer.news.show', $item->slug) }}" {{ $item->external_url ? 'target="_blank" rel="noopener"' : '' }}>
@@ -117,10 +117,10 @@
 
     {{-- DEALER RESMI + KEUNGGULAN - Combined 100vh --}}
     @if ((!empty($brands) && $brands->count()) || (!empty($whyChooseUs) && $whyChooseUs->count()))
-        <section class="brand-why-section">
+        <section class="brand-why-section overlap-section z5">
             <div class="container">
                 <div class="section-header center">
-                    <div>
+                    <div class="reveal">
                         <div class="section-title">Mengapa Memilih Kami</div>
                         <h2 class="section-title-text">Dealer Resmi untuk Merk</h2>
                         <div class="section-line center-line"></div>
@@ -128,8 +128,8 @@
                 </div>
                 <div class="brand-why-grid">
                     {{-- Kolom Brand --}}
-                    <div class="brand-col">
-                        <h3 style="font-size:16px;font-weight:600;color:var(--accent2);">Dealer Resmi Terpercaya</h3>
+                    <div class="brand-col reveal reveal-delay-1">
+                        <h3 style="font-size:16px;font-weight:600;color:#0055DA;">Dealer Resmi Terpercaya</h3>
                         <p style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6;">Kami adalah dealer resmi untuk merk-merk motor berkualitas terbaik di Indonesia.</p>
                         @if (!empty($brands) && $brands->count())
                             <div class="brand-items">
@@ -138,7 +138,7 @@
                                         @if($brand->logo_path)
                                             <img src="{{ image_url($brand->logo_path) }}" alt="{{ $brand->name }}" class="brand-logo-img-new">
                                         @else
-                                            <span style="font-size:14px;font-weight:700;color:var(--accent2);">{{ $brand->name }}</span>
+                                            <span style="font-size:14px;font-weight:700;color:#0055DA;">{{ $brand->name }}</span>
                                         @endif
                                         <span class="brand-name-new">{{ $brand->name }}</span>
                                     </a>
@@ -148,7 +148,7 @@
                     </div>
 
                     {{-- Kolom Keunggulan --}}
-                    <div class="why-col">
+                    <div class="why-col reveal reveal-delay-2">
                         @if (!empty($whyChooseUs) && $whyChooseUs->count())
                             <div class="why-items">
                                 @foreach ($whyChooseUs as $item)
@@ -171,10 +171,10 @@
     @endif
 
     {{-- HUBUNGI KAMI + SIMULASI KREDIT - 2 Kolom --}}
-    <section class="contact-credit-section">
+    <section class="contact-credit-section overlap-section" style="z-index:6;">
         <div class="container">
             <div class="section-header center">
-                <div>
+                <div class="reveal">
                     <div class="section-title">Layanan Kami</div>
                     <h2 class="section-title-text">Hubungi Kami & Simulasi Kredit</h2>
                     <div class="section-line center-line"></div>
@@ -182,8 +182,8 @@
             </div>
             <div class="contact-credit-grid">
                 {{-- Kolom Kiri: Hubungi Kami --}}
-                <div class="contact-col">
-                    <h3 style="font-size:16px;font-weight:600;color:var(--accent2);">Hubungi Kami</h3>
+                <div class="contact-col reveal reveal-delay-1">
+                    <h3 style="font-size:16px;font-weight:600;color:#0055DA;">Hubungi Kami</h3>
                     <p style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6;">Konsultasi dan penawaran terbaik untuk produk pilihan Anda.</p>
 
                     <div class="contact-info">
@@ -223,8 +223,8 @@
                 </div>
 
                 {{-- Kolom Kanan: Simulasi Kredit --}}
-                <div class="credit-col">
-                    <h3 style="font-size:16px;font-weight:600;color:var(--accent2);">Simulasi Kredit Motor</h3>
+                <div class="credit-col reveal reveal-delay-2">
+                    <h3 style="font-size:16px;font-weight:600;color:#0055DA;">Simulasi Kredit Motor</h3>
                     <p style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6;">Hitung perkiraan cicilan kredit motor impian Anda.</p>
 
                     <div class="credit-form" id="creditSimulation">
@@ -273,7 +273,7 @@
 
                     {{-- Opsi Pengambilan --}}
                     <div style="margin-top:24px;">
-                        <h4 style="font-size:14px;font-weight:600;color:var(--accent2);margin-bottom:4px;">Opsi Pengambilan Unit</h4>
+                        <h4 style="font-size:14px;font-weight:600;color:#0055DA;margin-bottom:4px;">Opsi Pengambilan Unit</h4>
                         <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Pilih metode pengambilan motor setelah pembayaran lunas di website.</p>
                         <div class="delivery-options">
                             <div class="delivery-option selected" onclick="selectDelivery(this, 'pickup')">
@@ -450,5 +450,37 @@
         document.addEventListener('DOMContentLoaded', function() {
             hitungKredit();
         });
+
+        // Scroll Reveal IntersectionObserver
+        (function() {
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -60px 0px'
+            });
+            document.querySelectorAll('.reveal').forEach(function(el) {
+                observer.observe(el);
+            });
+        })();
+
+        // Velocity parallax — hero backgrounds move slower on scroll
+        (function() {
+            var hero = document.querySelector('.banner-slider-hero');
+            if (!hero) return;
+            var bg = hero.querySelectorAll('.hero-bg-img');
+            if (!bg.length) return;
+            window.addEventListener('scroll', function() {
+                var top = hero.getBoundingClientRect().top;
+                var speed = 0.3;
+                bg.forEach(function(img) {
+                    img.style.transform = 'translateY(' + (top * speed) + 'px)';
+                });
+            }, { passive: true });
+        })();
     </script>
 @endpush
