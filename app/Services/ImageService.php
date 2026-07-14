@@ -22,12 +22,12 @@ class ImageService
 
             $this->convertToWebp($file->getPathname(), $fullPath);
 
-            return 'storage/'.$path;
+            return $path;
         }
 
         $stored = $file->storeAs('public/'.$directory, $name.'.'.$file->getClientOriginalExtension());
 
-        return Str::replaceStart('public/', 'storage/', $stored);
+        return Str::replaceStart('public/', '', $stored);
     }
 
     private function canConvertToWebp(UploadedFile $file): bool

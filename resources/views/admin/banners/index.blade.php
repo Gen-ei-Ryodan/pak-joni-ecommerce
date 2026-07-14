@@ -28,7 +28,7 @@
                     @forelse ($banners as $banner)
                         <tr style="border-top:1px solid var(--line);">
                             <td style="padding:10px;">
-                                <img src="{{ asset($banner->image_path) }}" alt="" style="width:140px;border-radius:12px;border:1px solid var(--line);">
+                                <img src="{{ image_url($banner->image_path) }}" alt="" style="width:140px;border-radius:12px;border:1px solid var(--line);">
                             </td>
                             <td style="padding:10px;">{{ $banner->title }}</td>
                             <td style="padding:10px;">{{ $banner->is_active ? 'yes' : 'no' }}</td>

@@ -27,10 +27,25 @@
 
     <div class="field">
         <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:6px;">Image</label>
-        <input name="image" type="file" accept="image/*" {{ isset($banner) ? '' : 'required' }}>
-        @if (!empty($banner?->image_path))
-            <div style="height:10px;"></div>
-            <img src="{{ asset($banner->image_path) }}" alt="" style="width:220px;border-radius:12px;border:1px solid var(--line);">
-        @endif
+        <input name="image" type="file" accept="image/*" {{ isset($banner) ? '' : 'required' }} onchange="previewBannerImage(event)">
+        <div style="height:10px;"></div>
+        <img id="banner-image-preview"
+             src="{{ !empty($banner?->image_path) ? image_url($banner->image_path) : '' }}"
+             alt=""
+             style="width:220px;border-radius:12px;border:1px solid var(--line);{{ empty($banner?->image_path) ? 'display:none;' : '' }}">
     </div>
 </div>
+
+<script>
+function previewBannerImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const preview = document.getElementById('banner-image-preview');
+        preview.src = e.target.result;
+        preview.style.display = '';
+    };
+    reader.readAsDataURL(file);
+}
+</script>

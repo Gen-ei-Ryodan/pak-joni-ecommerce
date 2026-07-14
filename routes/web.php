@@ -146,5 +146,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/my/orders/{order:order_no}/pay-remaining', [BuyerOrderController::class, 'payRemaining'])->name('buyer.orders.payRemaining');
 });
 
+
+
 // Catch-all for item detail — MUST be at the end after all other routes
 Route::get('/{categoryType}/{slug}', [BuyerMotorController::class, 'show'])->name('buyer.motors.show');
