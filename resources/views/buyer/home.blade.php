@@ -10,18 +10,6 @@
                 @foreach ($heroBanners as $index => $banner)
                     <div class="carousel-slide-hero {{ $index === 0 ? 'active' : '' }}" data-hero-slide>
                         <div class="hero-bg-img" style="background-image: url('{{ image_url($banner->image_path) }}');"></div>
-                        <div class="hero-overlay"></div>
-                        <div class="hero-content">
-                            @if($banner->subtitle)
-                                <div class="hero-label">{{ $banner->subtitle }}</div>
-                            @endif
-                            <h1 class="hero-title">{{ $banner->title }}</h1>
-                            @if($banner->button_text && $banner->link_url)
-                                <div class="hero-actions">
-                                    <a href="{{ $banner->link_url }}" class="btn-accent">{{ $banner->button_text }}</a>
-                                </div>
-                            @endif
-                        </div>
                     </div>
                 @endforeach
             </div>
@@ -41,7 +29,7 @@
     @if (!empty($promoBanners) && $promoBanners->count())
         <section class="promo-section overlap-section z3">
             <div class="container">
-                <div class="section-header center">
+                <div class="section-header center dark-text">
                     <div class="reveal">
                         <div class="section-title">Penawaran Terbaik</div>
                         <h2 class="section-title-text">Promo Spesial</h2>
@@ -115,57 +103,56 @@
         </section>
     @endif
 
-    {{-- DEALER RESMI + KEUNGGULAN - Combined 100vh --}}
+    {{-- DEALER RESMI + KEUNGGULAN - Top to bottom, 200vh --}}
     @if ((!empty($brands) && $brands->count()) || (!empty($whyChooseUs) && $whyChooseUs->count()))
         <section class="brand-why-section overlap-section z5">
             <div class="container">
-                <div class="section-header center">
-                    <div class="reveal">
-                        <div class="section-title">Mengapa Memilih Kami</div>
-                        <h2 class="section-title-text">Dealer Resmi untuk Merk</h2>
-                        <div class="section-line center-line"></div>
-                    </div>
+                {{-- Big heading: Dealer Resmi untuk Merk --}}
+                <div class="reveal">
+                    <h2 class="dealer-heading">Dealer Resmi untuk Merk</h2>
                 </div>
-                <div class="brand-why-grid">
-                    {{-- Kolom Brand --}}
-                    <div class="brand-col reveal reveal-delay-1">
-                        <h3 style="font-size:16px;font-weight:600;color:#0055DA;">Dealer Resmi Terpercaya</h3>
-                        <p style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6;">Kami adalah dealer resmi untuk merk-merk motor berkualitas terbaik di Indonesia.</p>
-                        @if (!empty($brands) && $brands->count())
-                            <div class="brand-items">
-                                @foreach ($brands as $brand)
-                                    <a href="{{ route('buyer.category-brand', ['categoryType' => 'motor', 'brand' => $brand->slug]) }}" class="brand-item-new">
-                                        @if($brand->logo_path)
-                                            <img src="{{ image_url($brand->logo_path) }}" alt="{{ $brand->name }}" class="brand-logo-img-new">
-                                        @else
-                                            <span style="font-size:14px;font-weight:700;color:#0055DA;">{{ $brand->name }}</span>
-                                        @endif
-                                        <span class="brand-name-new">{{ $brand->name }}</span>
-                                    </a>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
 
-                    {{-- Kolom Keunggulan --}}
-                    <div class="why-col reveal reveal-delay-2">
-                        @if (!empty($whyChooseUs) && $whyChooseUs->count())
-                            <div class="why-items">
-                                @foreach ($whyChooseUs as $item)
-                                    <div class="why-card-new">
-                                        <div class="why-icon-new">
-                                            @if($item->icon_image)
-                                                <img src="{{ asset('storage/' . $item->icon_image) }}" alt="{{ $item->title }}">
-                                            @endif
-                                        </div>
-                                        <h4 class="why-title-new">{{ $item->title }}</h4>
-                                        <p class="why-desc-new">{{ $item->description }}</p>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
+                {{-- Brand logos --}}
+                @if (!empty($brands) && $brands->count())
+                    <div class="brand-section reveal reveal-delay-2">
+                        <div class="brand-items">
+                            @foreach ($brands as $brand)
+                                <a href="{{ route('buyer.category-brand', ['categoryType' => 'motor', 'brand' => $brand->slug]) }}" class="brand-item-new">
+                                    @if($brand->logo_path)
+                                        <img src="{{ image_url($brand->logo_path) }}" alt="{{ $brand->name }}" class="brand-logo-img-new">
+                                    @else
+                                        <span style="font-size:14px;font-weight:700;color:#0055DA;">{{ $brand->name }}</span>
+                                    @endif
+                                    <span class="brand-name-new">{{ $brand->name }}</span>
+                                </a>
+                            @endforeach
+                        </div>
                     </div>
+                @endif
+
+                {{-- Keunggulan heading --}}
+                <div class="reveal reveal-delay-3">
+                    <h3 class="keunggulan-heading">Keunggulan Kami</h3>
                 </div>
+
+                {{-- Why Choose Us cards --}}
+                @if (!empty($whyChooseUs) && $whyChooseUs->count())
+                    <div class="why-section reveal reveal-delay-4">
+                        <div class="why-items">
+                            @foreach ($whyChooseUs as $item)
+                                <div class="why-card-new">
+                                    <div class="why-icon-new">
+                                        @if($item->icon_image)
+                                            <img src="{{ asset('storage/' . $item->icon_image) }}" alt="{{ $item->title }}">
+                                        @endif
+                                    </div>
+                                    <h4 class="why-title-new">{{ $item->title }}</h4>
+                                    <p class="why-desc-new">{{ $item->description }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
         </section>
     @endif
@@ -173,7 +160,7 @@
     {{-- HUBUNGI KAMI + SIMULASI KREDIT - 2 Kolom --}}
     <section class="contact-credit-section overlap-section" style="z-index:6;">
         <div class="container">
-            <div class="section-header center">
+            <div class="section-header center dark-text">
                 <div class="reveal">
                     <div class="section-title">Layanan Kami</div>
                     <h2 class="section-title-text">Hubungi Kami & Simulasi Kredit</h2>
@@ -183,8 +170,8 @@
             <div class="contact-credit-grid">
                 {{-- Kolom Kiri: Hubungi Kami --}}
                 <div class="contact-col reveal reveal-delay-1">
-                    <h3 style="font-size:16px;font-weight:600;color:#0055DA;">Hubungi Kami</h3>
-                    <p style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6;">Konsultasi dan penawaran terbaik untuk produk pilihan Anda.</p>
+                    <h3 style="font-size:16px;font-weight:600;color:#fff;">Hubungi Kami</h3>
+                    <p style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:6px;line-height:1.6;">Konsultasi dan penawaran terbaik untuk produk pilihan Anda.</p>
 
                     <div class="contact-info">
                         <div class="contact-item">
@@ -224,8 +211,8 @@
 
                 {{-- Kolom Kanan: Simulasi Kredit --}}
                 <div class="credit-col reveal reveal-delay-2">
-                    <h3 style="font-size:16px;font-weight:600;color:#0055DA;">Simulasi Kredit Motor</h3>
-                    <p style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6;">Hitung perkiraan cicilan kredit motor impian Anda.</p>
+                    <h3 style="font-size:16px;font-weight:600;color:#fff;">Simulasi Kredit Motor</h3>
+                    <p style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:6px;line-height:1.6;">Hitung perkiraan cicilan kredit motor impian Anda.</p>
 
                     <div class="credit-form" id="creditSimulation">
                         <div class="credit-form-group">
@@ -269,25 +256,6 @@
                                 <span id="resultCicilan">-</span>
                             </div>
                         </div>
-                    </div>
-
-                    {{-- Opsi Pengambilan --}}
-                    <div style="margin-top:24px;">
-                        <h4 style="font-size:14px;font-weight:600;color:#0055DA;margin-bottom:4px;">Opsi Pengambilan Unit</h4>
-                        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Pilih metode pengambilan motor setelah pembayaran lunas di website.</p>
-                        <div class="delivery-options">
-                            <div class="delivery-option selected" onclick="selectDelivery(this, 'pickup')">
-                                <div class="delivery-option-icon">🏍️</div>
-                                <div class="delivery-option-label">Ambil di Dealer</div>
-                                <div class="delivery-option-desc">Datang langsung ke dealer kami</div>
-                            </div>
-                            <div class="delivery-option" onclick="selectDelivery(this, 'antar')">
-                                <div class="delivery-option-icon">🚛</div>
-                                <div class="delivery-option-label">Minta Diantar</div>
-                                <div class="delivery-option-desc">Gratis antar ke lokasi Anda</div>
-                            </div>
-                        </div>
-                        <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center;">* Pembayaran dilakukan lunas melalui website. Tidak perlu input alamat pengiriman.</p>
                     </div>
                 </div>
             </div>

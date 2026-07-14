@@ -45,6 +45,15 @@
   z-index: 1;
 }
 
+.carousel-slide-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
 .hero-content {
   position: relative;
   z-index: 2;
@@ -239,7 +248,8 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: #f8f9ff;
+  background: #0055DA;
+  color: #fff;
   padding: 100px 0 80px;
 }
 
@@ -314,7 +324,7 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: #0055DA;
+  background: #059669;
   color: #fff;
   padding: 100px 0 80px;
 }
@@ -420,90 +430,110 @@
   overflow: hidden;
 }
 
-/* ======= BRAND + KEUNGGULAN COMBINED ======= */
+/* ======= DEALER RESMI + KEUNGGULAN - Top to bottom 200vh ======= */
 .brand-why-section {
-  min-height: 100vh;
+  min-height: 200vh;
   display: flex;
   align-items: center;
-  background: #fff;
+  background: #EFF6FF;
   padding: 100px 0 80px;
 }
 
-.brand-why-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
-}
-
-.brand-col {
+.brand-why-section .container {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 40px;
 }
 
-.brand-col h3 {
-  font-size: 18px;
-  font-weight: 700;
-  color: #0055DA;
-}
-
-.brand-desc {
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 8px;
-  line-height: 1.6;
+.brand-section {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .brand-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  max-width: 820px;
+  width: 100%;
 }
 
 .brand-item-new {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 20px 24px;
-  background: var(--panel);
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 32px;
+  background: #fff;
   border: 2px solid var(--line);
-  border-radius: 16px;
-  transition: all 0.3s ease;
+  border-radius: 20px;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   text-decoration: none;
-  min-width: 120px;
+  min-height: 200px;
+  position: relative;
+  overflow: hidden;
 }
 
 .brand-item-new:hover {
   border-color: #FF0052;
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(255, 0, 82, 0.15);
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 20px 48px rgba(255, 0, 82, 0.18);
+}
+
+.brand-item-new:hover .brand-logo-img-new {
+  transform: scale(2.2);
+}
+
+.brand-item-new:hover .brand-name-new {
+  color: #0055DA;
 }
 
 .brand-logo-img-new {
-  height: 40px;
+  height: 56px;
   width: auto;
   object-fit: contain;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
 }
 
 .brand-name-new {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
   color: var(--muted);
   text-transform: uppercase;
+  transition: color 0.3s ease;
 }
 
-.why-col {
-  display: flex;
-  flex-direction: column;
+.dealer-heading {
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 800;
+  color: #0055DA;
+  text-align: center;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  margin: 0;
+}
+
+.keunggulan-heading {
+  font-size: clamp(22px, 3vw, 36px);
+  font-weight: 700;
+  color: #1a1a2e;
+  text-align: center;
+  margin: 0;
+}
+
+.why-section {
+  width: 100%;
 }
 
 .why-items {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 0;
+  gap: 20px;
 }
 
 .why-card-new {
@@ -554,7 +584,8 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: #f8f9ff;
+  background: #0055DA;
+  color: #fff;
   padding: 100px 0 80px;
 }
 
@@ -632,14 +663,21 @@
 
 .contact-qr {
   margin-top: 24px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .contact-qr img {
   width: 140px;
   height: 140px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
 /* Credit Simulation */
@@ -912,11 +950,6 @@
     gap: 28px;
   }
 
-  .brand-why-grid {
-    grid-template-columns: 1fr;
-    gap: 36px;
-  }
-
   .contact-credit-grid {
     grid-template-columns: 1fr;
     gap: 40px;
@@ -924,6 +957,33 @@
 
   .why-items {
     grid-template-columns: 1fr;
+  }
+
+  .dealer-heading {
+    font-size: clamp(28px, 6vw, 42px);
+  }
+
+  .keunggulan-heading {
+    font-size: clamp(18px, 4vw, 26px);
+  }
+
+  .brand-items {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 600px;
+  }
+
+  .brand-item-new {
+    padding: 28px 24px;
+    min-height: 160px;
+  }
+
+  .brand-logo-img-new {
+    height: 44px;
+  }
+
+  .brand-why-section .container {
+    gap: 28px;
   }
 
   @media (max-width: 520px) {
@@ -944,6 +1004,24 @@
 
   .credit-form {
     padding: 20px;
+  }
+
+  .brand-items {
+    grid-template-columns: 1fr;
+    max-width: 280px;
+  }
+
+  .brand-item-new {
+    padding: 24px 20px;
+    min-height: 140px;
+  }
+
+  .brand-item-new:hover .brand-logo-img-new {
+    transform: scale(1.8);
+  }
+
+  .brand-logo-img-new {
+    height: 40px;
   }
 
   .section-header {

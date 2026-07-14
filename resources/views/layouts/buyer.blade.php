@@ -26,10 +26,10 @@
     </head>
     <body>
         <div class="page">
-            <header class="navbar" id="mainNavbar">
+            <header class="navbar {{ request()->routeIs('buyer.home') ? '' : 'navbar-white' }}" id="mainNavbar">
                 <div class="container navbar-inner">
                     <a class="brand" href="{{ url('/') }}">
-                        <img src="{{ asset('assets/images/logo.jpeg') }}" alt="{{ config('app.name') }}" class="brand-logo-img">
+                        <img src="{{ asset('assets/images/jomotologo.png') }}" alt="{{ config('app.name') }}" class="brand-logo-img">
                     </a>
 
                     <button class="mobile-menu-toggle" aria-label="Toggle menu" data-mobile-toggle>
@@ -141,7 +141,7 @@
                 </div>
             </header>
 
-            <main>
+            <main class="{{ request()->routeIs('buyer.home') ? '' : 'main-with-navbar' }}">
                 @yield('content')
             </main>
 
