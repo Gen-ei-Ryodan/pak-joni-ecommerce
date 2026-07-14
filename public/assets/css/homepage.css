@@ -41,7 +41,7 @@
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(15, 52, 96, 0.45) 0%, rgba(233, 69, 96, 0.2) 50%, rgba(83, 52, 131, 0.3) 100%);
+  background: linear-gradient(135deg, rgba(0, 85, 218, 0.5) 0%, rgba(255, 0, 82, 0.25) 50%, rgba(0, 198, 141, 0.25) 100%);
   z-index: 1;
 }
 
@@ -61,7 +61,7 @@
   font-size: 13px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #f0d68a;
+  color: #FFD400;
   margin-bottom: 16px;
   font-weight: 600;
   text-shadow: 0 1px 6px rgba(0,0,0,0.3);
@@ -154,7 +154,7 @@
   font-size: 13px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: var(--accent);
+  color: #FF0052;
   margin-bottom: 8px;
   font-weight: 600;
 }
@@ -183,7 +183,7 @@
 .section-line {
   height: 3px;
   width: 50px;
-  background: var(--grad-1);
+  background: linear-gradient(135deg, #FF0052, #0055DA);
   margin-top: 14px;
   border-radius: 3px;
 }
@@ -284,7 +284,7 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: linear-gradient(180deg, var(--accent3) 0%, var(--accent2) 100%);
+  background: linear-gradient(180deg, #003d9e 0%, #0055DA 100%);
   color: #fff;
   padding: 80px 0;
 }
@@ -413,7 +413,7 @@
 .brand-col h3 {
   font-size: 18px;
   font-weight: 700;
-  color: var(--accent2);
+  color: #0055DA;
 }
 
 .brand-desc {
@@ -447,7 +447,7 @@
 .brand-item-new:hover {
   border-color: var(--accent);
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(233, 69, 96, 0.15);
+  box-shadow: 0 8px 24px rgba(255, 0, 82, 0.15);
 }
 
 .brand-logo-img-new {
@@ -478,8 +478,8 @@
 
 .why-card-new {
   padding: 24px 20px;
-  background: linear-gradient(135deg, rgba(233, 69, 96, 0.04), rgba(83, 52, 131, 0.04));
-  border: 1px solid rgba(233, 69, 96, 0.1);
+  background: linear-gradient(135deg, rgba(255, 0, 82, 0.04), rgba(0, 85, 218, 0.04));
+  border: 1px solid rgba(255, 0, 82, 0.1);
   border-radius: 16px;
   transition: all 0.3s ease;
 }
@@ -487,13 +487,13 @@
 .why-card-new:hover {
   border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(233, 69, 96, 0.1);
+  box-shadow: 0 4px 16px rgba(255, 0, 82, 0.1);
 }
 
 .why-icon-new {
   font-size: 28px;
   margin-bottom: 12px;
-  color: var(--accent);
+  color: #FF0052;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -508,7 +508,7 @@
 .why-title-new {
   font-size: 15px;
   font-weight: 600;
-  color: var(--accent2);
+  color: #0055DA;
   margin-bottom: 6px;
 }
 
@@ -536,7 +536,7 @@
 .contact-col h3 {
   font-size: 18px;
   font-weight: 700;
-  color: var(--accent2);
+  color: #0055DA;
 }
 
 .contact-col > p {
@@ -566,14 +566,14 @@
 
 .contact-item:hover {
   border-color: var(--accent);
-  box-shadow: 0 4px 16px rgba(233, 69, 96, 0.08);
+  box-shadow: 0 4px 16px rgba(255, 0, 82, 0.08);
 }
 
 .contact-icon-circle {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--grad-1);
+  background: linear-gradient(135deg, #FF0052, #0055DA);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -615,7 +615,7 @@
 .credit-col h3 {
   font-size: 18px;
   font-weight: 700;
-  color: var(--accent2);
+  color: #0055DA;
 }
 
 .credit-col > p {
@@ -669,9 +669,9 @@
 .credit-result {
   margin-top: 20px;
   padding: 20px;
-  background: linear-gradient(135deg, rgba(233, 69, 96, 0.06), rgba(83, 52, 131, 0.06));
+  background: linear-gradient(135deg, rgba(255, 0, 82, 0.06), rgba(0, 85, 218, 0.06));
   border-radius: 14px;
-  border: 1px solid rgba(233, 69, 96, 0.15);
+  border: 1px solid rgba(255, 0, 82, 0.15);
 }
 
 .credit-result-row {
@@ -687,7 +687,7 @@
   padding-top: 14px;
   font-size: 18px;
   font-weight: 700;
-  color: var(--accent);
+  color: #FF0052;
 }
 
 .credit-result-label {
@@ -715,7 +715,7 @@
 .delivery-option:hover,
 .delivery-option.selected {
   border-color: var(--accent);
-  background: rgba(233, 69, 96, 0.04);
+  background: rgba(255, 0, 82, 0.04);
 }
 
 .delivery-option-icon {
@@ -746,7 +746,7 @@
   letter-spacing: 0.6px;
   text-decoration: none;
   color: #fff;
-  background: var(--grad-1);
+  background: linear-gradient(135deg, #FF0052, #0055DA);
   border: none;
   border-radius: 30px;
   cursor: pointer;
@@ -755,7 +755,7 @@
 
 .btn-accent:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(233, 69, 96, 0.35);
+  box-shadow: 0 8px 28px rgba(255, 0, 82, 0.35);
   color: #fff;
 }
 

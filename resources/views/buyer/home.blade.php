@@ -70,7 +70,7 @@
             <div class="container">
                 <div class="section-header center dark-text">
                     <div>
-                        <div class="section-title" style="color:rgba(255,255,255,0.7);">Update Terkini</div>
+                        <div class="section-title">Update Terkini</div>
                         <h2 class="section-title-text">Launching Produk & Berita</h2>
                         <div class="section-line center-line"></div>
                     </div>
@@ -83,7 +83,7 @@
                             <div class="launch-card-full" style="background-image:url('{{ image_url($lb->image_path) }}');">
                                 <div class="launch-card-body">
                                     @if($lb->subtitle)
-                                        <div style="color:#f0d68a;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:600;">{{ $lb->subtitle }}</div>
+                                        <div style="color:#FFD400;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:600;">{{ $lb->subtitle }}</div>
                                     @endif
                                     <h3 style="font-size:clamp(22px,3vw,32px);font-weight:700;color:#fff;margin-bottom:16px;">{{ $lb->title }}</h3>
                                     @if($lb->button_text && $lb->link_url)

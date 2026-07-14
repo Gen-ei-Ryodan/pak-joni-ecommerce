@@ -91,13 +91,13 @@
 
 .nav-links a.active {
   color: #fff;
-  background: var(--grad-1);
+  background: linear-gradient(135deg, #FF0052, #0055DA);
   font-weight: 600;
 }
 
 .navbar.scrolled .nav-links a.active {
   color: #fff;
-  background: var(--grad-1);
+  background: linear-gradient(135deg, #FF0052, #0055DA);
 }
 
 .nav-cta {
@@ -404,7 +404,7 @@
   align-items: center;
   justify-content: center;
   padding: 10px 18px;
-  background: var(--grad-1);
+  background: linear-gradient(135deg, #FF0052, #0055DA);
   border: none;
   border-radius: 10px;
   color: #fff;
@@ -580,7 +580,7 @@
 .btn-login:hover {
   opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(233, 69, 96, 0.3);
+  box-shadow: 0 4px 14px rgba(255, 0, 82, 0.3);
   color: #fff;
 }
 

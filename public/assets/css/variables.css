@@ -7,15 +7,15 @@
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 18px 60px rgba(0, 0, 0, 0.1);
 
-  /* Colorful accent palette */
-  --accent: #e94560;
-  --accent2: #0f3460;
-  --accent3: #16213e;
-  --accent4: #533483;
-  --accent5: #e23e57;
+  /* Bold Color Palette */
+  --accent: #FF0052;
+  --accent2: #0055DA;
+  --accent3: #003d9e;
+  --accent4: #FFD400;
+  --accent5: #00C68D;
   --accent6: #1a1a2e;
-  --accent7: #f0d68a;
-  --accent-light: rgba(233, 69, 96, 0.1);
+  --accent7: #FFD400;
+  --accent-light: rgba(255, 0, 82, 0.1);
   --danger: #dc2626;
   --radius: 14px;
   --radius-sm: 10px;
@@ -45,12 +45,12 @@
   --h3-size: clamp(1.125rem, 2.5vw, 1.375rem);
   --h4-size: clamp(1rem, 2vw, 1.125rem);
 
-  /* Colorful gradient stops */
-  --grad-1: linear-gradient(135deg, #e94560, #533483);
-  --grad-2: linear-gradient(135deg, #0f3460, #16213e);
-  --grad-3: linear-gradient(135deg, #e23e57, #f0d68a);
-  --grad-4: linear-gradient(135deg, #533483, #e94560);
-  --grad-5: linear-gradient(135deg, #16213e, #0f3460);
+  /* Bold Gradients */
+  --grad-1: linear-gradient(135deg, #FF0052, #0055DA);
+  --grad-2: linear-gradient(135deg, #0055DA, #003d9e);
+  --grad-3: linear-gradient(135deg, #00C68D, #FFD400);
+  --grad-4: linear-gradient(135deg, #FFD400, #FF0052);
+  --grad-5: linear-gradient(135deg, #003d9e, #0055DA);
 }
 
 /* Base font */
