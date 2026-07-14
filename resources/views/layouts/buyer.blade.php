@@ -222,6 +222,7 @@
                 touchMultiplier: 1.5,
                 infinite: false
             });
+            window.__lenis = lenis;
             function raf(time) {
                 lenis.raf(time);
                 requestAnimationFrame(raf);

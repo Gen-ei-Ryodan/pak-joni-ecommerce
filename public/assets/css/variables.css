@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 :root {
   --bg: #f8f9ff;
   --panel: #ffffff;
@@ -22,9 +24,11 @@
   --container: 1180px;
 
   /* --- Font Cascade System --- */
-  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji",
+  --font-display: 'Sora', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji",
     "Segoe UI Emoji";
-  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+  --font: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --mono: 'Space Grotesk', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
     monospace;
 
   /* Base Scale */
@@ -52,10 +56,10 @@ html { font-size: var(--fs-base); }
 body { font-family: var(--font); font-size: var(--fs-body); line-height: 1.6; color: var(--text); }
 
 /* Headings cascade */
-h1, .h1 { font-size: var(--h1-size); font-weight: 700; line-height: 1.2; }
-h2, .h2 { font-size: var(--h2-size); font-weight: 700; line-height: 1.25; }
-h3, .h3 { font-size: var(--h3-size); font-weight: 600; line-height: 1.35; }
-h4, .h4 { font-size: var(--h4-size); font-weight: 600; line-height: 1.4; }
+h1, .h1 { font-family: var(--font-display); font-size: var(--h1-size); font-weight: 700; line-height: 1.2; }
+h2, .h2 { font-family: var(--font-display); font-size: var(--h2-size); font-weight: 700; line-height: 1.25; }
+h3, .h3 { font-family: var(--font-display); font-size: var(--h3-size); font-weight: 600; line-height: 1.35; }
+h4, .h4 { font-family: var(--font-display); font-size: var(--h4-size); font-weight: 600; line-height: 1.4; }
 
 /* Utility font classes */
 .fs-xs { font-size: var(--fs-xs); }

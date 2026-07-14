@@ -25,46 +25,78 @@
         </section>
     @endif
 
-    {{-- PROMO SECTION - 100vh, auto proporsional --}}
+    {{-- PROMO SECTION - responsive grid, horizontal scroll jika > 4 --}}
     @if (!empty($promoBanners) && $promoBanners->count())
-        <section class="promo-section overlap-section z3">
-            <div class="container">
-                <div class="section-header center dark-text">
-                    <div class="reveal">
-                        <div class="section-title">Penawaran Terbaik</div>
-                        <h2 class="section-title-text">Promo Spesial</h2>
-                        <div class="section-line center-line"></div>
+        @php
+            $count = $promoBanners->count();
+            $isScroll = $count >= 5;
+        @endphp
+        <section class="promo-section overlap-section z3" @if($isScroll) data-promo-horizontal @endif>
+            <div class="promo-section-sticky">
+                <div class="container">
+                    <div class="section-header center dark-text">
+                        <div class="reveal">
+                            <div class="section-title">Penawaran Terbaik</div>
+                            <h2 class="section-title-text">Promo Spesial</h2>
+                            <div class="section-line center-line"></div>
+                        </div>
                     </div>
-                </div>
-                <div class="promo-grid {{ $promoBanners->count() === 1 ? 'single' : 'multiple' }}">
-                    @foreach ($promoBanners as $banner)
-                        <a class="promo-card reveal reveal-delay-{{ $loop->index + 1 }}" href="{{ $banner->link_url ?: '#' }}" style="background-image:url('{{ image_url($banner->image_path) }}');">
-                            <div class="promo-card-body">
-                                <h3 class="promo-card-title">{{ $banner->title }}</h3>
-                                @if($banner->subtitle)
-                                    <p class="promo-card-subtitle">{{ $banner->subtitle }}</p>
-                                @endif
+
+                    @if ($isScroll)
+                        <div class="promo-scroll-track">
+                            <div class="promo-scroll-content">
+                                @foreach ($promoBanners as $banner)
+                                    <a class="promo-card" href="{{ $banner->link_url ?: '#' }}" style="background-image:url('{{ image_url($banner->image_path) }}');">
+                                        <div class="promo-card-body">
+                                            <div class="promo-card-tag">Promo</div>
+                                            <h3 class="promo-card-title">{{ $banner->title }}</h3>
+                                            @if($banner->subtitle)
+                                                <p class="promo-card-subtitle">{{ $banner->subtitle }}</p>
+                                            @endif
+                                            <span class="promo-card-cta">Lihat Promo &#8594;</span>
+                                        </div>
+                                    </a>
+                                @endforeach
                             </div>
-                        </a>
-                    @endforeach
+                        </div>
+                        <div class="promo-scroll-indicator" data-promo-dots>
+                            @foreach ($promoBanners as $i => $b)
+                                <span class="promo-scroll-dot {{ $i === 0 ? 'active' : '' }}" data-index="{{ $i }}"></span>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="promo-grid cols-{{ $count }}">
+                            @foreach ($promoBanners as $banner)
+                                <a class="promo-card reveal reveal-delay-{{ $loop->index + 1 }}" href="{{ $banner->link_url ?: '#' }}" style="background-image:url('{{ image_url($banner->image_path) }}');">
+                                    <div class="promo-card-body">
+                                        <div class="promo-card-tag">Promo</div>
+                                        <h3 class="promo-card-title">{{ $banner->title }}</h3>
+                                        @if($banner->subtitle)
+                                            <p class="promo-card-subtitle">{{ $banner->subtitle }}</p>
+                                        @endif
+                                        <span class="promo-card-cta">Lihat Promo &#8594;</span>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
         </section>
     @endif
 
-    {{-- LAUNCHING PRODUK + BERITA INFORMASI - Combined 100vh --}}
-    @if ((!empty($launchingBanners) && $launchingBanners->count()) || (!empty($latestNews) && $latestNews->count()))
+    {{-- LAUNCHING PRODUK + BERITA + EVENT - 3 Kolom --}}
+    @if ((!empty($launchingBanners) && $launchingBanners->count()) || (!empty($latestNews) && $latestNews->count()) || (!empty($latestEvents) && $latestEvents->count()))
         <section class="launch-news-section overlap-section z4">
             <div class="container">
                 <div class="section-header center dark-text">
                     <div class="reveal">
                         <div class="section-title">Update Terkini</div>
-                        <h2 class="section-title-text">Launching Produk & Berita</h2>
                         <div class="section-line center-line"></div>
                     </div>
                 </div>
-                <div class="launch-news-grid">
-                    {{-- Kolom Launching --}}
+                <div class="launch-news-grid" style="grid-template-columns:repeat(3,1fr);">
+                    {{-- Kolom Kiri: Launching Produk --}}
                     <div class="launch-col reveal reveal-delay-1">
                         @if (!empty($launchingBanners) && $launchingBanners->count())
                             @php $lb = $launchingBanners->first(); @endphp
@@ -82,7 +114,7 @@
                         @endif
                     </div>
 
-                    {{-- Kolom Berita --}}
+                    {{-- Kolom Tengah: Berita --}}
                     <div class="news-col reveal reveal-delay-2">
                         @if (!empty($latestNews) && $latestNews->count())
                             @foreach ($latestNews->take(4) as $item)
@@ -96,6 +128,27 @@
                                 </a>
                             @endforeach
                             <a href="{{ route('buyer.news.index') }}" class="btn-outline-white" style="align-self:flex-start;margin-top:8px;">Lihat Semua Berita</a>
+                        @endif
+                    </div>
+
+                    {{-- Kolom Kanan: Event --}}
+                    <div class="event-col reveal reveal-delay-3">
+                        @if (!empty($latestEvents) && $latestEvents->count())
+                            @foreach ($latestEvents as $event)
+                                <a class="event-card" href="{{ route('buyer.events.show', $event->slug) }}">
+                                    @if($event->thumbnail_path)
+                                        <div class="event-card-thumb" style="background-image:url('{{ image_url($event->thumbnail_path) }}');"></div>
+                                    @endif
+                                    <div class="event-card-info">
+                                        <div class="event-card-date">{{ $event->event_date?->format('d M Y') }}</div>
+                                        <div class="news-card-title">{{ $event->title }}</div>
+                                        @if($event->location)
+                                            <div class="event-card-location">{{ $event->location }}</div>
+                                        @endif
+                                    </div>
+                                </a>
+                            @endforeach
+                            <a href="{{ route('buyer.events.index') }}" class="btn-outline-white" style="align-self:flex-start;margin-top:8px;">Lihat Semua Acara</a>
                         @endif
                     </div>
                 </div>
@@ -378,6 +431,62 @@
             border-color: #FF0052;
             color: #FF0052;
         }
+
+        /* --- Event Cards --- */
+        .event-col {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .event-card {
+            display: flex;
+            gap: 14px;
+            padding: 16px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.25s ease;
+        }
+
+        .event-card:hover {
+            background: rgba(255,255,255,0.14);
+            transform: translateX(4px);
+        }
+
+        .event-card-thumb {
+            width: 100px;
+            height: 80px;
+            border-radius: 10px;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+
+        .event-card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .event-card-date {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-bottom: 4px;
+        }
+
+        .event-card-location {
+            font-size: 11px;
+            opacity: 0.5;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 960px) {
+            .launch-news-grid[style*="repeat(3"] {
+                grid-template-columns: 1fr !important;
+            }
+        }
     </style>
 @endpush
 
@@ -478,6 +587,74 @@
                     observer.observe(el);
                 }
             });
+        })();
+
+        // Horizontal Scroll for Promo Section (5+ items)
+        (function() {
+            var section = document.querySelector('[data-promo-horizontal]');
+            if (!section) return;
+            var sticky = section.querySelector('.promo-section-sticky');
+            var content = section.querySelector('.promo-scroll-content');
+            var dots = section.querySelectorAll('[data-promo-dots] .promo-scroll-dot');
+            if (!content || !sticky) return;
+
+            var lenis = window.__lenis;
+            var sectionTop = 0;
+            var sectionHeight = 0;
+            var isActive = false;
+
+            function recalc() {
+                sectionTop = section.offsetTop;
+                var totalWidth = content.scrollWidth;
+                var visibleWidth = window.innerWidth - (window.innerWidth > 860 ? 80 : 32);
+                var scrollableWidth = Math.max(0, totalWidth - visibleWidth);
+                sectionHeight = scrollableWidth + window.innerHeight;
+                section.style.height = sectionHeight + 'px';
+            }
+
+            function updateScroll() {
+                var sy = window.scrollY || window.pageYOffset;
+                var offset = sy - sectionTop;
+
+                if (offset < -window.innerHeight * 0.5) {
+                    if (isActive) { sticky.classList.remove('active'); isActive = false; }
+                    return;
+                }
+                if (offset > sectionHeight + window.innerHeight * 0.5) {
+                    if (isActive) { sticky.classList.remove('active'); isActive = false; }
+                    return;
+                }
+
+                if (!isActive) { sticky.classList.add('active'); isActive = true; }
+
+                var maxScroll = sectionHeight - window.innerHeight;
+                if (maxScroll <= 0) { content.style.transform = 'translate3d(0,0,0)'; return; }
+
+                var progress = Math.max(0, Math.min(1, offset / maxScroll));
+                var visibleWidth = window.innerWidth - (window.innerWidth > 860 ? 80 : 32);
+                var maxTranslate = content.scrollWidth - visibleWidth;
+                content.style.transform = 'translate3d(' + (-progress * maxTranslate) + 'px, 0, 0)';
+
+                if (dots.length) {
+                    var idx = Math.max(0, Math.min(dots.length - 1, Math.round(progress * (dots.length - 1))));
+                    dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
+                }
+            }
+
+            var ticking = false;
+            function onScroll() {
+                if (!ticking) { requestAnimationFrame(function() { updateScroll(); ticking = false; }); ticking = true; }
+            }
+
+            recalc();
+            updateScroll();
+
+            if (lenis) {
+                lenis.on('scroll', onScroll);
+            } else {
+                window.addEventListener('scroll', onScroll, { passive: true });
+            }
+            window.addEventListener('resize', function() { recalc(); updateScroll(); });
         })();
     </script>
 @endpush

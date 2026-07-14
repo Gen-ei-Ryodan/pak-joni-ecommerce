@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\BannerResource\Pages;
+use App\Filament\Resources\ActivityBannerResource\Pages;
 use App\Models\Banner;
 use BackedEnum;
 use Filament\Actions;
@@ -16,23 +16,23 @@ use Illuminate\Database\Eloquent\Builder;
 use League\Flysystem\UnableToCheckFileExistence;
 use UnitEnum;
 
-class BannerResource extends Resource
+class ActivityBannerResource extends Resource
 {
     protected static ?string $model = Banner::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-photo';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
 
-    protected static ?string $navigationLabel = 'Hero';
+    protected static ?string $navigationLabel = 'Kegiatan';
 
     protected static string|UnitEnum|null $navigationGroup = 'Banners';
 
-    protected static ?int $navigationSort = 0;
+    protected static ?int $navigationSort = 3;
 
-    protected static ?string $slug = 'banners/hero';
+    protected static ?string $slug = 'banners/kegiatan';
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('type', 'hero');
+        return parent::getEloquentQuery()->where('type', 'kegiatan');
     }
 
     public static function table(Table $table): Table
@@ -46,6 +46,14 @@ class BannerResource extends Resource
                     ->getStateUsing(fn (Banner $record): ?string => $record->image_path ? image_url($record->image_path) : null)
                     ->checkFileExistence(false),
 
+                Tables\Columns\TextColumn::make('title')
+                    ->label('Title')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('subtitle')
+                    ->label('Subtitle')
+                    ->limit(40),
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean()
@@ -53,6 +61,10 @@ class BannerResource extends Resource
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('gray'),
+
+                Tables\Columns\TextColumn::make('sort_order')
+                    ->label('Sort')
+                    ->sortable(),
             ])
             ->filters([])
             ->actions([
@@ -72,6 +84,15 @@ class BannerResource extends Resource
     {
         return $schema
             ->schema([
+                Forms\Components\TextInput::make('title')
+                    ->label('Title')
+                    ->required()
+                    ->maxLength(255),
+
+                Forms\Components\TextInput::make('subtitle')
+                    ->label('Subtitle')
+                    ->maxLength(255),
+
                 Forms\Components\FileUpload::make('image_path')
                     ->label('Banner Image')
                     ->image()
@@ -98,16 +119,34 @@ class BannerResource extends Resource
                             'type' => $shouldFetchFileInformation ? $storage->mimeType($file) : null,
                             'url' => image_url($file),
                         ];
-                    })
+                    }),
+
+                Forms\Components\TextInput::make('link_url')
+                    ->label('Link URL')
+                    ->url()
+                    ->maxLength(255),
+
+                Forms\Components\TextInput::make('button_text')
+                    ->label('Button Text')
+                    ->maxLength(255),
+
+                Forms\Components\TextInput::make('sort_order')
+                    ->label('Sort Order')
+                    ->numeric()
+                    ->default(0),
+
+                Forms\Components\Toggle::make('is_active')
+                    ->label('Active')
+                    ->default(true),
             ]);
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListBanners::route('/'),
-            'create' => Pages\CreateBanner::route('/create'),
-            'edit' => Pages\EditBanner::route('/{record}/edit'),
+            'index' => Pages\ListActivityBanners::route('/'),
+            'create' => Pages\CreateActivityBanner::route('/create'),
+            'edit' => Pages\EditActivityBanner::route('/{record}/edit'),
         ];
     }
 }
