@@ -3,20 +3,6 @@
 @section('title', 'Home')
 
 @section('content')
-    {{-- HERO VIDEO - Full screen 100vh --}}
-    @if (!empty($heroVideo))
-        <section class="hero-video-section">
-            <video class="hero-video" autoplay muted loop playsinline>
-                <source src="{{ asset('storage/' . $heroVideo->video_path) }}" type="video/mp4">
-            </video>
-            @if($heroVideo->title)
-                <div class="hero-video-overlay">
-                    <h1 class="hero-video-title">{{ $heroVideo->title }}</h1>
-                </div>
-            @endif
-        </section>
-    @endif
-
     {{-- HERO BANNER - Full screen 100vh, photo full layar --}}
     @if (!empty($heroBanners) && $heroBanners->count())
         <section class="banner-slider-hero" data-hero-carousel>
@@ -114,6 +100,20 @@
                     </div>
                 </div>
             </div>
+        </section>
+    @endif
+
+    {{-- HERO VIDEO - Full screen 100vh --}}
+    @if (!empty($heroVideo))
+        <section class="hero-video-section overlap-section z5">
+            <video class="hero-video" autoplay muted loop playsinline>
+                <source src="{{ asset('storage/' . $heroVideo->video_path) }}" type="video/mp4">
+            </video>
+            @if($heroVideo->title)
+                <div class="hero-video-overlay">
+                    <h1 class="hero-video-title">{{ $heroVideo->title }}</h1>
+                </div>
+            @endif
         </section>
     @endif
 
