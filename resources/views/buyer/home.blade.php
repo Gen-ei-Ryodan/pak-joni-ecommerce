@@ -339,7 +339,7 @@
             font-size: 14px;
             font-weight: 600;
             color: #fff;
-            background: linear-gradient(135deg, #e94560, #533483);
+            background: #FF0052;
             border: none;
             border-radius: 30px;
             cursor: pointer;
@@ -348,7 +348,7 @@
         }
         .auth-confirm-buttons .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(233, 69, 96, 0.3);
+            box-shadow: 0 8px 24px rgba(255, 0, 82, 0.3);
         }
         .auth-confirm-buttons .btn-outline {
             display: inline-flex;
@@ -365,8 +365,8 @@
             transition: all 0.25s ease;
         }
         .auth-confirm-buttons .btn-outline:hover {
-            border-color: #e94560;
-            color: #e94560;
+            border-color: #FF0052;
+            color: #FF0052;
         }
     </style>
 @endpush
