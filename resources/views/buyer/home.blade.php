@@ -460,11 +460,17 @@
                     }
                 });
             }, {
-                threshold: 0.1,
-                rootMargin: '0px 0px -60px 0px'
+                threshold: 0.05,
+                rootMargin: '0px 0px -40px 0px'
             });
             document.querySelectorAll('.reveal').forEach(function(el) {
-                observer.observe(el);
+                // If already visible on load, add class immediately
+                var rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom > 0) {
+                    el.classList.add('visible');
+                } else {
+                    observer.observe(el);
+                }
             });
         })();
 
@@ -474,12 +480,20 @@
             if (!hero) return;
             var bg = hero.querySelectorAll('.hero-bg-img');
             if (!bg.length) return;
+            var ticking = false;
             window.addEventListener('scroll', function() {
-                var top = hero.getBoundingClientRect().top;
-                var speed = 0.3;
-                bg.forEach(function(img) {
-                    img.style.transform = 'translateY(' + (top * speed) + 'px)';
-                });
+                if (!ticking) {
+                    window.requestAnimationFrame(function() {
+                        var rect = hero.getBoundingClientRect();
+                        var offset = rect.top;
+                        var speed = 0.25;
+                        bg.forEach(function(img) {
+                            img.style.transform = 'translateY(' + (-offset * speed) + 'px)';
+                        });
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
             }, { passive: true });
         })();
     </script>

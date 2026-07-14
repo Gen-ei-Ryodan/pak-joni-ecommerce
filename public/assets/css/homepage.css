@@ -196,6 +196,10 @@
   color: #fff;
 }
 
+.dark-text .section-title {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .dark-text .section-title-text {
   color: #fff;
 }
@@ -206,29 +210,29 @@
 
 /* ======= OVERLAPPING SECTIONS ======= */
 /*
-  Each section has a layered "card stack" effect:
-  a subtle shadow arc at the top creates depth,
-  rounded top corners give the paper-stack feel.
+  Each section physically shifts upward using transform,
+  creating a real stacked overlapping effect.
+  The ::before pseudo adds a decorative curved accent line.
 */
 .overlap-section {
   position: relative;
   z-index: 2;
-  border-radius: 40px 40px 0 0;
-  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.06);
+  border-radius: 36px 36px 0 0;
+  transform: translateY(-36px);
+  padding-bottom: 0;
+  margin-bottom: -36px;
 }
 
 .overlap-section::before {
   content: '';
   position: absolute;
-  top: -12px;
+  top: 0;
   left: 0;
   right: 0;
-  height: 24px;
-  background: inherit;
-  border-radius: 40px 40px 0 0;
-  z-index: -1;
-  opacity: 0.85;
-  filter: blur(2px);
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 36px 36px 0 0;
+  pointer-events: none;
 }
 
 .overlap-section.z3 { z-index: 3; }
@@ -236,9 +240,9 @@
 .overlap-section.z5 { z-index: 5; }
 .overlap-section.z6 { z-index: 6; }
 
-/* Overlap promo on hero with more visual impact */
+/* First overlap section (promo) needs extra top padding */
 .promo-section.overlap-section {
-  padding-top: 80px;
+  padding-top: 100px;
 }
 
 /* ======= PROMO SECTION ======= */
@@ -892,9 +896,9 @@
 /* ======= SCROLL REVEAL ANIMATIONS ======= */
 .reveal {
   opacity: 0;
-  transform: translateY(50px);
-  transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateY(60px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .reveal.visible {
@@ -902,10 +906,10 @@
   transform: translateY(0);
 }
 
-.reveal-delay-1 { transition-delay: 0.1s; }
-.reveal-delay-2 { transition-delay: 0.2s; }
-.reveal-delay-3 { transition-delay: 0.3s; }
-.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-1 { transition-delay: 0.12s; }
+.reveal-delay-2 { transition-delay: 0.24s; }
+.reveal-delay-3 { transition-delay: 0.36s; }
+.reveal-delay-4 { transition-delay: 0.48s; }
 
 /* Scroll velocity parallax for hero backgrounds */
 .parallax-bg {
@@ -934,12 +938,14 @@
   }
 
   .overlap-section {
-    border-radius: 24px 24px 0 0;
+      transform: translateY(-20px);
+      margin-bottom: -20px;
+      border-radius: 20px 20px 0 0;
+    }
   }
-}
 
-@media (max-width: 520px) {
-  .carousel-arrow {
+  @media (max-width: 520px) {
+    .carousel-arrow {
     width: 36px;
     height: 36px;
   }
@@ -963,6 +969,7 @@
   }
 
   .overlap-section {
-    border-radius: 16px 16px 0 0;
+    transform: translateY(-12px);
+    border-radius: 12px 12px 0 0;
   }
 }
