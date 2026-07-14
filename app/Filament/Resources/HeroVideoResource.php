@@ -94,7 +94,7 @@ class HeroVideoResource extends Resource
                             'name' => basename($file),
                             'size' => $shouldFetchFileInformation ? $storage->size($file) : 0,
                             'type' => $shouldFetchFileInformation ? $storage->mimeType($file) : null,
-                            'url' => \App\Helpers\image_url($file),
+                            'url' => image_url($file),
                         ];
                     }),
 
