@@ -1,3 +1,8 @@
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+}
+
 body {
   font-family: var(--font);
   background: #fff;
