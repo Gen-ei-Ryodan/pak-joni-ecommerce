@@ -3,6 +3,20 @@
 @section('title', 'Home')
 
 @section('content')
+    {{-- HERO VIDEO - Full screen 100vh --}}
+    @if (!empty($heroVideo))
+        <section class="hero-video-section">
+            <video class="hero-video" autoplay muted loop playsinline>
+                <source src="{{ asset('storage/' . $heroVideo->video_path) }}" type="video/mp4">
+            </video>
+            @if($heroVideo->title)
+                <div class="hero-video-overlay">
+                    <h1 class="hero-video-title">{{ $heroVideo->title }}</h1>
+                </div>
+            @endif
+        </section>
+    @endif
+
     {{-- HERO BANNER - Full screen 100vh, photo full layar --}}
     @if (!empty($heroBanners) && $heroBanners->count())
         <section class="banner-slider-hero" data-hero-carousel>
@@ -265,6 +279,34 @@
 
 @push('head')
     <style>
+        .hero-video-section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+        }
+        .hero-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .hero-video-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.3);
+        }
+        .hero-video-title {
+            color: #fff;
+            font-size: clamp(24px, 5vw, 56px);
+            font-weight: 700;
+            text-align: center;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            padding: 0 20px;
+        }
         .auth-confirm-overlay {
             position: fixed;
             inset: 0;

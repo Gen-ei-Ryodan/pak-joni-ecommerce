@@ -44,6 +44,7 @@
                         <a href="{{ route('admin.parts.index') }}">Parts</a>
                         <a href="{{ route('admin.banners.index') }}">Banners</a>
                         <a href="{{ route('admin.orders.index') }}">Orders</a>
+                        <a href="{{ url('/admin/hero-videos') }}">Hero Videos</a>
                     </aside>
                     <section class="content">
                         @yield('content')
