@@ -208,22 +208,14 @@
   color: rgba(255,255,255,0.7);
 }
 
-/* ======= OVERLAPPING SECTIONS ======= */
+/* ======= SECTIONS DEFAULT ======= */
 /*
-  Full-page snap sections with card-stack overlap:
-  - scroll-snap-align snaps each section to the top
-  - z-index stacking makes each new section render on top
-  - ::before adds a decorative light accent line
-  - Small negative margin creates the overlap effect
-  - Each section fills the viewport (min-height: 100vh)
+  Sections stacked naturally, Lenis handles smooth scroll.
+  Subtle top accent line as visual separator.
 */
 .overlap-section {
   position: relative;
   z-index: 2;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-  margin-top: -12px;
-  border-radius: 24px 24px 0 0;
 }
 
 .overlap-section::before {
@@ -232,22 +224,15 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 24px 24px 0 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.04);
   pointer-events: none;
-  z-index: 1;
 }
 
 .overlap-section.z3 { z-index: 3; }
 .overlap-section.z4 { z-index: 4; }
 .overlap-section.z5 { z-index: 5; }
 .overlap-section.z6 { z-index: 6; }
-
-/* First overlap section (promo) needs extra top padding */
-.promo-section.overlap-section {
-  padding-top: 80px;
-}
 
 /* ======= PROMO SECTION ======= */
 .promo-section {
@@ -941,12 +926,6 @@
     grid-template-columns: 1fr;
   }
 
-  .overlap-section {
-      margin-top: -8px;
-      border-radius: 16px 16px 0 0;
-    }
-  }
-
   @media (max-width: 520px) {
     .carousel-arrow {
     width: 36px;
@@ -969,10 +948,5 @@
 
   .section-header {
     margin-bottom: 24px;
-  }
-
-  .overlap-section {
-    margin-top: -6px;
-    border-radius: 12px 12px 0 0;
   }
 }

@@ -19,6 +19,9 @@
         <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}?v=2">
         <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=2">
 
+        <link rel="stylesheet" href="https://unpkg.com/lenis@1.2.3/dist/lenis.css">
+        <script src="https://unpkg.com/lenis@1.2.3/dist/lenis.min.js"></script>
+
         @stack('head')
     </head>
     <body>
@@ -210,6 +213,22 @@
 
         <script src="{{ asset('assets/js/app.js') }}" defer></script>
         <script>
+        // Lenis smooth scroll
+        (function() {
+            var lenis = new Lenis({
+                duration: 1.6,
+                easing: function(t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)) },
+                wheelMultiplier: 1,
+                touchMultiplier: 1.5,
+                infinite: false
+            });
+            function raf(time) {
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
+            requestAnimationFrame(raf);
+        })();
+
         // Navbar scroll effect
         (function() {
             var navbar = document.getElementById('mainNavbar');
