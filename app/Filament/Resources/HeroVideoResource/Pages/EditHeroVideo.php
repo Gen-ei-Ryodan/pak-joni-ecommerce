@@ -3,12 +3,15 @@
 namespace App\Filament\Resources\HeroVideoResource\Pages;
 
 use App\Filament\Resources\HeroVideoResource;
+use App\Filament\Traits\RedirectsToList;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Storage;
 
 class EditHeroVideo extends EditRecord
 {
+    use RedirectsToList;
+
     protected static string $resource = HeroVideoResource::class;
 
     protected ?string $oldVideoPath = null;

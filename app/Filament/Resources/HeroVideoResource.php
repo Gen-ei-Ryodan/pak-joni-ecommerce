@@ -7,11 +7,13 @@ use App\Models\HeroVideo;
 use BackedEnum;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Forms\Components\BaseFileUpload;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\UnableToCheckFileExistence;
 use UnitEnum;
 
 class HeroVideoResource extends Resource
@@ -73,7 +75,28 @@ class HeroVideoResource extends Resource
                     ->acceptedFileTypes(['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'])
                     ->maxSize(102400)
                     ->uploadProgressIndicatorPosition('inline')
-                    ->helperText('Format: mp4, webm, ogg, mov. Maks 100MB.'),
+                    ->helperText('Format: mp4, webm, ogg, mov. Maks 100MB.')
+                    ->getUploadedFileUsing(function (BaseFileUpload $component, string $file, $storedFileNames): ?array {
+                        $storage = $component->getDisk();
+                        $shouldFetchFileInformation = $component->shouldFetchFileInformation();
+
+                        if ($shouldFetchFileInformation) {
+                            try {
+                                if (! $storage->exists($file)) {
+                                    return null;
+                                }
+                            } catch (UnableToCheckFileExistence $exception) {
+                                return null;
+                            }
+                        }
+
+                        return [
+                            'name' => basename($file),
+                            'size' => $shouldFetchFileInformation ? $storage->size($file) : 0,
+                            'type' => $shouldFetchFileInformation ? $storage->mimeType($file) : null,
+                            'url' => \App\Helpers\image_url($file),
+                        ];
+                    }),
 
                 Forms\Components\Toggle::make('is_active')
                     ->label('Active')
