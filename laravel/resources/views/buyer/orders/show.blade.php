@@ -8,14 +8,7 @@
 
 @section('dashboard-content')
     @php
-        $snapToken = null;
-        $clientKey = null;
-        if ($order->status === 'unpaid' && $order->payment_status === 'pending') {
-            try {
-                $snapToken = app(\App\Services\PaymentService::class)->getSnapToken($order);
-                $clientKey = config('services.midtrans.client_key');
-            } catch (\Exception $e) {}
-        }
+        $clientKey = config('services.midtrans.client_key');
     @endphp
 
     @if($order->status === 'unpaid' && $order->payment_status === 'pending')
@@ -24,15 +17,11 @@
                 <div style="font-weight:600;font-size:14px;">Menunggu Pembayaran</div>
                 <div class="muted" style="margin-top:4px;font-size:13px;">Selesaikan pembayaran Anda untuk memproses pesanan ini.</div>
             </div>
-            @if($snapToken)
-                <button id="pay-button" class="btn btn-primary" type="button" style="flex-shrink:0;">Bayar Sekarang</button>
-            @endif
+            <button id="pay-button" class="btn btn-primary" type="button" style="flex-shrink:0;">Bayar Sekarang</button>
         </div>
-        @if($snapToken)
-            <div id="reopen-hint" style="display:none;background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:13px;color:#856404;text-align:center;">
-                Pop-up pembayaran ditutup. Klik "Bayar Sekarang" untuk membukanya kembali.
-            </div>
-        @endif
+        <div id="reopen-hint" style="display:none;background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:13px;color:#856404;text-align:center;">
+            Pop-up pembayaran ditutup. Klik "Bayar Sekarang" untuk membukanya kembali.
+        </div>
     @endif
 
     <div class="order-detail-grid">
@@ -197,9 +186,7 @@
             {{-- Action Buttons --}}
             <div class="sidebar-card" style="display:grid;gap:8px;">
                 @if($order->status === 'unpaid' && $order->payment_status === 'pending')
-                    @if($snapToken)
-                        <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
-                    @endif
+                    <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
                     <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Continue Shopping</a>
                 @elseif($order->status === 'shipped')
                     <form method="post" action="{{ route('buyer.orders.confirmReceived', $order) }}" onsubmit="return confirm('Konfirmasi barang sudah diterima?')">
@@ -223,30 +210,53 @@
     </div>
 @endsection
 
-@if($snapToken)
-    @push('head')
-        <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ $clientKey }}"></script>
-    @endpush
+@push('head')
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ $clientKey }}"></script>
+@endpush
 
-    @push('scripts')
-        <script>
-            var snapToken = '{{ $snapToken }}';
-            var checkStatusUrl = '{{ route('payment.midtrans.status', $order) }}';
-            var isPaying = false;
+@push('scripts')
+    <script>
+        var snapTokenUrl = '{{ route('payment.midtrans.snap-token', $order) }}';
+        var checkStatusUrl = '{{ route('payment.midtrans.status', $order) }}';
+        var isPaying = false;
 
-            function payWithMidtrans(el) {
-                if (isPaying) return;
-                isPaying = true;
+        function getSnapToken(callback) {
+            fetch(snapTokenUrl)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success && data.snap_token) {
+                        callback(null, data.snap_token);
+                    } else {
+                        callback(data.error || 'Gagal mendapatkan token pembayaran.');
+                    }
+                })
+                .catch(function(err) {
+                    callback('Gagal terhubung ke server. Silakan coba lagi.');
+                });
+        }
 
-                if (el) {
-                    el.disabled = true;
-                    el.textContent = 'Memproses...';
+        function payWithMidtrans(el) {
+            if (isPaying) return;
+            isPaying = true;
+
+            var allPayBtns = document.querySelectorAll('#pay-button, #pay-button-sidebar');
+            allPayBtns.forEach(function(b) {
+                b.disabled = true;
+                b.textContent = 'Memproses...';
+            });
+
+            getSnapToken(function(error, token) {
+                if (error) {
+                    isPaying = false;
+                    allPayBtns.forEach(function(b) {
+                        b.disabled = false;
+                        b.textContent = 'Bayar Sekarang';
+                    });
+                    alert(error);
+                    return;
                 }
-                // Disable all pay buttons
-                var allPayBtns = document.querySelectorAll('#pay-button, #pay-button-sidebar');
-                allPayBtns.forEach(function(b) { b.disabled = true; });
 
-                snap.pay(snapToken, {
+                snap.pay(token, {
                     onSuccess: function(result) {
                         window.location.reload();
                     },
@@ -255,23 +265,28 @@
                     },
                     onError: function(result) {
                         isPaying = false;
-                        allPayBtns.forEach(function(b) { b.disabled = false; });
+                        allPayBtns.forEach(function(b) {
+                            b.disabled = false;
+                            b.textContent = 'Bayar Sekarang';
+                        });
                         alert('Pembayaran gagal. Silakan coba lagi.');
                     },
                     onClose: function() {
                         isPaying = false;
-                        allPayBtns.forEach(function(b) { b.disabled = false; });
-                        // Show reopen hint if it exists
+                        allPayBtns.forEach(function(b) {
+                            b.disabled = false;
+                            b.textContent = 'Bayar Sekarang';
+                        });
                         var reopenHint = document.getElementById('reopen-hint');
                         if (reopenHint) reopenHint.style.display = 'block';
                     }
                 });
-            }
+            });
+        }
 
-            var payBtn = document.getElementById('pay-button');
-            var payBtnSidebar = document.getElementById('pay-button-sidebar');
-            if (payBtn) payBtn.addEventListener('click', function() { payWithMidtrans(this); });
-            if (payBtnSidebar) payBtnSidebar.addEventListener('click', function() { payWithMidtrans(this); });
-        </script>
-    @endpush
-@endif
+        var payBtn = document.getElementById('pay-button');
+        var payBtnSidebar = document.getElementById('pay-button-sidebar');
+        if (payBtn) payBtn.addEventListener('click', function() { payWithMidtrans(this); });
+        if (payBtnSidebar) payBtnSidebar.addEventListener('click', function() { payWithMidtrans(this); });
+     </script>
+ @endpush
