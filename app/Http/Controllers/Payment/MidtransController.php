@@ -86,6 +86,34 @@ class MidtransController extends Controller
     }
 
     /**
+     * Generate and return Snap token for the order (AJAX).
+     * Used by the "Bayar Sekarang" button in frontend.
+     */
+    public function snapToken(Order $order, Request $request)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $order->load('items');
+
+        $token = $this->paymentService->getSnapToken($order);
+
+        if (! $token) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Gagal mendapatkan token pembayaran. Silakan coba lagi.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'snap_token' => $token,
+            'client_key' => config('services.midtrans.client_key'),
+        ]);
+    }
+
+    /**
      * Check payment status manually via Midtrans API.
      * Used by the "Cek Status" button in frontend.
      */
