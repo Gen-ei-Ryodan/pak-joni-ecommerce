@@ -89,6 +89,18 @@ class OrderResource extends Resource
                         default => $state,
                     }),
 
+                Tables\Columns\TextColumn::make('shipping_type')
+                    ->label('Pengiriman')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'dealer_pickup' => 'success',
+                        default => 'info',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'dealer_pickup' => 'Ambil di Dealer',
+                        default => 'Kurir',
+                    }),
+
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total')
                     ->money('IDR')
@@ -193,7 +205,7 @@ class OrderResource extends Resource
                     ->label('Ship')
                     ->icon('heroicon-o-truck')
                     ->color('orange')
-                    ->visible(fn (Order $record) => $record->status === 'processing')
+                    ->visible(fn (Order $record) => $record->status === 'processing' && !$record->isDealerPickup())
                     ->form([
                         Forms\Components\TextInput::make('courier')
                             ->label('Courier')
@@ -205,6 +217,16 @@ class OrderResource extends Resource
                     ])
                     ->action(function (Order $record, array $data) {
                         app(\App\Services\OrderService::class)->markAsShipped($record, $data['courier'], $data['receipt']);
+                    }),
+
+                Actions\Action::make('ready_for_pickup')
+                    ->label('Siap Diambil')
+                    ->icon('heroicon-o-building-storefront')
+                    ->color('success')
+                    ->visible(fn (Order $record) => $record->status === 'processing' && $record->isDealerPickup())
+                    ->requiresConfirmation()
+                    ->action(function (Order $record) {
+                        app(\App\Services\OrderService::class)->markAsShipped($record, 'dealer_pickup', 'Siap Diambil');
                     }),
                 Actions\Action::make('complete')
                     ->label('Complete')
@@ -295,7 +317,8 @@ class OrderResource extends Resource
                                 Infolists\Components\TextEntry::make('subtotal')
                                     ->money('IDR'),
                                 Infolists\Components\TextEntry::make('shipping_cost')
-                                    ->money('IDR'),
+                                    ->label('Ongkos Kirim')
+                                    ->formatStateUsing(fn (Order $record) => $record->isDealerPickup() ? 'Gratis' : 'Rp '.number_format((float) $record->shipping_cost, 0, ',', '.')),
                                 Infolists\Components\TextEntry::make('total')
                                     ->money('IDR'),
                                 Infolists\Components\TextEntry::make('payment_status')
@@ -355,7 +378,8 @@ class OrderResource extends Resource
                                 $record->address_snapshot['postal_code'] ?? '',
                             ])->filter()->implode(', '))
                             ->columnSpanFull(),
-                    ]),
+                    ])
+                    ->visible(fn (Order $record) => !$record->isDealerPickup()),
                 Section::make('Info Kurir')
                     ->schema([
                         Grid::make(3)
@@ -375,7 +399,21 @@ class OrderResource extends Resource
                                     ->dateTime('d M Y H:i')
                                     ->placeholder('-'),
                             ]),
-                    ]),
+                    ])
+                    ->visible(fn (Order $record) => !$record->isDealerPickup()),
+
+                Section::make('Informasi Pengambilan')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('shipping_type')
+                            ->label('Metode')
+                            ->badge()
+                            ->color('success')
+                            ->formatStateUsing(fn () => 'Ambil di Dealer'),
+                        Infolists\Components\TextEntry::make('shipping_cost')
+                            ->label('Biaya Kirim')
+                            ->formatStateUsing(fn () => 'Gratis'),
+                    ])
+                    ->visible(fn (Order $record) => $record->isDealerPickup()),
 
                 Section::make('Order Items')
                     ->schema([

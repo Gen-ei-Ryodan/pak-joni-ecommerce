@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'paid_at',
     'subtotal',
     'shipping_cost',
+    'shipping_type',
     'total',
     'dp_amount',
     'remaining_amount',
@@ -40,13 +41,15 @@ class Order extends Model
     protected $fillable = [
         'user_id', 'order_no', 'status', 'payment_status',
         'payment_method', 'payment_provider', 'payment_reference', 'paid_at',
-        'subtotal', 'shipping_cost', 'total',
+        'subtotal', 'shipping_cost', 'shipping_type', 'total',
         'dp_amount', 'remaining_amount', 'is_indent', 'indent_status',
         'address_snapshot', 'shipping_snapshot', 'shipping_courier', 'shipping_receipt',
         'shipped_at', 'completed_at', 'cancelled_at',
     ];
 
     public const STATUSES = ['unpaid', 'paid', 'processing', 'shipped', 'completed', 'cancelled'];
+    public const SHIPPING_TYPE_COURIER = 'courier';
+    public const SHIPPING_TYPE_DEALER_PICKUP = 'dealer_pickup';
     public const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'expired'];
     public const INDENT_STATUSES = ['waiting_stock', 'ready_for_delivery', 'waiting_payment', 'paid_full'];
 
@@ -86,6 +89,19 @@ class Order extends Model
     public function shipment(): HasOne
     {
         return $this->hasOne(Shipment::class);
+    }
+
+    public function isDealerPickup(): bool
+    {
+        return $this->shipping_type === self::SHIPPING_TYPE_DEALER_PICKUP;
+    }
+
+    public function shippingTypeLabel(): string
+    {
+        return match ($this->shipping_type) {
+            self::SHIPPING_TYPE_DEALER_PICKUP => 'Ambil di Dealer',
+            default => 'Dikirim via Kurir',
+        };
     }
 
     public function statusBadge(): string

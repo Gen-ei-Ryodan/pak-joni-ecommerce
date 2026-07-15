@@ -44,6 +44,7 @@ class OrderController extends Controller
             'action' => ['required', 'in:mark_paid,process,ship,complete,cancel'],
             'courier' => ['nullable', 'required_if:action,ship', 'string', 'max:255'],
             'receipt' => ['nullable', 'required_if:action,ship', 'string', 'max:255'],
+            'dealer_pickup' => ['nullable', 'in:1'],
         ]);
 
         $success = false;
@@ -59,12 +60,21 @@ class OrderController extends Controller
                 $message = 'Order mulai diproses.';
                 break;
             case 'ship':
-                $success = $this->orderService->markAsShipped(
-                    $order,
-                    $validated['courier'] ?? '',
-                    $validated['receipt'] ?? ''
-                );
-                $message = 'Order dikirim.';
+                if ($order->isDealerPickup()) {
+                    $success = $this->orderService->markAsShipped(
+                        $order,
+                        'dealer_pickup',
+                        'Siap Diambil'
+                    );
+                    $message = 'Order siap diambil.';
+                } else {
+                    $success = $this->orderService->markAsShipped(
+                        $order,
+                        $validated['courier'] ?? '',
+                        $validated['receipt'] ?? ''
+                    );
+                    $message = 'Order dikirim.';
+                }
                 break;
             case 'complete':
                 $success = $this->orderService->markAsCompleted($order);
@@ -85,12 +95,14 @@ class OrderController extends Controller
 
     private function buildTimeline(Order $order): array
     {
+        $shippedLabel = $order->isDealerPickup() ? 'Siap Diambil' : 'Shipped';
+
         $tl = [];
         $tl[] = ['label' => 'Order Created', 'time' => $order->created_at, 'done' => true];
         $tl[] = ['label' => 'Awaiting Payment', 'time' => $order->created_at, 'done' => $order->status !== 'unpaid' || $order->payment_status === 'paid'];
         $tl[] = ['label' => 'Payment Successful', 'time' => $order->paid_at, 'done' => in_array($order->status, ['paid','processing','shipped','completed'])];
         $tl[] = ['label' => 'Processing', 'time' => $order->status === 'processing' ? $order->updated_at : null, 'done' => in_array($order->status, ['processing','shipped','completed'])];
-        $tl[] = ['label' => 'Shipped', 'time' => $order->shipped_at, 'done' => in_array($order->status, ['shipped','completed'])];
+        $tl[] = ['label' => $shippedLabel, 'time' => $order->shipped_at, 'done' => in_array($order->status, ['shipped','completed'])];
         $tl[] = ['label' => 'Completed', 'time' => $order->completed_at, 'done' => $order->status === 'completed'];
 
         if ($order->status === 'cancelled') {

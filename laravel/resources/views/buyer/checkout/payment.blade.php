@@ -66,7 +66,7 @@
 
                     <div class="muted" style="display:grid;gap:8px;">
                         <div>Subtotal: <span style="font-family:var(--mono);">{{ number_format((float) $subtotal, 2, '.', ',') }}</span></div>
-                        <div>Shipping: <span style="font-family:var(--mono);">{{ number_format((float) $shippingCost, 2, '.', ',') }}</span></div>
+                        <div>Ongkos Kirim: <span style="font-family:var(--mono);">@if($isDealerPickup)<span style="color:#4ade80;">Gratis</span>@else{{ number_format((float) $shippingCost, 2, '.', ',') }}@endif</span></div>
                         @if($hasIndent)
                             <div style="margin-top:6px;padding:8px;background:#fff3cd;border-radius:8px;font-size:12px;color:#856404;">
                                 <div style="font-weight:600;margin-bottom:4px;">Indent Order - DP 50%</div>
@@ -77,20 +77,29 @@
                         <div>Total: <span style="font-family:var(--mono);">{{ number_format((float) $total, 2, '.', ',') }}</span></div>
                     </div>
 
-                    <div style="height:14px;"></div>
+                    @if($isDealerPickup)
+                        <div style="height:14px;"></div>
+                        <div style="font-weight:600;">Pengambilan</div>
+                        <div style="height:8px;"></div>
+                        <div class="muted" style="line-height:1.8;">
+                            Ambil di Dealer / Workshop<br>
+                            <span style="color:#4ade80;font-weight:500;">Gratis Ongkir — Tidak ada biaya pengiriman</span>
+                        </div>
+                    @else
+                        <div style="height:14px;"></div>
+                        <div style="font-weight:600;">Address</div>
+                        <div style="height:8px;"></div>
+                        <div class="muted" style="line-height:1.8;">
+                            {{ $address->recipient_name }} — {{ $address->phone }}<br>
+                            {{ $address->address_line1 }} {{ $address->address_line2 }}<br>
+                            {{ $address->city }}, {{ $address->province }} {{ $address->postal_code }}
+                        </div>
 
-                    <div style="font-weight:600;">Address</div>
-                    <div style="height:8px;"></div>
-                    <div class="muted" style="line-height:1.8;">
-                        {{ $address->recipient_name }} — {{ $address->phone }}<br>
-                        {{ $address->address_line1 }} {{ $address->address_line2 }}<br>
-                        {{ $address->city }}, {{ $address->province }} {{ $address->postal_code }}
-                    </div>
-
-                    <div style="height:14px;"></div>
-                    <div style="font-weight:600;">Shipping</div>
-                    <div style="height:8px;"></div>
-                    <div class="muted">{{ $shipping['courier'] }} — {{ $shipping['service'] }}</div>
+                        <div style="height:14px;"></div>
+                        <div style="font-weight:600;">Shipping</div>
+                        <div style="height:8px;"></div>
+                        <div class="muted">{{ $shipping['courier'] }} — {{ $shipping['service'] }}</div>
+                    @endif
                 </div>
             </div>
         </div>

@@ -46,22 +46,39 @@ class CheckoutController extends Controller
     public function setAddress(Request $request)
     {
         $validated = $request->validate([
-            'address_id' => ['required', 'integer', 'exists:addresses,id'],
+            'address_id' => ['required', 'integer'],
         ]);
 
-        $address = Address::query()->findOrFail((int) $validated['address_id']);
+        $addressId = (int) $validated['address_id'];
+
+        // address_id = 0 means dealer pickup
+        if ($addressId === 0) {
+            $request->session()->put('checkout.dealer_pickup', true);
+            $request->session()->forget('checkout.address_id');
+            $request->session()->forget('checkout.shipping');
+
+            return redirect('/checkout/payment');
+        }
+
+        $address = Address::query()->findOrFail($addressId);
 
         if ($address->user_id !== $request->user()->id) {
             abort(403);
         }
 
         $request->session()->put('checkout.address_id', $address->id);
+        $request->session()->forget('checkout.dealer_pickup');
 
         return redirect('/checkout/shipping');
     }
 
     public function shipping(Request $request)
     {
+        // If dealer pickup, skip shipping step
+        if ($request->session()->get('checkout.dealer_pickup')) {
+            return redirect('/checkout/payment');
+        }
+
         $cart = $this->loadSelectedCart($request);
 
         if ($cart->items->isEmpty()) {
@@ -150,6 +167,28 @@ class CheckoutController extends Controller
             return redirect('/cart')->with('status', 'Cart masih kosong.');
         }
 
+        $isDealerPickup = $request->session()->get('checkout.dealer_pickup');
+
+        if ($isDealerPickup) {
+            // Dealer pickup: no shipping, no address needed
+            $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
+            $shippingCost = 0;
+            $total = $subtotal;
+
+            $hasIndent = $this->hasIndentItems($cart);
+            $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
+            $dpAmount = $indentCalc['dp'];
+            $remainingAmount = $indentCalc['remaining'];
+
+            $shipping = null;
+            $address = null;
+
+            return view('buyer.checkout.payment', compact(
+                'cart', 'address', 'shipping', 'subtotal', 'shippingCost', 'total',
+                'hasIndent', 'dpAmount', 'remainingAmount', 'isDealerPickup'
+            ));
+        }
+
         $addressId = (int) ($request->session()->get('checkout.address_id') ?? 0);
         $shipping = $request->session()->get('checkout.shipping');
 
@@ -175,7 +214,7 @@ class CheckoutController extends Controller
 
         return view('buyer.checkout.payment', compact(
             'cart', 'address', 'shipping', 'subtotal', 'shippingCost', 'total',
-            'hasIndent', 'dpAmount', 'remainingAmount'
+            'hasIndent', 'dpAmount', 'remainingAmount', 'isDealerPickup'
         ));
     }
 
@@ -187,16 +226,20 @@ class CheckoutController extends Controller
             return redirect('/cart')->with('status', 'Cart masih kosong.');
         }
 
+        $isDealerPickup = $request->session()->get('checkout.dealer_pickup');
         $addressId = (int) ($request->session()->get('checkout.address_id') ?? 0);
         $shipping = $request->session()->get('checkout.shipping');
 
-        if (! $addressId || ! $shipping) {
-            return redirect('/checkout')->with('status', 'Checkout belum lengkap.');
+        if ($isDealerPickup) {
+            $address = null;
+        } else {
+            if (! $addressId || ! $shipping) {
+                return redirect('/checkout')->with('status', 'Checkout belum lengkap.');
+            }
+            $address = Address::query()->where('user_id', $request->user()->id)->findOrFail($addressId);
         }
 
-        $address = Address::query()->where('user_id', $request->user()->id)->findOrFail($addressId);
-
-        return DB::transaction(function () use ($request, $cart, $address, $shipping) {
+        return DB::transaction(function () use ($request, $cart, $address, $shipping, $isDealerPickup) {
             // Validate stock for part variants only (exclude indent quantity)
             foreach ($cart->items as $it) {
                 if ($it->itemable_type === PartVariant::class) {
@@ -210,7 +253,35 @@ class CheckoutController extends Controller
             }
 
             $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
-            $shippingCost = (float) ($shipping['shipping_cost'] ?? 0);
+
+            if ($isDealerPickup) {
+                $shippingCost = 0;
+                $shippingType = Order::SHIPPING_TYPE_DEALER_PICKUP;
+                $addressSnapshot = null;
+                $shippingSnapshot = [
+                    'type' => 'dealer_pickup',
+                    'label' => 'Ambil di Dealer',
+                ];
+            } else {
+                $shippingCost = (float) ($shipping['shipping_cost'] ?? 0);
+                $shippingType = Order::SHIPPING_TYPE_COURIER;
+                $addressSnapshot = [
+                    'label' => $address->label,
+                    'recipient_name' => $address->recipient_name,
+                    'phone' => $address->phone,
+                    'address_line1' => $address->address_line1,
+                    'address_line2' => $address->address_line2,
+                    'city' => $address->city,
+                    'province' => $address->province,
+                    'postal_code' => $address->postal_code,
+                    'notes' => $address->notes,
+                ];
+                $shippingSnapshot = [
+                    'courier' => $shipping['courier'] ?? null,
+                    'service' => $shipping['service'] ?? null,
+                    'shipping_cost' => $shippingCost,
+                ];
+            }
 
             $hasIndent = $this->hasIndentItems($cart);
             $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
@@ -232,27 +303,14 @@ class CheckoutController extends Controller
                 'payment_status' => 'pending',
                 'subtotal' => $subtotal,
                 'shipping_cost' => $shippingCost,
+                'shipping_type' => $shippingType,
                 'total' => $total,
                 'dp_amount' => $dpAmount,
                 'remaining_amount' => $remainingAmount,
                 'is_indent' => $isIndent,
                 'indent_status' => $indentStatus,
-                'address_snapshot' => [
-                    'label' => $address->label,
-                    'recipient_name' => $address->recipient_name,
-                    'phone' => $address->phone,
-                    'address_line1' => $address->address_line1,
-                    'address_line2' => $address->address_line2,
-                    'city' => $address->city,
-                    'province' => $address->province,
-                    'postal_code' => $address->postal_code,
-                    'notes' => $address->notes,
-                ],
-                'shipping_snapshot' => [
-                    'courier' => $shipping['courier'] ?? null,
-                    'service' => $shipping['service'] ?? null,
-                    'shipping_cost' => $shippingCost,
-                ],
+                'address_snapshot' => $addressSnapshot,
+                'shipping_snapshot' => $shippingSnapshot,
             ]);
 
             $this->paymentService->createPayment($order);
