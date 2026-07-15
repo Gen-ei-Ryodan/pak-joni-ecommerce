@@ -67,24 +67,33 @@
                 </div>
             </div>
 
-            {{-- Shipping Address --}}
+            {{-- Shipping / Pickup Info --}}
             <div class="shipping-card">
-                <div class="card-title-sm">Shipping Address</div>
-                @php($addr = $order->address_snapshot)
-                <div class="shipping-name">{{ $addr['recipient_name'] ?? '-' }}</div>
-                <div class="shipping-detail">
-                    {{ $addr['phone'] ?? '-' }}<br>
-                    {{ $addr['address_line1'] ?? '-' }}{{ !empty($addr['address_line2']) ? ', '.$addr['address_line2'] : '' }}<br>
-                    {{ $addr['city'] ?? '-' }}, {{ $addr['province'] ?? '-' }} {{ $addr['postal_code'] ?? '' }}
-                </div>
-                @if($order->shipping_courier)
-                    <div class="shipping-courier-badge">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                        {{ $order->shipping_courier }}
-                        @if($order->shipping_receipt)
-                            — {{ $order->shipping_receipt }}
-                        @endif
+                @if($order->isDealerPickup())
+                    <div class="card-title-sm">Pengambilan</div>
+                    <div class="shipping-name">Ambil di Dealer / Workshop</div>
+                    <div class="shipping-detail">
+                        Barang dapat diambil langsung di dealer/workshop kami.<br>
+                        <span style="color:#4ade80;font-weight:500;">Gratis Ongkir</span>
                     </div>
+                @else
+                    <div class="card-title-sm">Shipping Address</div>
+                    @php($addr = $order->address_snapshot)
+                    <div class="shipping-name">{{ $addr['recipient_name'] ?? '-' }}</div>
+                    <div class="shipping-detail">
+                        {{ $addr['phone'] ?? '-' }}<br>
+                        {{ $addr['address_line1'] ?? '-' }}{{ !empty($addr['address_line2']) ? ', '.$addr['address_line2'] : '' }}<br>
+                        {{ $addr['city'] ?? '-' }}, {{ $addr['province'] ?? '-' }} {{ $addr['postal_code'] ?? '' }}
+                    </div>
+                    @if($order->shipping_courier)
+                        <div class="shipping-courier-badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                            {{ $order->shipping_courier }}
+                            @if($order->shipping_receipt)
+                                — {{ $order->shipping_receipt }}
+                            @endif
+                        </div>
+                    @endif
                 @endif
             </div>
 
@@ -159,8 +168,12 @@
                     <span>Rp {{ number_format((float) $order->subtotal, 0, ',', '.') }}</span>
                 </div>
                 <div class="summary-row">
-                    <span style="color:var(--muted);">Shipping</span>
-                    <span>Rp {{ number_format((float) $order->shipping_cost, 0, ',', '.') }}</span>
+                    <span style="color:var(--muted);">Ongkos Kirim</span>
+                    @if($order->isDealerPickup())
+                        <span style="color:#4ade80;">Gratis</span>
+                    @else
+                        <span>Rp {{ number_format((float) $order->shipping_cost, 0, ',', '.') }}</span>
+                    @endif
                 </div>
                 @if($order->is_indent)
                     <div style="margin-top:6px;padding:8px;background:#fff3cd;border-radius:8px;font-size:12px;color:#856404;display:grid;gap:4px;">

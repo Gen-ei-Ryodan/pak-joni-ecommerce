@@ -61,7 +61,24 @@
                                 </label>
                             @endforeach
 
-                            <button class="btn btn-primary" type="submit">Continue to Shipping</button>
+                            {{-- Dealer Pickup Option --}}
+                            <div style="height:6px;"></div>
+                            <div style="font-weight:600;font-size:13px;color:var(--muted);">— atau —</div>
+                            <div style="height:6px;"></div>
+
+                            <label class="panel" style="padding:12px;border-radius:12px;display:flex;gap:12px;align-items:start;border-color:rgba(217,180,111,0.25);cursor:pointer;transition:border-color 0.15s;">
+                                <input type="radio" name="address_id" value="0" @checked(old('address_id', session('checkout.dealer_pickup')) == 0) style="margin-top:4px;">
+                                <div>
+                                    <div style="font-weight:600;color:var(--accent);">Ambil di Dealer</div>
+                                    <div class="muted" style="margin-top:6px;line-height:1.7;font-size:13px;">
+                                        Ambil barang langsung di dealer/workshop kami.<br>
+                                        <span style="color:#4ade80;font-weight:500;">Tidak ada biaya pengiriman (Gratis Ongkir)</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <div style="height:4px;"></div>
+                            <button class="btn btn-primary" type="submit">Continue</button>
                         </form>
                     @endif
                 </div>

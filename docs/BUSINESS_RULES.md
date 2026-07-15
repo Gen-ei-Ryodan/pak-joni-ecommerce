@@ -27,6 +27,8 @@
 ### 5. Pengiriman
 *   **Alamat pengiriman:** Alamat pengiriman harus lengkap dan valid sebelum pesanan dapat diproses.
 *   **Biaya pengiriman:** Biaya pengiriman dihitung berdasarkan lokasi dan berat produk.
+*   **Ambil di Dealer:** Pelanggan dapat memilih opsi "Ambil di Dealer" saat checkout. Pesanan dengan opsi ini tidak dikenakan biaya pengiriman dan melewati langkah pemilihan kurir.
+*   **Shipping type:** Setiap pesanan memiliki `shipping_type` yang membedakan antara `courier` (dikirim) dan `dealer_pickup` (ambil di dealer).
 *   **Pelacakan pengiriman:** Nomor pelacakan harus diisi oleh admin setelah pesanan dikirim.
 
 ### 6. Pengguna & Peran

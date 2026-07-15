@@ -2,6 +2,20 @@
 
 ## Catatan Perubahan Proyek
 
+### v1.1.0 (2026-07-15)
+
+#### Ditambahkan
+*   Opsi "Ambil di Dealer" pada checkout — buyer bisa memilih mengambil barang di dealer/workshop tanpa biaya ongkir.
+*   Kolom `shipping_type` pada tabel orders untuk membedakan pengiriman kurir (`courier`) dan ambil di dealer (`dealer_pickup`).
+*   Timeline "Siap Diambil" untuk pesanan dealer pickup (menggantikan "Shipped").
+*   Tombol "Siap Diambil" di admin panel untuk pesanan dealer pickup.
+
+#### Diubah
+*   Halaman checkout address: Menambahkan card opsi "Ambil di Dealer" di bawah daftar alamat.
+*   Alur checkout: Jika memilih dealer pickup, langsung skip ke halaman payment (lewati shipping step).
+*   Tampilan order detail (buyer & admin): Menampilkan "Ambil di Dealer" untuk pesanan dealer pickup.
+*   Filament OrderResource: Menambahkan kolom shipping_type, penanganan khusus dealer pickup di form dan display.
+
 ### v1.0.0 (2024-01-01)
 
 #### Ditambahkan
