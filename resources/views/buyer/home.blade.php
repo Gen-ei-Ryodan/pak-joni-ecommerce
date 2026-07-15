@@ -197,15 +197,14 @@
                     </div>
                 @endif
 
-                {{-- Keunggulan heading --}}
-                <div class="reveal reveal-delay-3">
-                    <h3 class="keunggulan-heading">Keunggulan Kami</h3>
-                </div>
-
-                {{-- Why Choose Us cards --}}
+                {{-- Keunggulan Kami - 2 kolom --}}
                 @if (!empty($whyChooseUs) && $whyChooseUs->count())
-                    <div class="why-section reveal reveal-delay-4">
-                        <div class="why-items">
+                    <div class="keunggulan-wrap reveal reveal-delay-3">
+                        <div class="keunggulan-left">
+                            <h3 class="keunggulan-heading">Keunggulan Kami</h3>
+                            <p class="keunggulan-desc">Kami menggabungkan pengalaman, teknologi, dan pelayanan terbaik untuk memastikan setiap kendaraan mendapatkan penanganan yang cepat, tepat, dan berkualitas.</p>
+                        </div>
+                        <div class="keunggulan-right">
                             @foreach ($whyChooseUs as $item)
                                 <div class="why-card-new">
                                     <div class="why-icon-new">

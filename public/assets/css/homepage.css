@@ -615,18 +615,18 @@
 
 /* ======= DEALER RESMI + KEUNGGULAN - Top to bottom 200vh ======= */
 .brand-why-section {
-  min-height: 200vh;
+  min-height: 150vh;
   display: flex;
   align-items: center;
   background: #EFF6FF;
-  padding: 100px 0 80px;
+  padding: 60px 0 50px;
 }
 
 .brand-why-section .container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 32px;
 }
 
 .brand-section {
@@ -705,8 +705,35 @@
   font-size: clamp(22px, 3vw, 36px);
   font-weight: 700;
   color: #1a1a2e;
-  text-align: center;
-  margin: 0;
+  margin: 0 0 16px 0;
+  text-align: left;
+}
+
+.keunggulan-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--muted);
+  max-width: 90%;
+}
+
+/* Keunggulan 2-column layout */
+.keunggulan-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  width: 100%;
+  align-items: start;
+}
+
+.keunggulan-left {
+  position: sticky;
+  top: 120px;
+}
+
+.keunggulan-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .why-section {
@@ -1142,6 +1169,15 @@
     grid-template-columns: 1fr;
   }
 
+  .keunggulan-wrap {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .keunggulan-left {
+    position: static;
+  }
+
   .dealer-heading {
     font-size: clamp(28px, 6vw, 42px);
   }
@@ -1169,8 +1205,10 @@
     gap: 28px;
   }
 
-  @media (max-width: 520px) {
-    .carousel-arrow {
+}
+
+@media (max-width: 520px) {
+  .carousel-arrow {
     width: 36px;
     height: 36px;
   }
