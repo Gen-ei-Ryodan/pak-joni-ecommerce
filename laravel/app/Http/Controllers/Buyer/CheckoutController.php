@@ -239,7 +239,7 @@ class CheckoutController extends Controller
             $address = Address::query()->where('user_id', $request->user()->id)->findOrFail($addressId);
         }
 
-        return DB::transaction(function () use ($request, $cart, $address, $shipping, $isDealerPickup) {
+        $result = DB::transaction(function () use ($request, $cart, $address, $shipping, $isDealerPickup) {
             // Validate stock for part variants only (exclude indent quantity)
             foreach ($cart->items as $it) {
                 if ($it->itemable_type === PartVariant::class) {
@@ -362,8 +362,10 @@ class CheckoutController extends Controller
             }
             $request->session()->forget('checkout');
 
-            return redirect('/checkout/finish/'.$order->id);
+            return $order;
         });
+
+        return redirect('/checkout/finish/'.$result->id);
     }
 
     public function finish(Request $request, Order $order)
