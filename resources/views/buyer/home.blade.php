@@ -89,10 +89,10 @@
     @if ((!empty($launchingBanners) && $launchingBanners->count()) || (!empty($latestNews) && $latestNews->count()) || (!empty($latestEvents) && $latestEvents->count()))
         <section class="launch-news-section overlap-section z4">
             <div class="container">
-                <div class="section-header center dark-text">
+                <div class="section-header center">
                     <div class="reveal">
-                        <div class="section-title">Update Terkini</div>
-                        <div class="section-line center-line"></div>
+                        <div class="section-title" style="color:#1a1a2e;">Update Terkini</div>
+                        <div class="section-line center-line" style="background:#0055DA;"></div>
                     </div>
                 </div>
                 <div class="launch-news-grid" style="grid-template-columns:repeat(3,1fr);">
@@ -197,14 +197,15 @@
                     </div>
                 @endif
 
-                {{-- Keunggulan Kami - 2 kolom --}}
+                {{-- Keunggulan Kami - Centered title + 5 cards row --}}
                 @if (!empty($whyChooseUs) && $whyChooseUs->count())
                     <div class="keunggulan-wrap reveal reveal-delay-3">
-                        <div class="keunggulan-left">
-                            <h3 class="keunggulan-heading">Keunggulan Kami</h3>
-                            <p class="keunggulan-desc">Kami menggabungkan pengalaman, teknologi, dan pelayanan terbaik untuk memastikan setiap kendaraan mendapatkan penanganan yang cepat, tepat, dan berkualitas.</p>
+                        <div class="keunggulan-header">
+                            <span class="keunggulan-badge">Keunggulan Kami</span>
+                            <h2 class="keunggulan-heading">Partner terpercaya untuk setiap perjalanan Anda.</h2>
+                            <p class="keunggulan-desc">Mulai dari memilih motor yang tepat hingga layanan purna jual dan perawatan berkala, kami siap memberikan pelayanan terbaik di setiap langkah.</p>
                         </div>
-                        <div class="keunggulan-right">
+                        <div class="keunggulan-cards">
                             @foreach ($whyChooseUs as $item)
                                 <div class="why-card-new">
                                     <div class="why-icon-new">
@@ -442,16 +443,16 @@
             display: flex;
             gap: 14px;
             padding: 16px;
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.7);
             border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(0,0,0,0.06);
             text-decoration: none;
-            color: #fff;
+            color: #1a1a2e;
             transition: all 0.25s ease;
         }
 
         .event-card:hover {
-            background: rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.9);
             transform: translateX(4px);
         }
 
@@ -473,12 +474,14 @@
             font-size: 11px;
             opacity: 0.6;
             margin-bottom: 4px;
+            color: #666;
         }
 
         .event-card-location {
             font-size: 11px;
             opacity: 0.5;
             margin-top: 4px;
+            color: #666;
         }
 
         @media (max-width: 960px) {
