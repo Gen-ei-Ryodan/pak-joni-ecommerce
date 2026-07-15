@@ -257,7 +257,7 @@ class CheckoutController extends Controller
             if ($isDealerPickup) {
                 $shippingCost = 0;
                 $shippingType = Order::SHIPPING_TYPE_DEALER_PICKUP;
-                $addressSnapshot = null;
+                $addressSnapshot = [];
                 $shippingSnapshot = [
                     'type' => 'dealer_pickup',
                     'label' => 'Ambil di Dealer',
