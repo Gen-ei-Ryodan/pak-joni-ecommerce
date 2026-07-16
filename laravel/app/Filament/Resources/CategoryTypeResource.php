@@ -4,7 +4,6 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CategoryTypeResource\Pages;
 use App\Models\CategoryType;
-use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -34,11 +33,11 @@ class CategoryTypeResource extends Resource
                 Tables\Columns\IconColumn::make('is_active')->boolean()->label('Active'),
             ])
             ->actions([
-                Actions\EditAction::make(),
-                Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Actions\BulkActionGroup::make([Actions\DeleteBulkAction::make()]),
+                Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);
     }
 

@@ -9,26 +9,28 @@
 
         <link rel="icon" href="{{ asset('favicon.ico') }}">
 
-        <link rel="stylesheet" href="{{ asset('assets/css/reset.css') }}?v=2">
-        <link rel="stylesheet" href="{{ asset('assets/css/variables.css') }}?v=2">
-        <link rel="stylesheet" href="{{ asset('assets/css/layout.css') }}?v=2">
-        <link rel="stylesheet" href="{{ asset('assets/css/navbar.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/reset.css') }}?v=3">
+        <link rel="stylesheet" href="{{ asset('assets/css/variables.css') }}?v=3">
+        <link rel="stylesheet" href="{{ asset('assets/css/layout.css') }}?v=3">
+        <link rel="stylesheet" href="{{ asset('assets/css/navbar.css') }}?v=3">
         <link rel="stylesheet" href="{{ asset('assets/css/button.css') }}?v=2">
         <link rel="stylesheet" href="{{ asset('assets/css/card.css') }}?v=2">
-        <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}?v=3">
         <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}?v=2">
         <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=2">
+
+        <link rel="stylesheet" href="https://unpkg.com/lenis@1.2.3/dist/lenis.css">
+        <script src="https://unpkg.com/lenis@1.2.3/dist/lenis.min.js"></script>
 
         @stack('head')
     </head>
     <body>
         <div class="page">
-            <header class="navbar">
+            <header class="navbar {{ request()->routeIs('buyer.home') ? '' : 'navbar-white' }}" id="mainNavbar">
                 <div class="container navbar-inner">
                     <a class="brand" href="{{ url('/') }}">
-                        <span>{{ config('app.name') }}</span>
+                        <img src="{{ asset('assets/images/jomotologo.png') }}" alt="{{ config('app.name') }}" class="brand-logo-img">
                     </a>
-
 
                     <button class="mobile-menu-toggle" aria-label="Toggle menu" data-mobile-toggle>
                         <span></span><span></span><span></span>
@@ -72,9 +74,6 @@
                                 <a href="{{ route('buyer.part-catalog') }}">Part Katalog</a>
                             </div>
                         </div>
-
-                        {{-- Diler hidden sementara --}}
-                        {{-- <a href="{{ route('buyer.dealer') }}">Diler</a> --}}
 
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" data-dropdown-toggle="beritaacara">Berita dan Acara <span class="dd-arrow">&#9662;</span></button>
@@ -142,7 +141,7 @@
                 </div>
             </header>
 
-            <main>
+            <main class="{{ request()->routeIs('buyer.home') ? '' : 'main-with-navbar' }}">
                 @yield('content')
             </main>
 
@@ -214,6 +213,38 @@
 
         <script src="{{ asset('assets/js/app.js') }}" defer></script>
         <script>
+        // Lenis smooth scroll
+        (function() {
+            var lenis = new Lenis({
+                duration: 1.6,
+                easing: function(t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)) },
+                wheelMultiplier: 1,
+                touchMultiplier: 1.5,
+                infinite: false
+            });
+            window.__lenis = lenis;
+            function raf(time) {
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
+            requestAnimationFrame(raf);
+        })();
+
+        // Navbar scroll effect
+        (function() {
+            var navbar = document.getElementById('mainNavbar');
+            if (!navbar) return;
+            function onScroll() {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            }
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+        })();
+
         function showAuthConfirm(e) {
             if (e && e.preventDefault) e.preventDefault();
             var overlay = document.createElement('div');

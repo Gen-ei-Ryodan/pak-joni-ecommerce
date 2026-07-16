@@ -18,6 +18,7 @@ use App\Models\ItemPartCatalog;
 use App\Models\News;
 use App\Models\Part;
 use App\Models\PartCategory;
+use App\Models\HeroVideo;
 use App\Models\ShowroomGallery;
 use App\Models\WhyChooseUs;
 use Illuminate\Http\Request;
@@ -55,10 +56,12 @@ class PageController extends Controller
             ->take(8)
             ->get();
 
+        $heroVideo = HeroVideo::query()->where('is_active', true)->first();
+
         return view('buyer.home', compact(
             'heroBanners', 'promoBanners', 'launchingBanners', 'kegiatanBanners',
             'latestNews', 'brands', 'whyChooseUs', 'latestEvents',
-            'items', 'parts'
+            'items', 'parts', 'heroVideo'
         ));
     }
 

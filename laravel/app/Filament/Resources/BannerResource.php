@@ -6,11 +6,14 @@ use App\Filament\Resources\BannerResource\Pages;
 use App\Models\Banner;
 use BackedEnum;
 use Filament\Actions;
+use Filament\Forms\Components\BaseFileUpload;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use League\Flysystem\UnableToCheckFileExistence;
 use UnitEnum;
 
 class BannerResource extends Resource
@@ -19,11 +22,18 @@ class BannerResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-photo';
 
-    protected static ?string $navigationLabel = 'Banners';
+    protected static ?string $navigationLabel = 'Hero';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Content';
+    protected static string|UnitEnum|null $navigationGroup = 'Banners';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 0;
+
+    protected static ?string $slug = 'banners/hero';
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('type', 'hero');
+    }
 
     public static function table(Table $table): Table
     {
@@ -31,41 +41,25 @@ class BannerResource extends Resource
             ->defaultSort('sort_order')
             ->columns([
                 Tables\Columns\ImageColumn::make('image_path')
-                    ->label('Image')
-                    ->disk('public')
-                    ->size(80),
-
-                Tables\Columns\TextColumn::make('title')
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('type')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'hero' => 'warning',
-                        'promo' => 'success',
-                        'launching' => 'info',
-                        'kegiatan' => 'gray',
-                        default => 'gray',
-                    }),
-
-                Tables\Columns\TextColumn::make('link_url')
-                    ->label('Link')
-                    ->searchable()
-                    ->limit(40),
+                    ->label('Preview')
+                    ->size(140)
+                    ->getStateUsing(fn (Banner $record): ?string => $record->image_path ? image_url($record->image_path) : null)
+                    ->checkFileExistence(false),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Active')
-                    ->boolean(),
-
-                Tables\Columns\TextColumn::make('sort_order')
-                    ->numeric()
-                    ->sortable(),
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('gray'),
             ])
             ->filters([])
             ->actions([
-                Actions\EditAction::make(),
-                Actions\DeleteAction::make(),
+                Actions\EditAction::make()
+                    ->icon('heroicon-o-pencil'),
+                Actions\DeleteAction::make()
+                    ->icon('heroicon-o-trash'),
             ])
             ->bulkActions([
                 Actions\BulkActionGroup::make([
@@ -78,46 +72,33 @@ class BannerResource extends Resource
     {
         return $schema
             ->schema([
-                Forms\Components\TextInput::make('title')
-                    ->required()
-                    ->maxLength(255),
-
-                Forms\Components\Select::make('type')
-                    ->options([
-                        'hero' => 'Hero Banner',
-                        'promo' => 'Promo',
-                        'launching' => 'Launching Produk',
-                        'kegiatan' => 'Kegiatan',
-                    ])
-                    ->default('hero')
-                    ->required(),
-
-                Forms\Components\TextInput::make('subtitle')
-                    ->maxLength(255),
-
-                Forms\Components\TextInput::make('link_url')
-                    ->label('Link URL')
-                    ->maxLength(255),
-
-                Forms\Components\TextInput::make('button_text')
-                    ->maxLength(50),
-
                 Forms\Components\FileUpload::make('image_path')
-                    ->label('Image')
+                    ->label('Banner Image')
                     ->image()
-                    ->imageEditor()
                     ->disk('public')
                     ->directory('banners')
-                    ->preserveFilenames()
-                    ->maxSize(5120),
+                    ->maxSize(5120)
+                    ->getUploadedFileUsing(function (BaseFileUpload $component, string $file, $storedFileNames): ?array {
+                        $storage = $component->getDisk();
+                        $shouldFetchFileInformation = $component->shouldFetchFileInformation();
 
-                Forms\Components\Toggle::make('is_active')
-                    ->label('Active')
-                    ->default(true),
+                        if ($shouldFetchFileInformation) {
+                            try {
+                                if (! $storage->exists($file)) {
+                                    return null;
+                                }
+                            } catch (UnableToCheckFileExistence $exception) {
+                                return null;
+                            }
+                        }
 
-                Forms\Components\TextInput::make('sort_order')
-                    ->numeric()
-                    ->default(0),
+                        return [
+                            'name' => basename($file),
+                            'size' => $shouldFetchFileInformation ? $storage->size($file) : 0,
+                            'type' => $shouldFetchFileInformation ? $storage->mimeType($file) : null,
+                            'url' => image_url($file),
+                        ];
+                    })
             ]);
     }
 

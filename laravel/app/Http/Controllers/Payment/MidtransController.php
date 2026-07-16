@@ -51,11 +51,7 @@ class MidtransController extends Controller
         }
 
         if ($orderId) {
-            // Strip -LUNAS suffix for remaining indent payment redirect
-            $redirectOrderId = str_ends_with($orderId, '-LUNAS')
-                ? substr($orderId, 0, -6)
-                : $orderId;
-            return redirect()->route('buyer.orders.show', $redirectOrderId);
+            return redirect()->route('buyer.orders.show', $orderId);
         }
 
         return redirect()->route('buyer.dashboard');
@@ -95,7 +91,7 @@ class MidtransController extends Controller
      */
     public function status(Order $order, Request $request)
     {
-        if ((int) $order->user_id !== (int) $request->user()->id) {
+        if ($order->user_id !== $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 

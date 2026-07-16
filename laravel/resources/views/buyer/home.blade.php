@@ -3,325 +3,513 @@
 @section('title', 'Home')
 
 @section('content')
+    {{-- HERO BANNER - Full screen 100vh, photo full layar --}}
     @if (!empty($heroBanners) && $heroBanners->count())
-        <section class="banner-slider" data-carousel>
-            <div class="carousel-container" data-carousel-track>
+        <section class="banner-slider-hero" data-hero-carousel>
+            <div class="carousel-container-hero" data-hero-track>
                 @foreach ($heroBanners as $index => $banner)
-                    <div class="carousel-slide" data-carousel-slide style="{{ $index === 0 ? '' : 'display:none;' }}">
-                        <div class="banner-slide" style="background-image: url('{{ image_url($banner->image_path) }}'); background-size: cover; background-position: center; min-height: 75vh;">
-                            <div class="banner-overlay">
-                                <div class="container banner-content-inner">
-                                    @if($banner->subtitle)
-                                        <div class="banner-label">{{ $banner->subtitle }}</div>
-                                    @endif
-                                    <h2 class="banner-heading">{{ $banner->title }}</h2>
-                                    @if($banner->button_text && $banner->link_url)
-                                        <a href="{{ $banner->link_url }}" class="btn btn-accent">{{ $banner->button_text }}</a>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
+                    <div class="carousel-slide-hero {{ $index === 0 ? 'active' : '' }}" data-hero-slide>
+                        <div class="hero-bg-img" style="background-image: url('{{ image_url($banner->image_path) }}');"></div>
                     </div>
                 @endforeach
             </div>
             @if($heroBanners->count() > 1)
-                <button class="carousel-arrow carousel-arrow-prev" type="button" data-carousel-prev aria-label="Previous">&#10094;</button>
-                <button class="carousel-arrow carousel-arrow-next" type="button" data-carousel-next aria-label="Next">&#10095;</button>
-                <div class="carousel-dots" data-carousel-dots>
+                <button class="carousel-arrow carousel-arrow-prev" type="button" data-hero-prev aria-label="Previous">&#10094;</button>
+                <button class="carousel-arrow carousel-arrow-next" type="button" data-hero-next aria-label="Next">&#10095;</button>
+                <div class="carousel-dots" data-hero-dots>
                     @foreach ($heroBanners as $index => $b)
-                        <button type="button" data-carousel-dot="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}"></button>
+                        <button type="button" data-hero-dot="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}"></button>
                     @endforeach
                 </div>
             @endif
         </section>
     @endif
 
+    {{-- PROMO SECTION - responsive grid, horizontal scroll jika > 4 --}}
     @if (!empty($promoBanners) && $promoBanners->count())
-        <section class="section">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title-text">Promo Spesial</h2>
-                    <div class="section-line"></div>
-                </div>
-                <div class="grid grid-3">
-                    @foreach ($promoBanners as $banner)
-                        <a class="card card-banner" href="{{ $banner->link_url ?: '#' }}">
-                            <div class="card-media" style="background-image:url('{{ image_url($banner->image_path) }}');background-size:cover;background-position:center;"></div>
-                            <div class="card-body">
-                                <div class="card-title">{{ $banner->title }}</div>
-                                @if($banner->subtitle)
-                                    <div class="card-meta">{{ $banner->subtitle }}</div>
-                                @endif
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
+        @php
+            $count = $promoBanners->count();
+            $isScroll = $count >= 5;
+        @endphp
+        <section class="promo-section overlap-section z3" @if($isScroll) data-promo-horizontal @endif>
+            <div class="promo-section-sticky">
+                <div class="container">
+                    <div class="section-header center dark-text">
+                        <div class="reveal">
+                            <div class="section-title">Penawaran Terbaik</div>
+                            <h2 class="section-title-text">Promo Spesial</h2>
+                            <div class="section-line center-line"></div>
+                        </div>
+                    </div>
 
-    @if (!empty($launchingBanners) && $launchingBanners->count())
-        <section class="section section-dark">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title-text">Launching Produk</h2>
-                    <div class="section-line"></div>
-                </div>
-                <div class="carousel" data-interval="4000">
-                    @foreach ($launchingBanners as $index => $banner)
-                        <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                            <div class="launch-card" style="background-image:linear-gradient(135deg, rgba(0,0,0,0.7), rgba(0,0,0,0.3)),url('{{ image_url($banner->image_path) }}'); background-size:cover; background-position:center; min-height:400px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; text-align:center; padding:40px;">
-                                <div>
-                                    @if($banner->subtitle)
-                                        <div style="color:#f0d68a;font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;font-weight:600;">{{ $banner->subtitle }}</div>
-                                    @endif
-                                    <h3 style="font-size:clamp(24px,4vw,40px);font-weight:700;color:#fff;">{{ $banner->title }}</h3>
-                                    @if($banner->button_text && $banner->link_url)
-                                        <a href="{{ $banner->link_url }}" class="btn btn-accent" style="margin-top:20px;">{{ $banner->button_text }}</a>
-                                    @endif
-                                </div>
+                    @if ($isScroll)
+                        <div class="promo-scroll-track">
+                            <div class="promo-scroll-content">
+                                @foreach ($promoBanners as $banner)
+                                    <a class="promo-card" href="{{ $banner->link_url ?: '#' }}" style="background-image:url('{{ image_url($banner->image_path) }}');">
+                                        <div class="promo-card-body">
+                                            <div class="promo-card-tag">Promo</div>
+                                            <h3 class="promo-card-title">{{ $banner->title }}</h3>
+                                            @if($banner->subtitle)
+                                                <p class="promo-card-subtitle">{{ $banner->subtitle }}</p>
+                                            @endif
+                                            <span class="promo-card-cta">Lihat Promo &#8594;</span>
+                                        </div>
+                                    </a>
+                                @endforeach
                             </div>
                         </div>
-                    @endforeach
-                    @if($launchingBanners->count() > 1)
-                        <button class="carousel-control-prev" type="button">&#10094;</button>
-                        <button class="carousel-control-next" type="button">&#10095;</button>
+                        <div class="promo-scroll-indicator" data-promo-dots>
+                            @foreach ($promoBanners as $i => $b)
+                                <span class="promo-scroll-dot {{ $i === 0 ? 'active' : '' }}" data-index="{{ $i }}"></span>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="promo-grid cols-{{ $count }}">
+                            @foreach ($promoBanners as $banner)
+                                <a class="promo-card reveal reveal-delay-{{ $loop->index + 1 }}" href="{{ $banner->link_url ?: '#' }}" style="background-image:url('{{ image_url($banner->image_path) }}');">
+                                    <div class="promo-card-body">
+                                        <div class="promo-card-tag">Promo</div>
+                                        <h3 class="promo-card-title">{{ $banner->title }}</h3>
+                                        @if($banner->subtitle)
+                                            <p class="promo-card-subtitle">{{ $banner->subtitle }}</p>
+                                        @endif
+                                        <span class="promo-card-cta">Lihat Promo &#8594;</span>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
                     @endif
                 </div>
             </div>
         </section>
     @endif
 
-    @if (!empty($kegiatanBanners) && $kegiatanBanners->count())
-        <section class="section">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title-text">Kegiatan Perusahaan</h2>
-                    <div class="section-line"></div>
-                </div>
-                <div class="carousel" data-interval="4000">
-                    @foreach ($kegiatanBanners as $index => $banner)
-                        <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                            <div class="kegiatan-card" style="background-image:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.3)),url('{{ image_url($banner->image_path) }}');background-size:cover;background-position:center;min-height:350px;border-radius:var(--radius);display:flex;align-items:flex-end;padding:40px;">
-                                <div>
-                                    <h3 style="font-size:28px;font-weight:700;color:#fff;">{{ $banner->title }}</h3>
-                                    @if($banner->subtitle)
-                                        <p style="color:rgba(255,255,255,0.7);margin-top:8px;">{{ $banner->subtitle }}</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                    @if($kegiatanBanners->count() > 1)
-                        <button class="carousel-control-prev" type="button">&#10094;</button>
-                        <button class="carousel-control-next" type="button">&#10095;</button>
-                    @endif
-                </div>
-            </div>
-        </section>
-    @endif
-
-    @if (!empty($latestNews) && $latestNews->count())
-        <section class="section section-dark">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title-text">Berita dan Informasi</h2>
-                    <a href="{{ route('buyer.news.index') }}" class="btn btn-outline">Lihat Semua</a>
-                </div>
-                <div class="grid grid-4">
-                    @foreach ($latestNews as $item)
-                        <a class="card" href="{{ route('buyer.news.show', $item->slug) }}">
-                            <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:180px;"></div>
-                            <div class="card-body">
-                                <div class="card-meta">{{ $item->publish_date?->format('d M Y') }}</div>
-                                <div class="card-title" style="font-size:14px;">{{ $item->title }}</div>
-                                <div class="card-meta" style="margin-top:6px;">{{ \Illuminate\Support\Str::limit(strip_tags($item->content), 80) }}</div>
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-
-
-    @if (!empty($brands) && $brands->count())
-        <section class="section section-dark">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title-text">Brand Kami</h2>
-                    <div class="section-line"></div>
-                </div>
-                <div class="brand-carousel">
-                    @foreach ($brands as $brand)
-                        <a href="{{ route('buyer.category-brand', ['categoryType' => 'motor', 'brand' => $brand->slug]) }}" class="brand-item">
-                            @if($brand->logo_path)
-                                <img src="{{ image_url($brand->logo_path) }}" alt="{{ $brand->name }}" class="brand-logo-img">
-                            @else
-                                <div class="brand-placeholder">{{ $brand->name }}</div>
-                            @endif
-                            <span class="brand-name">{{ $brand->name }}</span>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-    @if (!empty($whyChooseUs) && $whyChooseUs->count())
-        <section class="section">
+    {{-- LAUNCHING PRODUK + BERITA + EVENT - 3 Kolom --}}
+    @if ((!empty($launchingBanners) && $launchingBanners->count()) || (!empty($latestNews) && $latestNews->count()) || (!empty($latestEvents) && $latestEvents->count()))
+        <section class="launch-news-section overlap-section z4">
             <div class="container">
                 <div class="section-header center">
-                    <h2 class="section-title-text">Keunggulan Jomoto Center</h2>
+                    <div class="reveal">
+                        <div class="section-title" style="color:#1a1a2e;">Update Terkini</div>
+                        <div class="section-line center-line" style="background:#0055DA;"></div>
+                    </div>
+                </div>
+                <div class="launch-news-grid" style="grid-template-columns:repeat(3,1fr);">
+                    {{-- Kolom Kiri: Launching Produk --}}
+                    <div class="launch-col reveal reveal-delay-1">
+                        @if (!empty($launchingBanners) && $launchingBanners->count())
+                            @php $lb = $launchingBanners->first(); @endphp
+                            <div class="launch-card-full" style="background-image:url('{{ image_url($lb->image_path) }}');">
+                                <div class="launch-card-body">
+                                    @if($lb->subtitle)
+                                        <div style="color:#FFD400;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:600;">{{ $lb->subtitle }}</div>
+                                    @endif
+                                    <h3 style="font-size:clamp(22px,3vw,32px);font-weight:700;color:#fff;margin-bottom:16px;">{{ $lb->title }}</h3>
+                                    @if($lb->button_text && $lb->link_url)
+                                        <a href="{{ $lb->link_url }}" class="btn-accent" style="font-size:12px;padding:10px 24px;">{{ $lb->button_text }}</a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Kolom Tengah: Berita --}}
+                    <div class="news-col reveal reveal-delay-2">
+                        @if (!empty($latestNews) && $latestNews->count())
+                            @foreach ($latestNews->take(4) as $item)
+                                <a class="news-card" href="{{ $item->external_url ?: route('buyer.news.show', $item->slug) }}" {{ $item->external_url ? 'target="_blank" rel="noopener"' : '' }}>
+                                    <div class="news-card-thumb" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');"></div>
+                                    <div class="news-card-info">
+                                        <div class="news-card-date">{{ $item->publish_date?->format('d M Y') }}</div>
+                                        <div class="news-card-title">{{ $item->title }}</div>
+                                        <div class="news-card-excerpt">{{ \Illuminate\Support\Str::limit(strip_tags($item->content), 80) }}</div>
+                                    </div>
+                                </a>
+                            @endforeach
+                            <a href="{{ route('buyer.news.index') }}" class="btn-outline-white" style="align-self:flex-start;margin-top:8px;">Lihat Semua Berita</a>
+                        @endif
+                    </div>
+
+                    {{-- Kolom Kanan: Event --}}
+                    <div class="event-col reveal reveal-delay-3">
+                        @if (!empty($latestEvents) && $latestEvents->count())
+                            @foreach ($latestEvents as $event)
+                                <a class="event-card" href="{{ route('buyer.events.show', $event->slug) }}">
+                                    @if($event->thumbnail_path)
+                                        <div class="event-card-thumb" style="background-image:url('{{ image_url($event->thumbnail_path) }}');"></div>
+                                    @endif
+                                    <div class="event-card-info">
+                                        <div class="event-card-date">{{ $event->event_date?->format('d M Y') }}</div>
+                                        <div class="news-card-title">{{ $event->title }}</div>
+                                        @if($event->location)
+                                            <div class="event-card-location">{{ $event->location }}</div>
+                                        @endif
+                                    </div>
+                                </a>
+                            @endforeach
+                            <a href="{{ route('buyer.events.index') }}" class="btn-outline-white" style="align-self:flex-start;margin-top:8px;">Lihat Semua Acara</a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </section>
+    @endif
+
+    {{-- HERO VIDEO - Full screen 100vh --}}
+    @if (!empty($heroVideo))
+        <section class="hero-video-section overlap-section z5">
+            <video class="hero-video" autoplay muted loop playsinline>
+                <source src="{{ asset('storage/' . $heroVideo->video_path) }}" type="video/mp4">
+            </video>
+            @if($heroVideo->title)
+                <div class="hero-video-overlay">
+                    <h1 class="hero-video-title">{{ $heroVideo->title }}</h1>
+                </div>
+            @endif
+        </section>
+    @endif
+
+    {{-- DEALER RESMI + KEUNGGULAN - Top to bottom, 200vh --}}
+    @if ((!empty($brands) && $brands->count()) || (!empty($whyChooseUs) && $whyChooseUs->count()))
+        <section class="brand-why-section overlap-section z5">
+            <div class="container">
+                {{-- Big heading: Dealer Resmi untuk Merk --}}
+                <div class="reveal">
+                    <h2 class="dealer-heading">Dealer Resmi untuk Merk</h2>
+                </div>
+
+                {{-- Brand logos --}}
+                @if (!empty($brands) && $brands->count())
+                    <div class="brand-section reveal reveal-delay-2">
+                        <div class="brand-items">
+                            @foreach ($brands as $brand)
+                                <a href="{{ route('buyer.category-brand', ['categoryType' => 'motor', 'brand' => $brand->slug]) }}" class="brand-item-new">
+                                    @if($brand->logo_path)
+                                        <img src="{{ image_url($brand->logo_path) }}" alt="{{ $brand->name }}" class="brand-logo-img-new">
+                                    @else
+                                        <span style="font-size:14px;font-weight:700;color:#0055DA;">{{ $brand->name }}</span>
+                                    @endif
+                                    <span class="brand-name-new">{{ $brand->name }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Keunggulan Kami - Centered title + 5 cards row --}}
+                @if (!empty($whyChooseUs) && $whyChooseUs->count())
+                    <div class="keunggulan-wrap reveal reveal-delay-3">
+                        <div class="keunggulan-header">
+                            <span class="keunggulan-badge">Keunggulan Kami</span>
+                            <h2 class="keunggulan-heading">Partner terpercaya untuk setiap perjalanan Anda.</h2>
+                            <p class="keunggulan-desc">Mulai dari memilih motor yang tepat hingga layanan purna jual dan perawatan berkala, kami siap memberikan pelayanan terbaik di setiap langkah.</p>
+                        </div>
+                        <div class="keunggulan-cards">
+                            @foreach ($whyChooseUs as $item)
+                                <div class="why-card-new">
+                                    <div class="why-icon-new">
+                                        @if($item->icon_image)
+                                            <img src="{{ asset('storage/' . $item->icon_image) }}" alt="{{ $item->title }}">
+                                        @endif
+                                    </div>
+                                    <h4 class="why-title-new">{{ $item->title }}</h4>
+                                    <p class="why-desc-new">{{ $item->description }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </section>
+    @endif
+
+    {{-- HUBUNGI KAMI + SIMULASI KREDIT - 2 Kolom --}}
+    <section class="contact-credit-section overlap-section" style="z-index:6;">
+        <div class="container">
+            <div class="section-header center dark-text">
+                <div class="reveal">
+                    <div class="section-title">Layanan Kami</div>
+                    <h2 class="section-title-text">Hubungi Kami & Simulasi Kredit</h2>
                     <div class="section-line center-line"></div>
                 </div>
-                <div class="grid grid-3">
-                    @foreach ($whyChooseUs as $item)
-                        <div class="why-card">
-                            <div class="why-icon">
-                                @if($item->icon_image)
-                                    <img src="{{ asset('storage/' . $item->icon_image) }}" alt="{{ $item->title }}" style="display:block;margin:0 auto;width:48px;height:48px;object-fit:contain;">
-                                @endif
+            </div>
+            <div class="contact-credit-grid">
+                {{-- Kolom Kiri: Hubungi Kami --}}
+                <div class="contact-col reveal reveal-delay-1">
+                    <h3 style="font-size:16px;font-weight:600;color:#fff;">Hubungi Kami</h3>
+                    <p style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:6px;line-height:1.6;">Konsultasi dan penawaran terbaik untuk produk pilihan Anda.</p>
+
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <div class="contact-icon-circle">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
                             </div>
-                            <h4 class="why-title">{{ $item->title }}</h4>
-                            <p class="why-desc">{{ $item->description }}</p>
+                            <div class="contact-item-info">
+                                <h4>WhatsApp</h4>
+                                <a href="https://wa.me/{{ config('app.social.whatsapp_link') }}?text=Halo%20{{ urlencode(config('app.name')) }}%2C%20saya%20ingin%20konsultasi%20dan%20penawaran." target="_blank" rel="noopener">{{ config('app.social.whatsapp') }}</a>
+                            </div>
                         </div>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-    @if (!empty($latestEvents) && $latestEvents->count())
-        <section class="section section-dark">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title-text">Event Terbaru</h2>
-                    <a href="{{ route('buyer.events.index') }}" class="btn btn-outline">Lihat Semua</a>
-                </div>
-                <div class="grid grid-3">
-                    @foreach ($latestEvents as $event)
-                        <a class="card" href="{{ route('buyer.events.show', $event->slug) }}">
-                            <div class="card-media" style="background-image:url('{{ $event->thumbnail_path ? image_url($event->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
-                            <div class="card-body">
-                                <div class="card-meta">{{ $event->event_date?->format('d M Y') }} @if($event->location) &middot; {{ $event->location }} @endif</div>
-                                <div class="card-title">{{ $event->title }}</div>
-                                <div class="card-meta" style="margin-top:6px;">{{ \Illuminate\Support\Str::limit(strip_tags($event->description), 100) }}</div>
+                        <div class="contact-item">
+                            <div class="contact-icon-circle">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                             </div>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
+                            <div class="contact-item-info">
+                                <h4>Email</h4>
+                                <a href="mailto:{{ config('app.social.email') }}">{{ config('app.social.email') }}</a>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon-circle">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            </div>
+                            <div class="contact-item-info">
+                                <h4>Alamat Dealer</h4>
+                                <span>Jl Kapasari No 73 Surabaya</span>
+                            </div>
+                        </div>
+                    </div>
 
-    <section class="section">
-        <div class="container">
-            <div class="section-header center">
-                <h2 class="section-title-text">Hubungi Kami Untuk Penawaran</h2>
-                <div class="section-line center-line"></div>
-                <p style="color:var(--muted);max-width:500px;margin:0 auto;">Tertarik dengan produk kami? Hubungi langsung via WhatsApp untuk konsultasi dan penawaran.</p>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px;">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ urlencode(url('/')) }}"
-                     alt="WhatsApp QR Code" style="width:200px;height:200px;border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,0.1);" loading="lazy">
-                <a href="https://wa.me/{{ config('app.social.whatsapp_link') }}?text=Halo%20{{ urlencode(config('app.name')) }}%2C%20saya%20ingin%20konsultasi%20dan%20penawaran%20untuk%20produk%20di%20website%20Anda."
-                   target="_blank" rel="noopener"
-                   style="display:inline-flex;align-items:center;gap:6px;color:#25D366;font-size:13px;font-weight:500;text-decoration:none;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                    Hubungi via WhatsApp
-                </a>
-                <div style="font-size:12px;color:var(--muted);margin-top:8px;">
-                    {{ config('app.social.whatsapp') }} | {{ config('app.social.email') }}
+                    <div class="contact-qr">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ urlencode(url('/')) }}" alt="QR Code" loading="lazy">
+                        <p style="font-size:11px;color:var(--muted);margin-top:8px;">Scan QR untuk mengunjungi website kami</p>
+                    </div>
+                </div>
+
+                {{-- Kolom Kanan: Simulasi Kredit --}}
+                <div class="credit-col reveal reveal-delay-2">
+                    <h3 style="font-size:16px;font-weight:600;color:#fff;">Simulasi Kredit Motor</h3>
+                    <p style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:6px;line-height:1.6;">Hitung perkiraan cicilan kredit motor impian Anda.</p>
+
+                    <div class="credit-form" id="creditSimulation">
+                        <div class="credit-form-group">
+                            <label class="credit-form-label">Harga Motor (Rp)</label>
+                            <input type="number" class="credit-form-input" id="creditPrice" placeholder="Contoh: 30000000" value="30000000" min="0">
+                        </div>
+                        <div class="credit-form-group">
+                            <label class="credit-form-label">Uang Muka / DP (Rp)</label>
+                            <input type="number" class="credit-form-input" id="creditDp" placeholder="Contoh: 5000000" value="5000000" min="0">
+                        </div>
+                        <div class="credit-form-group">
+                            <label class="credit-form-label">Tenor / Jangka Waktu</label>
+                            <select class="credit-form-select" id="creditTenor">
+                                <option value="12">12 Bulan (1 Tahun)</option>
+                                <option value="24" selected>24 Bulan (2 Tahun)</option>
+                                <option value="36">36 Bulan (3 Tahun)</option>
+                                <option value="48">48 Bulan (4 Tahun)</option>
+                            </select>
+                        </div>
+                        <div class="credit-form-group">
+                            <label class="credit-form-label">Bunga per Tahun (%)</label>
+                            <input type="number" class="credit-form-input" id="creditBunga" placeholder="Contoh: 8" value="8" min="0" max="50" step="0.1">
+                        </div>
+                        <button type="button" class="btn-accent btn-full" onclick="hitungKredit()">Hitung Simulasi</button>
+
+                        <div class="credit-result" id="creditResult" style="display:none;">
+                            <div class="credit-result-row">
+                                <span class="credit-result-label">Total Pinjaman</span>
+                                <span id="resultPinjaman">-</span>
+                            </div>
+                            <div class="credit-result-row">
+                                <span class="credit-result-label">Bunga Total</span>
+                                <span id="resultBunga">-</span>
+                            </div>
+                            <div class="credit-result-row">
+                                <span class="credit-result-label">Total Pembayaran</span>
+                                <span id="resultTotal">-</span>
+                            </div>
+                            <div class="credit-result-row">
+                                <span class="credit-result-label">Cicilan per Bulan</span>
+                                <span id="resultCicilan">-</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
-
-    @if (!empty($items) && $items->count())
-        <section class="section section-dark">
-            <div class="container">
-                <div class="section-header">
-                    <h2 class="section-title-text">Produk Terbaru</h2>
-                    <a href="{{ route('buyer.category-brand', ['categoryType' => 'motor', 'brand' => 'all']) }}" class="btn btn-outline">Lihat Semua</a>
-                </div>
-                <div class="grid grid-4">
-                    @foreach ($items as $item)
-                        <div class="card motor-card">
-                            <a class="card-media-link" href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" style="display:block;text-decoration:none;">
-                                <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;"></div>
-                            </a>
-                            <div class="card-body">
-                                @if($item->brand)
-                                    <div class="card-meta">{{ $item->brand->name }}</div>
-                                @endif
-                                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" style="text-decoration:none;color:inherit;">
-                                    <div class="card-title">{{ $item->name }}</div>
-                                </a>
-                                @if($item->price)
-                                    <div class="price">Rp {{ number_format($item->price, 0, ',', '.') }}</div>
-                                @endif
-                            </div>
-                            <div class="card-actions">
-                                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" class="card-action-btn primary">Lihat Detail</a>
-                                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts']) }}" class="card-action-btn">Sparepart</a>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
 @endsection
 
 @push('head')
     <style>
-        .motor-card { display: flex; flex-direction: column; overflow: hidden; }
-        .card-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0;
-            border-top: 1px solid var(--line);
+        .hero-video-section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
         }
-        .card-action-btn {
-            display: inline-flex;
+        .hero-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .hero-video-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
             align-items: center;
             justify-content: center;
-            padding: 10px 14px;
-            font-size: 12px;
-            font-weight: 600;
+            background: rgba(0,0,0,0.3);
+        }
+        .hero-video-title {
+            color: #fff;
+            font-size: clamp(24px, 5vw, 56px);
+            font-weight: 700;
+            text-align: center;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            padding: 0 20px;
+        }
+        .auth-confirm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .auth-confirm-modal {
+            background: #f7f4f0;
+            border-radius: 20px;
+            padding: 12px 4px 12px;
+            max-width: 500px;
+            width: 92%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            transform: scale(2);
+            overflow: hidden;
+        }
+        .auth-confirm-modal h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 2px;
+            padding: 0 20px;
+        }
+        .auth-confirm-modal p {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+            padding: 0 20px;
+        }
+        .popup-actions {
+            display: flex;
+            font-size: 0;
+        }
+        .popup-btn {
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 0;
+            display: block;
+            width: calc(50% + 2px);
+            line-height: 0;
+            flex-shrink: 0;
+            transition: transform 0.25s ease;
+        }
+        .popup-btn:first-child {
+            margin-right: -2px;
+        }
+        .popup-btn:last-child {
+            width: calc(50% + 2px);
+            margin-left: -2px;
+        }
+        .popup-btn:hover {
+            transform: scale(1.05);
+        }
+        .popup-btn img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        @media (max-width: 500px) {
+            .auth-confirm-modal {
+                padding: 10px 4px 10px;
+                transform: scale(1);
+            }
+            .auth-confirm-modal h3,
+            .auth-confirm-modal p {
+                padding: 0 12px;
+            }
+        }
+
+        /* --- Event Cards --- */
+        .event-col {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .event-card {
+            display: flex;
+            gap: 14px;
+            padding: 16px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 14px;
+            border: 1px solid rgba(0,0,0,0.06);
             text-decoration: none;
-            color: var(--muted);
-            transition: all .2s;
-            letter-spacing: 0.3px;
+            color: #1a1a2e;
+            transition: all 0.25s ease;
         }
-        .card-action-btn.primary {
-            color: var(--accent);
-            border-right: 1px solid var(--line);
+
+        .event-card:hover {
+            background: rgba(255,255,255,0.9);
+            transform: translateX(4px);
         }
-        .card-action-btn:hover {
-            background: rgba(217,180,111,0.08);
-            color: var(--accent);
+
+        .event-card-thumb {
+            width: 100px;
+            height: 80px;
+            border-radius: 10px;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+
+        .event-card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .event-card-date {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-bottom: 4px;
+            color: #666;
+        }
+
+        .event-card-location {
+            font-size: 11px;
+            opacity: 0.5;
+            margin-top: 4px;
+            color: #666;
+        }
+
+        @media (max-width: 960px) {
+            .launch-news-grid[style*="repeat(3"] {
+                grid-template-columns: 1fr !important;
+            }
         }
     </style>
 @endpush
 
 @push('scripts')
     <script>
-        // Popup untuk guest setiap kali buka home
         @guest
         setTimeout(function() { showAuthConfirm(null); }, 500);
         @endguest
 
+        // Hero Carousel
         (function () {
-            const carousel = document.querySelector('[data-carousel]');
+            const carousel = document.querySelector('[data-hero-carousel]');
             if (!carousel) return;
 
-            const slides = Array.from(carousel.querySelectorAll('[data-carousel-slide]'));
-            const dots = Array.from(carousel.querySelectorAll('[data-carousel-dot]'));
-            const prevBtn = carousel.querySelector('[data-carousel-prev]');
-            const nextBtn = carousel.querySelector('[data-carousel-next]');
+            const slides = Array.from(carousel.querySelectorAll('[data-hero-slide]'));
+            const dots = Array.from(carousel.querySelectorAll('[data-hero-dot]'));
+            const prevBtn = carousel.querySelector('[data-hero-prev]');
+            const nextBtn = carousel.querySelector('[data-hero-next]');
             if (slides.length < 2) return;
 
             let current = 0;
@@ -329,7 +517,7 @@
 
             function show(idx) {
                 idx = ((idx % slides.length) + slides.length) % slides.length;
-                slides.forEach((s, i) => { s.style.display = i === idx ? '' : 'none'; });
+                slides.forEach((s, i) => { s.classList.toggle('active', i === idx); });
                 dots.forEach((d, i) => { d.classList.toggle('active', i === idx); });
                 current = idx;
             }
@@ -346,14 +534,132 @@
             if (prevBtn) prevBtn.addEventListener('click', () => { show(current - 1); startAuto(); });
             if (nextBtn) nextBtn.addEventListener('click', () => { show(current + 1); startAuto(); });
             dots.forEach(d => {
-                d.addEventListener('click', () => { show(parseInt(d.dataset.carouselDot)); startAuto(); });
+                d.addEventListener('click', () => { show(parseInt(d.dataset.heroDot)); startAuto(); });
             });
 
             carousel.addEventListener('mouseenter', stopAuto);
             carousel.addEventListener('mouseleave', startAuto);
 
-            show(0);
             startAuto();
+        })();
+
+        // Credit Simulation
+        function hitungKredit() {
+            const price = parseFloat(document.getElementById('creditPrice').value) || 0;
+            const dp = parseFloat(document.getElementById('creditDp').value) || 0;
+            const tenor = parseInt(document.getElementById('creditTenor').value) || 12;
+            const bunga = parseFloat(document.getElementById('creditBunga').value) || 0;
+
+            const pinjaman = Math.max(0, price - dp);
+            const totalBunga = pinjaman * (bunga / 100) * (tenor / 12);
+            const totalBayar = pinjaman + totalBunga;
+            const cicilan = tenor > 0 ? totalBayar / tenor : 0;
+
+            const fmt = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+
+            document.getElementById('resultPinjaman').textContent = fmt(pinjaman);
+            document.getElementById('resultBunga').textContent = fmt(totalBunga);
+            document.getElementById('resultTotal').textContent = fmt(totalBayar);
+            document.getElementById('resultCicilan').textContent = fmt(cicilan);
+            document.getElementById('creditResult').style.display = 'block';
+        }
+
+        // Delivery option selector
+        function selectDelivery(el, type) {
+            document.querySelectorAll('.delivery-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        // Init credit calc on load
+        document.addEventListener('DOMContentLoaded', function() {
+            hitungKredit();
+        });
+
+        // Scroll Reveal via IntersectionObserver
+        (function() {
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.05 });
+            document.querySelectorAll('.reveal').forEach(function(el) {
+                var rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom > 0) {
+                    el.classList.add('visible');
+                } else {
+                    observer.observe(el);
+                }
+            });
+        })();
+
+        // Horizontal Scroll for Promo Section (5+ items)
+        (function() {
+            var section = document.querySelector('[data-promo-horizontal]');
+            if (!section) return;
+            var sticky = section.querySelector('.promo-section-sticky');
+            var content = section.querySelector('.promo-scroll-content');
+            var dots = section.querySelectorAll('[data-promo-dots] .promo-scroll-dot');
+            if (!content || !sticky) return;
+
+            var lenis = window.__lenis;
+            var sectionTop = 0;
+            var sectionHeight = 0;
+            var isActive = false;
+
+            function recalc() {
+                sectionTop = section.offsetTop;
+                var totalWidth = content.scrollWidth;
+                var visibleWidth = window.innerWidth - (window.innerWidth > 860 ? 80 : 32);
+                var scrollableWidth = Math.max(0, totalWidth - visibleWidth);
+                sectionHeight = scrollableWidth + window.innerHeight;
+                section.style.height = sectionHeight + 'px';
+            }
+
+            function updateScroll() {
+                var sy = window.scrollY || window.pageYOffset;
+                var offset = sy - sectionTop;
+
+                if (offset < -window.innerHeight * 0.5) {
+                    if (isActive) { sticky.classList.remove('active'); isActive = false; }
+                    return;
+                }
+                if (offset > sectionHeight + window.innerHeight * 0.5) {
+                    if (isActive) { sticky.classList.remove('active'); isActive = false; }
+                    return;
+                }
+
+                if (!isActive) { sticky.classList.add('active'); isActive = true; }
+
+                var maxScroll = sectionHeight - window.innerHeight;
+                if (maxScroll <= 0) { content.style.transform = 'translate3d(0,0,0)'; return; }
+
+                var progress = Math.max(0, Math.min(1, offset / maxScroll));
+                var visibleWidth = window.innerWidth - (window.innerWidth > 860 ? 80 : 32);
+                var maxTranslate = content.scrollWidth - visibleWidth;
+                content.style.transform = 'translate3d(' + (-progress * maxTranslate) + 'px, 0, 0)';
+
+                if (dots.length) {
+                    var idx = Math.max(0, Math.min(dots.length - 1, Math.round(progress * (dots.length - 1))));
+                    dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
+                }
+            }
+
+            var ticking = false;
+            function onScroll() {
+                if (!ticking) { requestAnimationFrame(function() { updateScroll(); ticking = false; }); ticking = true; }
+            }
+
+            recalc();
+            updateScroll();
+
+            if (lenis) {
+                lenis.on('scroll', onScroll);
+            } else {
+                window.addEventListener('scroll', onScroll, { passive: true });
+            }
+            window.addEventListener('resize', function() { recalc(); updateScroll(); });
         })();
     </script>
 @endpush

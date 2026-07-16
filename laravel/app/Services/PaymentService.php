@@ -56,28 +56,12 @@ class PaymentService
             $customerPhone = $snapData['phone'] ?? '';
 
             $items = [];
-
             foreach ($order->items as $it) {
-                $price = (int) round((float) $it->price);
-                $qty = (int) $it->quantity;
-                $name = substr($it->name, 0, 50);
-                $sku = $it->sku ?: 'ITEM-'.$it->id;
-
                 $items[] = [
-                    'id' => $sku,
-                    'price' => $price,
-                    'quantity' => $qty,
-                    'name' => $name,
-                ];
-            }
-
-            // For indent orders: add discount (remaining amount) so item totals match gross_amount
-            if ($order->is_indent && (float) $order->remaining_amount > 0) {
-                $items[] = [
-                    'id' => 'DISCOUNT',
-                    'price' => -(int) round((float) $order->remaining_amount),
-                    'quantity' => 1,
-                    'name' => 'Diskon DP 50%',
+                    'id' => $it->sku ?: 'ITEM-'.$it->id,
+                    'price' => (int) round((float) $it->price),
+                    'quantity' => (int) $it->quantity,
+                    'name' => substr($it->name, 0, 50),
                 ];
             }
 
@@ -149,58 +133,6 @@ class PaymentService
     }
 
     /**
-     * Get Midtrans Snap token for remaining indent payment.
-     * Uses order_no with '-LUNAS' suffix for unique Midtrans order_id.
-     */
-    public function getRemainingSnapToken(Order $order): ?string
-    {
-        try {
-            $this->configureMidtrans();
-
-            $remainingAmount = (int) round((float) $order->remaining_amount);
-            $remainingOrderId = $order->order_no . '-LUNAS';
-
-            $items = [[
-                'id' => 'REMAINING',
-                'price' => $remainingAmount,
-                'quantity' => 1,
-                'name' => 'Sisa Pembayaran Indent - ' . $order->order_no,
-            ]];
-
-            $transactionDetails = [
-                'order_id' => $remainingOrderId,
-                'gross_amount' => $remainingAmount,
-            ];
-
-            $snapData = $order->address_snapshot;
-            $customerDetails = [
-                'first_name' => $order->user?->name ?? 'Customer',
-                'email' => $order->user?->email ?? 'customer@example.com',
-                'phone' => $snapData['phone'] ?? '',
-            ];
-
-            $params = [
-                'transaction_details' => $transactionDetails,
-                'item_details' => $items,
-                'customer_details' => $customerDetails,
-                'callbacks' => [
-                    'finish' => route('payment.midtrans.finish') . '?order_id=' . $remainingOrderId,
-                ],
-            ];
-
-            $snapToken = \Midtrans\Snap::getSnapToken($params);
-
-            return $snapToken;
-        } catch (\Exception $e) {
-            Log::error('Midtrans getRemainingSnapToken error: '.$e->getMessage(), [
-                'order_id' => $order->id,
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return null;
-        }
-    }
-
-    /**
      * Process incoming Midtrans notification (server-to-server callback).
      */
     public function processNotification(array $payload): array
@@ -227,12 +159,6 @@ class PaymentService
 
             if (! $orderId) {
                 return ['success' => false, 'message' => 'No order_id in notification'];
-            }
-
-            // Check if this is a remaining indent payment (-LUNAS suffix)
-            $isRemainingPayment = str_ends_with($orderId, '-LUNAS');
-            if ($isRemainingPayment) {
-                $orderId = substr($orderId, 0, -6);
             }
 
             $order = Order::query()->with('payment')->where('order_no', $orderId)->first();
@@ -276,15 +202,6 @@ class PaymentService
                     return ['success' => true, 'message' => 'Payment challenged, pending review'];
                 }
                 $this->markPaymentSuccess($order, $notif);
-
-                // If remaining indent payment, mark indent as fully paid
-                if ($isRemainingPayment) {
-                    $order->updateQuietly([
-                        'remaining_amount' => 0,
-                        'indent_status' => 'paid_full',
-                        'status' => 'paid',
-                    ]);
-                }
             } elseif (in_array($transactionStatus, $failedStatuses)) {
                 $this->paymentFailed($order);
             } elseif (in_array($transactionStatus, $expiredStatuses)) {

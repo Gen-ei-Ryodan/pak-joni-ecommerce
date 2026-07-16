@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Banner;
 use App\Models\Career;
 use App\Models\CompanyProfile;
 use App\Models\CsrArticle;
@@ -44,7 +43,7 @@ class DatabaseSeeder extends Seeder
         $this->createAdmin();
         $this->createPartCategories();
         $this->createParts();
-        $this->createBanners();
+        // Banners dikosongkan — dikelola manual via Filament
         $this->createWhyChooseUs();
         $this->createNews();
         $this->createEvents();
@@ -182,30 +181,6 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->command->info("✓ Parts: {$counter} created");
-    }
-
-    private function createBanners(): void
-    {
-        $data = [
-            ['JOMOTO 2025', 'New Collection', 'Jelajahi Produk', '/produk', 'hero'],
-            ['CFMOTO 450SR', 'Sport Performance', 'Lihat Detail', '#', 'hero'],
-            ['ZEEHO Electric', 'EV Future', 'Selengkapnya', '/produk?brand=zeeho', 'hero'],
-            ['Promo Akhir Tahun', 'Diskon Hingga 5 Juta', 'Lihat Promo', '#', 'promo'],
-            ['Gratis Service 4x', 'Service Gratis', 'Lihat Promo', '#', 'promo'],
-            ['Trade-In Motor Lama', 'Tukar Tambah', 'Cek Sekarang', '#', 'promo'],
-            ['ZONTES 350X Adventure', 'Launching', 'Lihat Detail', '#', 'launching'],
-            ['JOMOTO Fest 2025', 'Gathering', 'Lihat Event', '#', 'kegiatan'],
-        ];
-
-        foreach ($data as $i => $d) {
-            Banner::create([
-                'title' => $d[0], 'subtitle' => $d[1], 'button_text' => $d[2],
-                'link_url' => $d[3], 'type' => $d[4],
-                'image_path' => $this->pic($i + 300), 'sort_order' => $i + 1, 'is_active' => true,
-            ]);
-        }
-
-        $this->command->info('✓ Banners: ' . Banner::count());
     }
 
     private function createWhyChooseUs(): void

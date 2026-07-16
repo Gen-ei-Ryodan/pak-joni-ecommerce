@@ -194,7 +194,7 @@ class CartController extends Controller
             'indent_mode' => ['nullable', 'string', 'in:split,full'],
         ]);
 
-        if ((int) $cartItem->cart->user_id !== (int) $request->user()->id) {
+        if ($cartItem->cart->user_id !== $request->user()->id) {
             abort(403);
         }
 
@@ -255,7 +255,7 @@ class CartController extends Controller
             'indent_mode' => ['required', 'string', 'in:split,full'],
         ]);
 
-        if ((int) $cartItem->cart->user_id !== (int) $request->user()->id) {
+        if ($cartItem->cart->user_id !== $request->user()->id) {
             abort(403);
         }
 
@@ -296,7 +296,7 @@ class CartController extends Controller
 
     public function destroy(Request $request, CartItem $cartItem)
     {
-        if ((int) $cartItem->cart->user_id !== (int) $request->user()->id) {
+        if ($cartItem->cart->user_id !== $request->user()->id) {
             abort(403);
         }
         $cartItem->delete();

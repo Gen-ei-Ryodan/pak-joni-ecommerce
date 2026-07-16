@@ -20,6 +20,11 @@ if (! function_exists('image_url')) {
             return asset($path);
         }
 
+        // Handle paths that already have a storage/ prefix (legacy data from ImageService)
+        if (str_starts_with($path, 'storage/')) {
+            return asset($path);
+        }
+
         return asset('storage/' . $path);
     }
 }

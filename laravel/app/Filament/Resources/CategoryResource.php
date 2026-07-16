@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CategoryResource\Pages;
 use App\Models\Category;
 use App\Models\CategoryType;
-use Filament\Actions;
 use Filament\Forms;
 use Filament\Navigation\NavigationItem;
 use Filament\Resources\Resource;
@@ -57,11 +56,11 @@ class CategoryResource extends Resource
                     ->preload(),
             ])
             ->actions([
-                Actions\EditAction::make(),
-                Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Actions\BulkActionGroup::make([Actions\DeleteBulkAction::make()]),
+                Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);
     }
 
