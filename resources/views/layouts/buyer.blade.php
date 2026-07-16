@@ -250,11 +250,16 @@
             var overlay = document.createElement('div');
             overlay.className = 'auth-confirm-overlay';
             overlay.innerHTML = '<div class="auth-confirm-modal">' +
-                '<h3>Selamat Datang di {{ config('app.name') }}</h3>' +
-                '<p>Apakah Anda sudah memiliki akun?</p>' +
-                '<div class="auth-confirm-buttons">' +
-                    '<a href="{{ route('auth.login') }}" class="btn btn-primary">Ya, saya sudah memiliki akun</a>' +
-                    '<button class="btn btn-outline" onclick="dismissGuestPopup(event)">Saya pengunjung baru</button>' +
+                '<h3>Selamat Datang di</h3>' +
+                '<h3 style="margin-top:-4px;">{{ config('app.name') }}</h3>' +
+                '<p>Silakan pilih salah satu:</p>' +
+                '<div class="popup-actions">' +
+                    '<a href="{{ route('auth.login') }}" class="popup-btn">' +
+                        '<img src="{{ asset('images/popup/biru.png') }}" alt="Login">' +
+                    '</a>' +
+                    '<button class="popup-btn" onclick="dismissGuestPopup(event)">' +
+                        '<img src="{{ asset('images/popup/kuning.png') }}" alt="Tutup">' +
+                    '</button>' +
                 '</div>' +
             '</div>';
             document.body.appendChild(overlay);

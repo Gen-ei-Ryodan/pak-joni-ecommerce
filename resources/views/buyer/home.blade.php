@@ -368,68 +368,71 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
         .auth-confirm-modal {
-            background: #fff;
+            background: #f7f4f0;
             border-radius: 20px;
-            padding: 40px;
-            max-width: 420px;
-            width: 90%;
+            padding: 12px 4px 12px;
+            max-width: 500px;
+            width: 92%;
             text-align: center;
             box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            transform: scale(2);
+            overflow: hidden;
         }
         .auth-confirm-modal h3 {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 8px;
+            margin-bottom: 2px;
+            padding: 0 20px;
         }
         .auth-confirm-modal p {
             color: #666;
-            font-size: 14px;
-            margin-bottom: 24px;
+            font-size: 13px;
+            margin-bottom: 8px;
+            padding: 0 20px;
         }
-        .auth-confirm-buttons {
+        .popup-actions {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            font-size: 0;
         }
-        .auth-confirm-buttons .btn-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 24px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #fff;
-            background: #FF0052;
+        .popup-btn {
             border: none;
-            border-radius: 30px;
+            background: none;
             cursor: pointer;
-            text-decoration: none;
-            transition: all 0.25s ease;
+            padding: 0;
+            display: block;
+            width: calc(50% + 2px);
+            line-height: 0;
+            flex-shrink: 0;
+            transition: transform 0.25s ease;
         }
-        .auth-confirm-buttons .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(255, 0, 82, 0.3);
+        .popup-btn:first-child {
+            margin-right: -2px;
         }
-        .auth-confirm-buttons .btn-outline {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 24px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #666;
-            background: transparent;
-            border: 2px solid #ddd;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.25s ease;
+        .popup-btn:last-child {
+            width: calc(50% + 2px);
+            margin-left: -2px;
         }
-        .auth-confirm-buttons .btn-outline:hover {
-            border-color: #FF0052;
-            color: #FF0052;
+        .popup-btn:hover {
+            transform: scale(1.05);
+        }
+        .popup-btn img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        @media (max-width: 500px) {
+            .auth-confirm-modal {
+                padding: 10px 4px 10px;
+                transform: scale(1);
+            }
+            .auth-confirm-modal h3,
+            .auth-confirm-modal p {
+                padding: 0 12px;
+            }
         }
 
         /* --- Event Cards --- */
