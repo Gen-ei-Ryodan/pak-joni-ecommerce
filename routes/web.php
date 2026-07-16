@@ -92,6 +92,7 @@ Route::get('/payment/midtrans/error', [MidtransController::class, 'error'])->nam
 
 Route::middleware(['auth', 'throttle:10,1'])->group(function () {
     Route::get('/payment/midtrans/status/{order}', [MidtransController::class, 'status'])->name('payment.midtrans.status');
+    Route::get('/payment/midtrans/snap-token/{order}', [MidtransController::class, 'snapToken'])->name('payment.midtrans.snap-token');
 });
 
 Route::middleware('guest')->group(function () {

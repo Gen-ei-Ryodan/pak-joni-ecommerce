@@ -52,8 +52,14 @@ class PaymentService
 
             $customerName = $order->user->name ?? 'Customer';
             $customerEmail = $order->user->email ?? 'customer@example.com';
-            $snapData = $order->address_snapshot;
-            $customerPhone = $snapData['phone'] ?? '';
+
+            // For dealer pickup, address_snapshot is empty, so fallback to user data
+            if ($order->isDealerPickup()) {
+                $customerPhone = $order->user->phone ?? $order->user->no_telp ?? '';
+            } else {
+                $snapData = $order->address_snapshot;
+                $customerPhone = $snapData['phone'] ?? '';
+            }
 
             $items = [];
             foreach ($order->items as $it) {
@@ -65,9 +71,9 @@ class PaymentService
                 ];
             }
 
-            // Add shipping as a separate item
+            // Add shipping as a separate item (only for non-dealer-pickup)
             $shippingCost = (int) round((float) $order->shipping_cost);
-            if ($shippingCost > 0) {
+            if ($shippingCost > 0 && !$order->isDealerPickup()) {
                 $items[] = [
                     'id' => 'SHIPPING',
                     'price' => $shippingCost,

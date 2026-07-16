@@ -101,12 +101,14 @@ class OrderController extends Controller
 
     private function buildTimeline(Order $order): array
     {
+        $shippedLabel = $order->isDealerPickup() ? 'Siap Diambil' : 'Shipped';
+
         $tl = [];
         $tl[] = ['label' => 'Order Created', 'time' => $order->created_at, 'done' => true];
         $tl[] = ['label' => 'Awaiting Payment', 'time' => $order->created_at, 'done' => $order->status !== 'unpaid' || $order->payment_status === 'paid'];
         $tl[] = ['label' => 'Payment Successful', 'time' => $order->paid_at, 'done' => in_array($order->status, ['paid','processing','shipped','completed'])];
         $tl[] = ['label' => 'Processing', 'time' => $order->status === 'processing' ? $order->updated_at : null, 'done' => in_array($order->status, ['processing','shipped','completed'])];
-        $tl[] = ['label' => 'Shipped', 'time' => $order->shipped_at, 'done' => in_array($order->status, ['shipped','completed'])];
+        $tl[] = ['label' => $shippedLabel, 'time' => $order->shipped_at, 'done' => in_array($order->status, ['shipped','completed'])];
         $tl[] = ['label' => 'Completed', 'time' => $order->completed_at, 'done' => $order->status === 'completed'];
 
         if ($order->status === 'cancelled') {

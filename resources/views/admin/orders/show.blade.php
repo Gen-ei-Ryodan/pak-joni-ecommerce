@@ -48,20 +48,28 @@
 
                 <div style="height:12px;"></div>
 
-                <div style="font-weight:600;margin-bottom:10px;">Shipping Address</div>
-                <div class="muted" style="line-height:1.8;">
-                    @php($addr = $order->address_snapshot)
-                    <div><span style="color:var(--text);">{{ $addr['recipient_name'] ?? '-' }}</span></div>
-                    <div>{{ $addr['phone'] ?? '-' }}</div>
-                    <div>{{ $addr['address_line1'] ?? '-' }}{{ !empty($addr['address_line2']) ? ', '.$addr['address_line2'] : '' }}</div>
-                    <div>{{ $addr['city'] ?? '-' }}, {{ $addr['province'] ?? '-' }} {{ $addr['postal_code'] ?? '' }}</div>
-                </div>
+                @if($order->isDealerPickup())
+                    <div style="font-weight:600;margin-bottom:10px;">Pengambilan</div>
+                    <div class="muted" style="line-height:1.8;">
+                        <span style="color:var(--text);">Ambil di Dealer / Workshop</span><br>
+                        <span style="color:#4ade80;">Gratis Ongkir</span>
+                    </div>
+                @else
+                    <div style="font-weight:600;margin-bottom:10px;">Shipping Address</div>
+                    <div class="muted" style="line-height:1.8;">
+                        @php($addr = $order->address_snapshot)
+                        <div><span style="color:var(--text);">{{ $addr['recipient_name'] ?? '-' }}</span></div>
+                        <div>{{ $addr['phone'] ?? '-' }}</div>
+                        <div>{{ $addr['address_line1'] ?? '-' }}{{ !empty($addr['address_line2']) ? ', '.$addr['address_line2'] : '' }}</div>
+                        <div>{{ $addr['city'] ?? '-' }}, {{ $addr['province'] ?? '-' }} {{ $addr['postal_code'] ?? '' }}</div>
+                    </div>
 
-                @if($order->shipping_courier)
-                    <div style="height:8px;"></div>
-                    <div>Courier: <span style="color:var(--text);">{{ $order->shipping_courier }}</span></div>
-                    @if($order->shipping_receipt)
-                        <div>Receipt: <span style="color:var(--text);font-family:var(--mono);">{{ $order->shipping_receipt }}</span></div>
+                    @if($order->shipping_courier)
+                        <div style="height:8px;"></div>
+                        <div>Courier: <span style="color:var(--text);">{{ $order->shipping_courier }}</span></div>
+                        @if($order->shipping_receipt)
+                            <div>Receipt: <span style="color:var(--text);font-family:var(--mono);">{{ $order->shipping_receipt }}</span></div>
+                        @endif
                     @endif
                 @endif
 
@@ -75,7 +83,11 @@
                     </div>
                     <div style="display:flex;justify-content:space-between;">
                         <span>Shipping</span>
-                        <span style="color:var(--text);">Rp {{ number_format((float) $order->shipping_cost, 0, ',', '.') }}</span>
+                        @if($order->isDealerPickup())
+                            <span style="color:#4ade80;">Gratis</span>
+                        @else
+                            <span style="color:var(--text);">Rp {{ number_format((float) $order->shipping_cost, 0, ',', '.') }}</span>
+                        @endif
                     </div>
                     <div style="display:flex;justify-content:space-between;font-weight:600;border-top:1px solid var(--line);padding-top:6px;">
                         <span>Total</span>
@@ -165,22 +177,32 @@
                     @endif
 
                     @if($order->canTransitionTo('shipped'))
-                        <form method="post" action="{{ route('admin.orders.update', $order) }}" style="display:grid;gap:8px;">
-                            @csrf
-                            @method('put')
-                            <input type="hidden" name="action" value="ship">
-                            <div>
-                                <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:4px;">Courier</label>
-                                <input name="courier" required placeholder="JNE / J&T / SiCepat..."
-                                    style="width:100%;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
-                            </div>
-                            <div>
-                                <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:4px;">Receipt No.</label>
-                                <input name="receipt" required placeholder="Tracking number..."
-                                    style="width:100%;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
-                            </div>
-                            <button class="btn btn-primary" type="submit" style="width:100%;">Mark as Shipped</button>
-                        </form>
+                        @if($order->isDealerPickup())
+                            <form method="post" action="{{ route('admin.orders.update', $order) }}">
+                                @csrf
+                                @method('put')
+                                <input type="hidden" name="action" value="ship">
+                                <input type="hidden" name="dealer_pickup" value="1">
+                                <button class="btn btn-primary" type="submit" style="width:100%;">Siap Diambil</button>
+                            </form>
+                        @else
+                            <form method="post" action="{{ route('admin.orders.update', $order) }}" style="display:grid;gap:8px;">
+                                @csrf
+                                @method('put')
+                                <input type="hidden" name="action" value="ship">
+                                <div>
+                                    <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:4px;">Courier</label>
+                                    <input name="courier" required placeholder="JNE / J&T / SiCepat..."
+                                        style="width:100%;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
+                                </div>
+                                <div>
+                                    <label style="display:block;color:var(--muted);font-size:12px;margin-bottom:4px;">Receipt No.</label>
+                                    <input name="receipt" required placeholder="Tracking number..."
+                                        style="width:100%;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:10px 12px;color:var(--text);">
+                                </div>
+                                <button class="btn btn-primary" type="submit" style="width:100%;">Mark as Shipped</button>
+                            </form>
+                        @endif
                     @endif
 
                     @if($order->canTransitionTo('completed'))

@@ -95,6 +95,10 @@
                             Cek Status Pembayaran
                         </button>
                     </div>
+                @else
+                    <a class="btn btn-primary" href="{{ route('buyer.orders.show', $order) }}" style="width:100%;padding:14px;font-size:15px;">
+                        Bayar Sekarang — Rp {{ number_format((float) $order->total, 0, ',', '.') }}
+                    </a>
                 @endif
 
                 <div style="height:12px;"></div>
