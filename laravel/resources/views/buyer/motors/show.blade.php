@@ -130,7 +130,7 @@
                         <div style="max-width:700px;margin:0 auto;">
                             <h2 class="section-title-text" style="margin-bottom:20px;text-align:center;">Spesifikasi</h2>
                             <div class="spec-tabs">
-                                @foreach($specGroups as $group => $specs)
+                                @foreach($specsGrouped as $group => $specs)
                                     <div class="spec-group">
                                         <h3 class="spec-group-title">{{ $group }}</h3>
                                         <div class="spec-table">

@@ -8,6 +8,7 @@ use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Actions;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
@@ -33,11 +34,11 @@ class CategoryTypeResource extends Resource
                 Tables\Columns\IconColumn::make('is_active')->boolean()->label('Active'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Actions\EditAction::make(),
+                Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
+                Actions\BulkActionGroup::make([Actions\DeleteBulkAction::make()]),
             ]);
     }
 

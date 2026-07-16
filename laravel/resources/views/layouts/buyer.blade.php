@@ -15,7 +15,7 @@
         <link rel="stylesheet" href="{{ asset('assets/css/navbar.css') }}?v=4">
         <link rel="stylesheet" href="{{ asset('assets/css/button.css') }}?v=3">
         <link rel="stylesheet" href="{{ asset('assets/css/card.css') }}?v=3">
-        <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}?v=4">
+        <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}?v=5">
         <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}?v=3">
         <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=3">
 
