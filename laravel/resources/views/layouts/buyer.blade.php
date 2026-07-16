@@ -9,15 +9,15 @@
 
         <link rel="icon" href="{{ asset('favicon.ico') }}">
 
-        <link rel="stylesheet" href="{{ asset('assets/css/reset.css') }}?v=3">
-        <link rel="stylesheet" href="{{ asset('assets/css/variables.css') }}?v=3">
-        <link rel="stylesheet" href="{{ asset('assets/css/layout.css') }}?v=3">
-        <link rel="stylesheet" href="{{ asset('assets/css/navbar.css') }}?v=3">
-        <link rel="stylesheet" href="{{ asset('assets/css/button.css') }}?v=2">
-        <link rel="stylesheet" href="{{ asset('assets/css/card.css') }}?v=2">
-        <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}?v=3">
-        <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}?v=2">
-        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/reset.css') }}?v=4">
+        <link rel="stylesheet" href="{{ asset('assets/css/variables.css') }}?v=4">
+        <link rel="stylesheet" href="{{ asset('assets/css/layout.css') }}?v=4">
+        <link rel="stylesheet" href="{{ asset('assets/css/navbar.css') }}?v=4">
+        <link rel="stylesheet" href="{{ asset('assets/css/button.css') }}?v=3">
+        <link rel="stylesheet" href="{{ asset('assets/css/card.css') }}?v=3">
+        <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}?v=4">
+        <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}?v=3">
+        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=3">
 
         <link rel="stylesheet" href="https://unpkg.com/lenis@1.2.3/dist/lenis.css">
         <script src="https://unpkg.com/lenis@1.2.3/dist/lenis.min.js"></script>
