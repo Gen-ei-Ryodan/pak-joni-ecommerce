@@ -309,9 +309,7 @@
         }
         .gallery-main {
             width: 100%;
-            max-height: 510px;
-            margin: 0 auto;
-            aspect-ratio: 1 / 1;
+            aspect-ratio: 3 / 2;
             border-radius: var(--radius);
             background-size: cover;
             background-position: center bottom;
