@@ -141,26 +141,27 @@
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 18px 20px;
-  max-width: 240px;
+  padding: 0;
+  max-width: 160px;
   width: calc(100% - 32px);
   text-align: center;
   box-shadow: 0 16px 48px rgba(0,0,0,0.25);
 }
 .auth-confirm-modal h3 {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin: 10px 0 2px;
 }
 .auth-confirm-modal p {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
-  margin-bottom: 14px;
+  margin: 0 0 8px;
 }
 .popup-actions {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
+  padding: 0 8px 8px;
 }
 .popup-btn {
   border: none;
@@ -171,7 +172,7 @@
   justify-content: center;
 }
 .popup-btn img {
-  width: 40px !important;
-  height: auto !important;
+  width: 60px;
+  height: auto;
   display: block;
 }

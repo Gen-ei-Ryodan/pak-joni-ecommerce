@@ -17,7 +17,7 @@
         <link rel="stylesheet" href="{{ asset('assets/css/card.css') }}?v=2">
         <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}?v=6">
         <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}?v=2">
-        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=6">
+        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=7">
 
         <link rel="stylesheet" href="https://unpkg.com/lenis@1.2.3/dist/lenis.css">
         <script src="https://unpkg.com/lenis@1.2.3/dist/lenis.min.js"></script>
@@ -261,7 +261,7 @@
             overlay.className = 'auth-confirm-overlay';
             overlay.innerHTML = '<div class="auth-confirm-modal">' +
                 '<h3>Selamat Datang di</h3>' +
-                '<h3 style="margin-top:-2px;">{{ config('app.name') }}</h3>' +
+                '<h3>{{ config('app.name') }}</h3>' +
                 '<p>Silakan pilih salah satu:</p>' +
                 '<div class="popup-actions">' +
                     '<a href="{{ route('auth.login') }}" class="popup-btn">' +
