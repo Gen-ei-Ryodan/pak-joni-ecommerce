@@ -579,7 +579,7 @@
         // Credit Simulation
         function hitungKredit() {
             @guest
-            window.location.href = '{{ route('login') }}?redirect={{ urlencode(route('buyer.home')) }}';
+            window.location.href = '{{ route('auth.login') }}?redirect={{ urlencode(route('buyer.home')) }}';
             return;
             @endguest
             const price = parseFloat(document.getElementById('creditPrice').value) || 0;
