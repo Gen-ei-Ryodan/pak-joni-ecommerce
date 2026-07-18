@@ -507,7 +507,7 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: #ebc41b;
+  background: linear-gradient(135deg, #fff 0%, #fce4ec 30%, #e3f2fd 70%, #fff 100%);
   color: #1a1a2e;
   padding: 100px 0 80px;
 }
@@ -560,7 +560,7 @@
   display: flex;
   gap: 16px;
   padding: 16px;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.85);
   border-radius: 14px;
   border: 1px solid rgba(0,0,0,0.06);
   text-decoration: none;
@@ -569,7 +569,7 @@
 }
 
 .news-card:hover {
-  background: rgba(255,255,255,0.9);
+  background: #fff;
   transform: translateX(4px);
 }
 
