@@ -821,8 +821,8 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: #0055DA;
-  color: #fff;
+  background: linear-gradient(180deg, #0055DA 0%, #dbeafe 50%, #fff 100%);
+  color: #1a1a2e;
   padding: 100px 0 80px;
 }
 
@@ -857,9 +857,9 @@
   align-items: center;
   gap: 16px;
   padding: 18px 20px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.7);
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(0,85,218,0.08);
   transition: all 0.25s ease;
 }
 
@@ -883,14 +883,14 @@
 .contact-item-info h4 {
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: #1a1a2e;
   margin-bottom: 2px;
 }
 
 .contact-item-info a,
 .contact-item-info span {
   font-size: 13px;
-  color: rgba(255,255,255,0.7);
+  color: #4b5563;
   text-decoration: none;
 }
 
@@ -901,9 +901,9 @@
 .contact-dealer-card {
   margin-top: 16px;
   padding: 16px 18px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.7);
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(0,85,218,0.08);
 }
 
 .contact-dealer-header {
@@ -914,27 +914,27 @@
 }
 
 .contact-dealer-header svg {
-  color: #FFD400;
+  color: #0055DA;
   flex-shrink: 0;
 }
 
 .contact-dealer-header h4 {
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: #1a1a2e;
   margin: 0;
 }
 
 .contact-dealer-address {
   font-size: 13px;
-  color: rgba(255,255,255,0.7);
+  color: #4b5563;
   margin: 4px 0;
   line-height: 1.5;
 }
 
 .contact-dealer-phone {
   font-size: 13px;
-  color: rgba(255,255,255,0.6);
+  color: #6b7280;
   margin: 4px 0;
   display: flex;
   align-items: center;
@@ -950,15 +950,15 @@
 
 .contact-map-card {
   padding: 14px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.7);
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(0,85,218,0.08);
 }
 
 .contact-map-card h4 {
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
+  color: #1a1a2e;
   margin-bottom: 10px;
 }
 
@@ -969,7 +969,7 @@
 
 .contact-map-address {
   font-size: 12px;
-  color: rgba(255,255,255,0.6);
+  color: #6b7280;
   margin-top: 8px;
 }
 

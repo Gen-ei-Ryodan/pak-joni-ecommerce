@@ -449,11 +449,11 @@
 }
 
 .site-footer {
-  background: #111;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: #fff;
+  border-top: 1px solid rgba(0, 85, 218, 0.1);
   padding: 60px 0 30px;
   margin-top: 0;
-  color: #ddd;
+  color: #1a1a2e;
 }
 
 .footer-grid {
@@ -468,12 +468,12 @@
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: 14px;
-  color: #fff;
+  color: #0055DA;
 }
 
 .footer-desc {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.55);
+  color: #4b5563;
   line-height: 1.7;
   margin-bottom: 20px;
 }
@@ -490,7 +490,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 85, 218, 0.15);
   transition: all 0.2s ease;
 }
 
@@ -498,10 +498,11 @@
 .footer-social a:nth-child(2) { color: #E4405F; }
 .footer-social a:nth-child(3) { color: #EA4335; }
 .footer-social a:nth-child(4) { color: #25D366; }
+.footer-social a:nth-child(5) { color: #010101; }
 
 .footer-social a:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: #0055DA;
+  color: #0055DA;
   transform: translateY(-2px);
 }
 
@@ -510,7 +511,7 @@
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #fff;
+  color: #0055DA;
   margin-bottom: 18px;
 }
 
@@ -525,13 +526,13 @@
 
 .footer-links a {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.55);
+  color: #4b5563;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .footer-links a:hover {
-  color: var(--accent);
+  color: #0055DA;
 }
 
 .footer-contact li {
@@ -539,14 +540,14 @@
   align-items: flex-start;
   gap: 10px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.55);
+  color: #4b5563;
   line-height: 1.6;
 }
 
 .footer-contact svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #0055DA;
 }
 
 .footer-bottom {
@@ -557,9 +558,9 @@
   gap: 10px;
   padding-top: 30px;
   margin-top: 40px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(0, 85, 218, 0.1);
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #6b7280;
 }
 
 .footer-bottom-links {
@@ -568,14 +569,14 @@
 }
 
 .footer-bottom-links a {
-  color: rgba(255, 255, 255, 0.4);
+  color: #6b7280;
   font-size: 12px;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .footer-bottom-links a:hover {
-  color: #fff;
+  color: #0055DA;
 }
 
 .btn-login {
