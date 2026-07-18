@@ -1057,6 +1057,41 @@
   color: var(--muted);
 }
 
+.credit-wa-card {
+  margin-top: 20px;
+  padding: 28px 24px;
+  background: #fff;
+  border-radius: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.credit-wa-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.credit-wa-link {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: #25D366;
+  padding: 12px 32px;
+  border-radius: 30px;
+  text-decoration: none;
+  transition: background 0.25s ease;
+}
+
+.credit-wa-link:hover {
+  background: #1da851;
+}
+
 /* Delivery options */
 .delivery-options {
   margin-top: 16px;
