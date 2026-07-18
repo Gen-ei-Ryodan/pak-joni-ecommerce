@@ -3,7 +3,7 @@
 @section('title', $part->name)
 
 @section('content')
-    <section class="section">
+    <section class="section section-detail">
         <div class="container">
             @if (session('status'))
                 <div class="panel" style="padding:10px 12px;margin-bottom:12px;border-color:rgba(217,180,111,0.35);background:rgba(217,180,111,0.08);">

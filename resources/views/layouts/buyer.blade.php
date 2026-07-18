@@ -31,6 +31,9 @@
                 from { transform: translateY(100%); }
                 to { transform: translateY(0); }
             }
+            .section-detail {
+                background: linear-gradient(135deg, #fff 0%, #e0e7ff 25%, #bfdbfe 60%, #fff 100%);
+            }
         </style>
         @stack('head')
     </head>

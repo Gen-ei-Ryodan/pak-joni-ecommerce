@@ -3,7 +3,7 @@
 @section('title', $item->name)
 
 @section('content')
-    <section class="section">
+    <section class="section section-detail">
         <div class="container">
             {{-- Header --}}
             <div class="motor-header">
