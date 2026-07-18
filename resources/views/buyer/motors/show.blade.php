@@ -32,7 +32,7 @@
             @if($tab === 'detail')
                 {{-- Gallery Atas --}}
                 <div class="motor-gallery-section">
-                    <div class="gallery-main" id="galleryMain" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;">
+                    <div class="gallery-main" id="galleryMain" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;">
                         @if(!$item->thumbnail_path)
                             <span style="color:var(--muted);">No Image</span>
                         @endif

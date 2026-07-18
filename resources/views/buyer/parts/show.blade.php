@@ -14,7 +14,7 @@
             <div class="part-detail">
                 {{-- Gallery --}}
                 <div class="part-gallery">
-                    <div class="gallery-main" id="galleryMain" style="background-image:url('{{ $part->thumbnail_path ? image_url($part->thumbnail_path) : '' }}');background-size:cover;background-position:center;">
+                    <div class="gallery-main" id="galleryMain" style="background-image:url('{{ $part->thumbnail_path ? image_url($part->thumbnail_path) : '' }}');background-size:cover;">
                         @if(!$part->thumbnail_path)
                             <span style="color:var(--muted);display:flex;align-items:center;justify-content:center;height:100%;">No Image</span>
                         @endif
