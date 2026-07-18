@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="light">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="light" id="jmtHtml">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,6 +23,7 @@
         <script src="https://unpkg.com/lenis@1.2.3/dist/lenis.min.js"></script>
 
         <style>
+            .jmt-transition .loader-overlay { display: none !important; }
             .loader-overlay {
                 position: fixed; inset: 0; z-index: 99999;
                 background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
@@ -71,6 +72,7 @@
                 100% { opacity: 1; transform: translateY(0); }
             }
         </style>
+        <script>if(sessionStorage.getItem('_jmt_t')){sessionStorage.removeItem('_jmt_t');document.documentElement.classList.add('jmt-transition');}</script>
         @stack('head')
     </head>
     <body>
@@ -327,11 +329,9 @@
         // Loader — hanya saat refresh/load ulang (bukan navigasi internal)
         (function() {
             var loader = document.getElementById('loaderOverlay');
-            var isTransition = sessionStorage.getItem('_jmt_transition');
             var page = document.getElementById('pageWrap');
-            if (isTransition) {
-                sessionStorage.removeItem('_jmt_transition');
-                if (loader) loader.style.display = 'none';
+            if (document.documentElement.classList.contains('jmt-transition')) {
+                document.documentElement.classList.remove('jmt-transition');
                 if (page) page.style.opacity = '1';
             } else {
                 if (page) page.classList.add('page-enter');
@@ -368,7 +368,7 @@
                 if (!document.getElementById('pageWrap') || isLeaving) return;
                 e.preventDefault();
                 isLeaving = true;
-                sessionStorage.setItem('_jmt_transition', '1');
+                sessionStorage.setItem('_jmt_t', '1');
                 overlay.style.opacity = '1';
                 setTimeout(function() { window.location.href = href; }, TRANSITION_MS);
             }, true);
