@@ -169,7 +169,7 @@
   cursor: pointer;
 }
 .popup-btn img {
-  max-height: 85px;
-  width: auto;
+  width: 95px;
+  height: auto;
   display: block;
 }
