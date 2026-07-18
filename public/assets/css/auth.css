@@ -159,17 +159,19 @@
 }
 .popup-actions {
   display: flex;
-  gap: 10px;
   justify-content: center;
 }
 .popup-btn {
+  flex: 1;
   border: none;
   background: none;
   padding: 0;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
 }
 .popup-btn img {
-  width: 30px;
+  max-width: 50%;
   height: auto;
   display: block;
 }
