@@ -534,10 +534,6 @@
 
 @push('scripts')
     <script>
-        @guest
-        setTimeout(function() { showAuthConfirm(null); }, 500);
-        @endguest
-
         // Hero Carousel
         (function () {
             const carousel = document.querySelector('[data-hero-carousel]');
@@ -583,7 +579,7 @@
         // Credit Simulation
         function hitungKredit() {
             @guest
-            showAuthConfirm(null);
+            window.location.href = '{{ route('login') }}?redirect={{ urlencode(route('buyer.home')) }}';
             return;
             @endguest
             const price = parseFloat(document.getElementById('creditPrice').value) || 0;
@@ -611,10 +607,12 @@
             el.classList.add('selected');
         }
 
-        // Init credit calc on load
+        // Init credit calc on load (only for authenticated users)
+        @auth
         document.addEventListener('DOMContentLoaded', function() {
             hitungKredit();
         });
+        @endauth
 
         // Scroll Reveal via IntersectionObserver
         (function() {
