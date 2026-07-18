@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="light" id="jmtHtml">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="light">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,69 +23,15 @@
         <script src="https://unpkg.com/lenis@1.2.3/dist/lenis.min.js"></script>
 
         <style>
-            .jmt-transition .loader-overlay { display: none !important; }
-            .loader-overlay {
-                position: fixed; inset: 0; z-index: 99999;
-                background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
-                display: flex; align-items: center; justify-content: center;
-                transition: opacity 0.8s ease, visibility 0.8s ease;
-            }
-            .loader-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-            .loader-content { text-align: center; }
-            .loader-logo { margin-bottom: 24px; }
-            .loader-logo-img {
-                width: 120px; height: auto;
-                animation: loaderLogo 1.4s cubic-bezier(0.16,1,0.3,1) forwards;
-            }
-            @keyframes loaderLogo {
-                0% { opacity: 0; transform: scale(0.6) translateY(20px); }
-                100% { opacity: 1; transform: scale(1) translateY(0); }
-            }
-            .loader-brand {
-                font-size: clamp(24px,4vw,40px); font-weight: 800;
-                color: #fff; letter-spacing: 4px; text-transform: uppercase;
-                opacity: 0; animation: loaderBrand 1s 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
-            }
-            @keyframes loaderBrand {
-                0% { opacity: 0; transform: translateY(16px); letter-spacing: 16px; }
-                100% { opacity: 1; transform: translateY(0); letter-spacing: 4px; }
-            }
-            .loader-bar {
-                margin: 32px auto 0; width: 200px; height: 3px;
-                background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden;
-                opacity: 0; animation: loaderBar 0.6s 0.6s ease forwards;
-            }
-            .loader-bar-fill {
-                height: 100%; width: 0; border-radius: 3px;
-                background: linear-gradient(90deg, #FF0052, #FFD400);
-                animation: loaderFill 1.8s 0.8s cubic-bezier(0.22,1,0.36,1) forwards;
-            }
-            @keyframes loaderBar { 0% { opacity: 0; } 100% { opacity: 1; } }
-            @keyframes loaderFill {
-                0% { width: 0; }
-                100% { width: 100%; }
-            }
-
-            .page.page-enter { animation: pageEnter 0.8s 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+            .page { animation: pageEnter 0.8s 0.6s cubic-bezier(0.16,1,0.3,1) both; }
             @keyframes pageEnter {
                 0% { opacity: 0; transform: translateY(30px); }
                 100% { opacity: 1; transform: translateY(0); }
             }
         </style>
-        <script>if(sessionStorage.getItem('_jmt_t')){sessionStorage.removeItem('_jmt_t');document.documentElement.classList.add('jmt-transition');}</script>
         @stack('head')
     </head>
     <body>
-        <div class="loader-overlay" id="loaderOverlay">
-            <div class="loader-content">
-                <div class="loader-logo">
-                    <img src="{{ asset('assets/images/jomotologo.png') }}" alt="{{ config('app.name') }}" class="loader-logo-img">
-                </div>
-                <div class="loader-brand">{{ config('app.name') }}</div>
-                <div class="loader-bar"><div class="loader-bar-fill"></div></div>
-            </div>
-        </div>
-
         <div class="page" id="pageWrap">
             <header class="navbar {{ request()->routeIs('buyer.home') ? '' : 'navbar-white' }}" id="mainNavbar">
                 <div class="container navbar-inner">
@@ -326,31 +272,6 @@
             document.body.appendChild(overlay);
         }
 
-        // Loader — hanya saat refresh/load ulang (bukan navigasi internal)
-        (function() {
-            var loader = document.getElementById('loaderOverlay');
-            var page = document.getElementById('pageWrap');
-            if (document.documentElement.classList.contains('jmt-transition')) {
-                document.documentElement.classList.remove('jmt-transition');
-                if (page) page.style.opacity = '1';
-            } else {
-                if (page) page.classList.add('page-enter');
-            }
-            var start = Date.now();
-            function hideLoader() {
-                var elapsed = Date.now() - start;
-                var remain = Math.max(0, 3000 - elapsed);
-                setTimeout(function() {
-                    if (loader) loader.classList.add('hidden');
-                }, remain);
-            }
-            if (document.readyState === 'complete') {
-                hideLoader();
-            } else {
-                window.addEventListener('load', hideLoader);
-            }
-        })();
-
         // Page transition — 1.5 detik, clean overlay
         (function() {
             var TRANSITION_MS = 1500;
@@ -368,7 +289,6 @@
                 if (!document.getElementById('pageWrap') || isLeaving) return;
                 e.preventDefault();
                 isLeaving = true;
-                sessionStorage.setItem('_jmt_t', '1');
                 overlay.style.opacity = '1';
                 setTimeout(function() { window.location.href = href; }, TRANSITION_MS);
             }, true);
