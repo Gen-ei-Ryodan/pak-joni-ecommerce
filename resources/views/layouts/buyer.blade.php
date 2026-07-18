@@ -65,7 +65,7 @@
                 100% { width: 100%; }
             }
 
-            .page { animation: pageEnter 0.8s 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+            .page.page-enter { animation: pageEnter 0.8s 0.6s cubic-bezier(0.16,1,0.3,1) both; }
             @keyframes pageEnter {
                 0% { opacity: 0; transform: translateY(30px); }
                 100% { opacity: 1; transform: translateY(0); }
@@ -324,9 +324,18 @@
             document.body.appendChild(overlay);
         }
 
-        // Loader hide — minimum 3 detik
+        // Loader — hanya saat refresh/load ulang (bukan navigasi internal)
         (function() {
             var loader = document.getElementById('loaderOverlay');
+            var isTransition = sessionStorage.getItem('_jmt_transition');
+            var page = document.getElementById('pageWrap');
+            if (isTransition) {
+                sessionStorage.removeItem('_jmt_transition');
+                if (loader) loader.style.display = 'none';
+                if (page) page.style.opacity = '1';
+            } else {
+                if (page) page.classList.add('page-enter');
+            }
             var start = Date.now();
             function hideLoader() {
                 var elapsed = Date.now() - start;
@@ -359,6 +368,7 @@
                 if (!document.getElementById('pageWrap') || isLeaving) return;
                 e.preventDefault();
                 isLeaving = true;
+                sessionStorage.setItem('_jmt_transition', '1');
                 overlay.style.opacity = '1';
                 setTimeout(function() { window.location.href = href; }, TRANSITION_MS);
             }, true);
