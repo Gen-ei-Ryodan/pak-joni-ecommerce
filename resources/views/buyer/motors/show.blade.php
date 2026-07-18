@@ -314,7 +314,7 @@
             aspect-ratio: 1 / 1;
             border-radius: var(--radius);
             background-size: cover;
-            background-position: center;
+            background-position: center 20%;
         }
         .gallery-thumbs {
             display: flex;

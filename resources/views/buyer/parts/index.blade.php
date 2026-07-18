@@ -133,7 +133,7 @@
             border-color: var(--accent);
         }
         .btn-primary {
-            background: linear-gradient(135deg, #b8860b, #9a6f09);
+            background: linear-gradient(135deg, #0055DA, #0044b3);
             color: #fff;
             border: none;
             font-weight: 600;
@@ -142,7 +142,7 @@
             transition: all 0.2s ease;
         }
         .btn-primary:hover {
-            opacity: 0.9;
+            background: linear-gradient(135deg, #0044b3, #003399);
         }
         .btn-outline {
             background: transparent;

@@ -19,12 +19,14 @@
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, rgba(184, 134, 11, 0.22), rgba(184, 134, 11, 0.14));
-  border-color: rgba(184, 134, 11, 0.48);
+  background: linear-gradient(180deg, #0055DA, #0044b3);
+  border-color: #0055DA;
+  color: #fff;
 }
 
 .btn-primary:hover {
-  border-color: rgba(184, 134, 11, 0.8);
+  background: linear-gradient(180deg, #0044b3, #003399);
+  border-color: #0044b3;
 }
 
 .btn-danger {
