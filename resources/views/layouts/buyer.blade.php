@@ -65,7 +65,7 @@
                 100% { width: 100%; }
             }
 
-            .page { animation: pageEnter 0.8s 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+            .page { animation: pageEnter 0.8s 0.6s cubic-bezier(0.16,1,0.3,1) both; }
             @keyframes pageEnter {
                 0% { opacity: 0; transform: translateY(30px); }
                 100% { opacity: 1; transform: translateY(0); }
@@ -324,21 +324,27 @@
             document.body.appendChild(overlay);
         }
 
-        // Loader hide + page transition
+        // Loader hide — minimum 3 detik
         (function() {
             var loader = document.getElementById('loaderOverlay');
+            var start = Date.now();
             function hideLoader() {
-                if (loader) loader.classList.add('hidden');
+                var elapsed = Date.now() - start;
+                var remain = Math.max(0, 3000 - elapsed);
+                setTimeout(function() {
+                    if (loader) loader.classList.add('hidden');
+                }, remain);
             }
             if (document.readyState === 'complete') {
                 hideLoader();
             } else {
                 window.addEventListener('load', hideLoader);
-                setTimeout(hideLoader, 4000);
             }
         })();
 
+        // Page transition — 1.5 detik
         (function() {
+            var TRANSITION_MS = 1500;
             var isLeaving = false;
             document.addEventListener('click', function(e) {
                 var link = e.target.closest('a');
@@ -349,10 +355,10 @@
                 if (!page || isLeaving) return;
                 e.preventDefault();
                 isLeaving = true;
-                page.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                page.style.transition = 'opacity ' + TRANSITION_MS + 'ms ease, transform ' + TRANSITION_MS + 'ms ease';
                 page.style.opacity = '0';
-                page.style.transform = 'translateY(-20px)';
-                setTimeout(function() { window.location.href = href; }, 400);
+                page.style.transform = 'translateY(-30px)';
+                setTimeout(function() { window.location.href = href; }, TRANSITION_MS);
             }, true);
         })();
 
