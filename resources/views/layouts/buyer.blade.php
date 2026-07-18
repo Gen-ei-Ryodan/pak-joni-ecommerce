@@ -17,7 +17,7 @@
         <link rel="stylesheet" href="{{ asset('assets/css/card.css') }}?v=2">
         <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}?v=6">
         <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}?v=2">
-        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=2">
+        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=3">
 
         <link rel="stylesheet" href="https://unpkg.com/lenis@1.2.3/dist/lenis.css">
         <script src="https://unpkg.com/lenis@1.2.3/dist/lenis.min.js"></script>

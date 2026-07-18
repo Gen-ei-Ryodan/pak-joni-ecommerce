@@ -146,6 +146,7 @@
   width: calc(100% - 32px);
   text-align: center;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  transform: scale(1);
 }
 .auth-confirm-modal h3 {
   font-size: 18px;
@@ -157,11 +158,19 @@
   color: var(--muted);
   margin-bottom: 24px;
 }
-.auth-confirm-buttons {
+.popup-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
 }
-.auth-confirm-buttons .btn {
-  min-width: 120px;
+.popup-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+.popup-btn img {
+  width: 180px;
+  height: auto;
+  display: block;
 }
