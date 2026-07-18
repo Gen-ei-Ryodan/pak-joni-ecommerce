@@ -32,7 +32,7 @@
                 to { transform: translateY(0); }
             }
             .section-detail {
-                background: linear-gradient(135deg, #fff 0%, #e0e7ff 25%, #bfdbfe 60%, #fff 100%);
+                background: linear-gradient(135deg, #fff 0%, #f0f4ff 25%, #e0edff 60%, #fff 100%);
             }
         </style>
         @stack('head')
