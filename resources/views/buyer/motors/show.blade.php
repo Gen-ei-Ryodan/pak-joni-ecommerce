@@ -3,7 +3,7 @@
 @section('title', $item->name)
 
 @section('content')
-    <section class="section section-detail">
+    <section class="section">
         <div class="container">
             {{-- Header --}}
             <div class="motor-header">
@@ -311,7 +311,7 @@
             width: 100%;
             height: 450px;
             border-radius: var(--radius);
-            border: 1px solid var(--line);
+            border: 2px solid var(--accent);
             margin: 0 auto;
         }
         .gallery-thumbs {
@@ -335,7 +335,7 @@
         .motor-short-desc {
             font-size: 14px;
             color: var(--muted);
-            line-height: 1.7;
+            line-height: 2;
             text-align: center;
         }
         .motor-colors { margin-top: 24px; }
@@ -447,13 +447,13 @@
         .motor-desc-section {
             margin-top: 40px;
             background: var(--panel);
-            border: 1px solid var(--line);
+            border: 2px solid var(--accent);
             border-radius: var(--radius);
             padding: 30px;
         }
         .desc-content {
             color: var(--muted);
-            line-height: 1.8;
+            line-height: 2;
             font-size: 14px;
         }
         .related-section { margin-top: 50px; }

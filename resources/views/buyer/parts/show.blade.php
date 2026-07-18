@@ -3,7 +3,7 @@
 @section('title', $part->name)
 
 @section('content')
-    <section class="section section-detail">
+    <section class="section">
         <div class="container">
             @if (session('status'))
                 <div class="panel" style="padding:10px 12px;margin-bottom:12px;border-color:rgba(217,180,111,0.35);background:rgba(217,180,111,0.08);">
@@ -394,7 +394,7 @@ function handleAddToCart() {
             width: 100%;
             height: 450px;
             border-radius: var(--radius);
-            border: 1px solid var(--line);
+            border: 2px solid var(--accent);
         }
         .gallery-thumbs {
             display: flex;
@@ -452,7 +452,7 @@ function handleAddToCart() {
         .part-short-desc {
             font-size: 15px;
             color: var(--muted);
-            line-height: 1.8;
+            line-height: 2;
         }
         .part-variants { margin-top: 28px; }
         .part-variants-label {
@@ -537,20 +537,20 @@ function handleAddToCart() {
         .part-desc-section {
             margin-top: 40px;
             background: var(--panel);
-            border: 1px solid var(--line);
+            border: 2px solid var(--accent);
             border-radius: var(--radius);
             padding: 30px;
         }
         .part-desc-content {
             color: var(--muted);
-            line-height: 1.8;
+            line-height: 2;
             font-size: 14px;
         }
 
         .compatible-section {
             margin-top: 40px;
             background: var(--panel);
-            border: 1px solid var(--line);
+            border: 2px solid var(--accent);
             border-radius: 16px;
             padding: 30px;
         }
