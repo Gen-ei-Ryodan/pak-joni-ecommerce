@@ -342,22 +342,24 @@
             }
         })();
 
-        // Page transition — 1.5 detik
+        // Page transition — 1.5 detik, clean overlay
         (function() {
             var TRANSITION_MS = 1500;
+            var overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#fff;opacity:0;transition:opacity ' + TRANSITION_MS + 'ms ease;pointer-events:none;';
+            overlay.id = 'pageTransitionOverlay';
+            document.body.appendChild(overlay);
+
             var isLeaving = false;
             document.addEventListener('click', function(e) {
                 var link = e.target.closest('a');
                 if (!link) return;
                 var href = link.getAttribute('href');
                 if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:') || link.hasAttribute('download') || link.hasAttribute('data-no-transition') || e.ctrlKey || e.metaKey || e.shiftKey) return;
-                var page = document.getElementById('pageWrap');
-                if (!page || isLeaving) return;
+                if (!document.getElementById('pageWrap') || isLeaving) return;
                 e.preventDefault();
                 isLeaving = true;
-                page.style.transition = 'opacity ' + TRANSITION_MS + 'ms ease, transform ' + TRANSITION_MS + 'ms ease';
-                page.style.opacity = '0';
-                page.style.transform = 'translateY(-30px)';
+                overlay.style.opacity = '1';
                 setTimeout(function() { window.location.href = href; }, TRANSITION_MS);
             }, true);
         })();
