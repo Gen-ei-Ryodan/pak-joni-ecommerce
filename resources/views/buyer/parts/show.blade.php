@@ -397,7 +397,7 @@ function handleAddToCart() {
             aspect-ratio: 1 / 1;
             border-radius: var(--radius);
             background-size: cover;
-            background-position: center;
+            background-position: center bottom;
         }
         .gallery-thumbs {
             display: flex;
