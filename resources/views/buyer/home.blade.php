@@ -259,15 +259,7 @@
                                 <a href="mailto:{{ config('app.social.email') }}">{{ config('app.social.email') }}</a>
                             </div>
                         </div>
-                        <div class="contact-item">
-                            <div class="contact-icon-circle">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m10-10h-4M6 12H2"/></svg>
-                            </div>
-                            <div class="contact-item-info">
-                                <h4>TikTok</h4>
-                                <a href="https://www.tiktok.com/@jomoto.center" target="_blank" rel="noopener">@jomoto.center</a>
-                            </div>
-                        </div>
+
                     </div>
 
                     {{-- Dealer Addresses + Maps --}}

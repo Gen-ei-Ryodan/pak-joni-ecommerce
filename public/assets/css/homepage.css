@@ -665,12 +665,12 @@
 
 .brand-item-new:hover {
   border-color: #FF0052;
-  transform: translateY(-8px) scale(1.03);
-  box-shadow: 0 20px 48px rgba(255, 0, 82, 0.18);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 12px 32px rgba(255, 0, 82, 0.14);
 }
 
 .brand-item-new:hover .brand-logo-img-new {
-  transform: scale(2.2);
+  transform: scale(1.15);
 }
 
 .brand-item-new:hover .brand-name-new {
@@ -782,8 +782,8 @@
 }
 
 .why-icon-new img {
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
 }
 
@@ -1321,7 +1321,7 @@
   }
 
   .brand-item-new:hover .brand-logo-img-new {
-    transform: scale(1.8);
+    transform: scale(1.1);
   }
 
   .brand-logo-img-new {
