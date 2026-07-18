@@ -75,6 +75,7 @@
                                     <span class="stock-badge indent">Indent</span>
                                 @elseif($item->stock_status === 'ready')
                                     <span class="stock-badge ready">Ready Stock</span>
+                                    <span class="stock-badge otr">OTR SURABAYA</span>
                                 @endif
                             </div>
                             <div class="card-actions">
@@ -180,6 +181,11 @@
         .stock-badge.indent {
             background: #fef3c7;
             color: #92400e;
+        }
+        .stock-badge.otr {
+            background: #0055DA;
+            color: #fff;
+            margin-left: 4px;
         }
         .empty-state {
             text-align: center;

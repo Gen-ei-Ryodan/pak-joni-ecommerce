@@ -25,6 +25,10 @@
             <form class="form" method="post" action="{{ route('auth.login.store') }}">
                 @csrf
 
+                @if(request('redirect'))
+                    <input type="hidden" name="redirect" value="{{ request('redirect') }}">
+                @endif
+
                 <div class="field">
                     <label for="email">Email</label>
                     <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" required>

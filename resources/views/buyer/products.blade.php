@@ -24,21 +24,7 @@
                 <a href="{{ route('buyer.products', $sParams) }}" class="type-toggle-btn {{ $productType === 'sparepart' ? 'active' : '' }}" style="border-radius:0 8px 8px 0;">Sparepart</a>
             </div>
 
-            {{-- Step 2: Brand Selection --}}
-            @if(!empty($brands) && $brands->count())
-                <div class="brand-filter">
-                    @php
-                        $baseParams = $productType ? ['type' => $productType] : [];
-                    @endphp
-                    <a href="{{ route('buyer.products', $baseParams) }}" class="filter-tag {{ !$selectedBrand ? 'active' : '' }}">Semua Brand</a>
-                    @foreach($brands as $brand)
-                        @php $bp = array_merge($baseParams, ['brand' => $brand->slug]); @endphp
-                        <a href="{{ route('buyer.products', $bp) }}" class="filter-tag {{ $selectedBrand === $brand->slug ? 'active' : '' }}">{{ $brand->name }}</a>
-                    @endforeach
-                </div>
-            @endif
-
-            {{-- Step 3: Category Selection (if brand selected) --}}
+            {{-- Step 2: Category Selection --}}
             @if(!empty($categories) && $categories->count())
                 <div class="brand-filter">
                     @php $catBase = $selectedBrand ? ['brand' => $selectedBrand] : [];
@@ -80,6 +66,7 @@
                                     <span class="stock-badge indent">Indent</span>
                                 @elseif($item->stock_status === 'ready')
                                     <span class="stock-badge ready">Ready Stock</span>
+                                    <span class="stock-badge otr">OTR SURABAYA</span>
                                 @endif
                             </div>
                             <div class="card-actions">
@@ -150,6 +137,9 @@
                                     <span class="stock-badge indent">Indent</span>
                                 @elseif($p->stock_status === 'ready')
                                     <span class="stock-badge ready">Ready Stock ({{ $p->totalStock() }})</span>
+                                    @if($p->items()->first()?->brand)
+                                        <span class="stock-badge otr">OTR SURABAYA</span>
+                                    @endif
                                 @endif
                             </div>
                         </a>
@@ -249,6 +239,11 @@
         .stock-badge.indent {
             background: #fef3c7;
             color: #92400e;
+        }
+        .stock-badge.otr {
+            background: #0055DA;
+            color: #fff;
+            margin-left: 4px;
         }
         .empty-state {
             text-align: center;

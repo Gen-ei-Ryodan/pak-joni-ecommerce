@@ -62,6 +62,7 @@
                                 <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>
                                 Ready Stock - Available
                             </span>
+                            <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:#0055DA;color:#fff;margin-left:8px;">OTR SURABAYA</span>
                         @elseif($item->stock_status === 'indent')
                             <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:#fef3c7;color:#92400e;">
                                 <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span>

@@ -751,7 +751,7 @@
 }
 
 .why-card-new {
-  padding: 40px 20px;
+  padding: 40px 24px;
   background: #fff;
   border: 1px solid #FF0052;
   border-radius: 16px;
@@ -761,7 +761,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 260px;
+  min-height: 300px;
 }
 
 .why-card-new:hover {
@@ -772,8 +772,8 @@
 }
 
 .why-icon-new {
-  font-size: 28px;
-  margin-bottom: 16px;
+  font-size: 36px;
+  margin-bottom: 20px;
   color: #FF0052;
   display: flex;
   align-items: center;
@@ -782,8 +782,8 @@
 }
 
 .why-icon-new img {
-  width: 52px;
-  height: 52px;
+  width: 80px;
+  height: 80px;
   object-fit: contain;
 }
 
@@ -858,9 +858,9 @@
   align-items: center;
   gap: 16px;
   padding: 18px 20px;
-  background: var(--panel);
+  background: rgba(255,255,255,0.08);
   border-radius: 14px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(255,255,255,0.12);
   transition: all 0.25s ease;
 }
 
@@ -884,14 +884,14 @@
 .contact-item-info h4 {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text);
+  color: #fff;
   margin-bottom: 2px;
 }
 
 .contact-item-info a,
 .contact-item-info span {
   font-size: 13px;
-  color: var(--muted);
+  color: rgba(255,255,255,0.7);
   text-decoration: none;
 }
 
@@ -899,23 +899,79 @@
   color: #FF0052;
 }
 
-.contact-qr {
-  margin-top: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  background: #fff;
-  width: fit-content;
-  margin-left: auto;
-  margin-right: auto;
+.contact-dealer-card {
+  margin-top: 16px;
+  padding: 16px 18px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.12);
 }
 
-.contact-qr img {
-  width: 140px;
-  height: 140px;
+.contact-dealer-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.contact-dealer-header svg {
+  color: #FFD400;
+  flex-shrink: 0;
+}
+
+.contact-dealer-header h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.contact-dealer-address {
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+.contact-dealer-phone {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  margin: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.contact-map-wrap {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.contact-map-card {
+  padding: 14px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.contact-map-card h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.contact-map-embed {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.contact-map-address {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 8px;
 }
 
 /* Credit Simulation */
@@ -1274,5 +1330,14 @@
 
   .section-header {
     margin-bottom: 24px;
+  }
+
+  .contact-dealer-card,
+  .contact-map-card {
+    padding: 12px 14px;
+  }
+
+  .contact-map-embed iframe {
+    height: 160px;
   }
 }

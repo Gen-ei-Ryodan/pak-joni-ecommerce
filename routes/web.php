@@ -71,9 +71,6 @@ Route::get('/berita/{news:slug}', [BuyerPageController::class, 'newsShow'])->nam
 Route::get('/acara', [BuyerPageController::class, 'events'])->name('buyer.events.index');
 Route::get('/acara/{event:slug}', [BuyerPageController::class, 'eventShow'])->name('buyer.events.show');
 
-Route::get('/csr', [BuyerPageController::class, 'csr'])->name('buyer.csr.index');
-Route::get('/csr/{article:slug}', [BuyerPageController::class, 'csrShow'])->name('buyer.csr.show');
-
 Route::get('/karir', [BuyerPageController::class, 'careers'])->name('buyer.careers.index');
 Route::get('/karir/{career:slug}', [BuyerPageController::class, 'careerShow'])->name('buyer.careers.show');
 

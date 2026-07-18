@@ -80,7 +80,6 @@
                             <div class="nav-dropdown-menu" data-dropdown-menu="beritaacara">
                                 <a href="{{ route('buyer.news.index') }}">Berita</a>
                                 <a href="{{ route('buyer.events.index') }}">Acara</a>
-                                <a href="{{ route('buyer.csr.index') }}">Tanggung Jawab Sosial Perusahaan</a>
                             </div>
                         </div>
 
@@ -177,7 +176,7 @@
                                 <li><a href="{{ route('buyer.news.index') }}">Berita</a></li>
                                 <li><a href="{{ route('buyer.events.index') }}">Acara</a></li>
                                 <li><a href="{{ route('buyer.careers.index') }}">Karir</a></li>
-                                <li><a href="{{ route('buyer.csr.index') }}">CSR</a></li>
+
                             </ul>
                         </div>
 

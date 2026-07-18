@@ -8,7 +8,6 @@ use App\Models\Brand;
 use App\Models\Career;
 use App\Models\CategoryType;
 use App\Models\CompanyProfile;
-use App\Models\CsrArticle;
 use App\Models\Dealer;
 use App\Models\Event;
 use App\Models\InternalActivity;
@@ -58,10 +57,13 @@ class PageController extends Controller
 
         $heroVideo = HeroVideo::query()->where('is_active', true)->first();
 
+        $dealers = Dealer::query()->where('is_active', true)->orderBy('sort_order')->get();
+        $mapsLocations = \App\Models\MapsLocation::query()->where('is_active', true)->orderBy('sort_order')->get();
+
         return view('buyer.home', compact(
             'heroBanners', 'promoBanners', 'launchingBanners', 'kegiatanBanners',
             'latestNews', 'brands', 'whyChooseUs', 'latestEvents',
-            'items', 'parts', 'heroVideo'
+            'items', 'parts', 'heroVideo', 'dealers', 'mapsLocations'
         ));
     }
 
@@ -406,28 +408,6 @@ class PageController extends Controller
             ->get();
 
         return view('buyer.events.show', compact('event', 'relatedEvents'));
-    }
-
-    public function csr(Request $request)
-    {
-        $articles = \App\Models\CsrArticle::query()
-            ->where('is_active', true)
-            ->orderByDesc('publish_date')
-            ->paginate(9);
-
-        return view('buyer.csr.index', compact('articles'));
-    }
-
-    public function csrShow(\App\Models\CsrArticle $article)
-    {
-        $relatedArticles = \App\Models\CsrArticle::query()
-            ->where('is_active', true)
-            ->where('id', '!=', $article->id)
-            ->orderByDesc('publish_date')
-            ->take(3)
-            ->get();
-
-        return view('buyer.csr.show', compact('article', 'relatedArticles'));
     }
 
     public function careers(Request $request)
