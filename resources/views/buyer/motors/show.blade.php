@@ -309,8 +309,12 @@
         }
         .gallery-main {
             width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
             aspect-ratio: 1 / 1;
             border-radius: var(--radius);
+            background-size: cover;
+            background-position: center;
         }
         .gallery-thumbs {
             display: flex;
