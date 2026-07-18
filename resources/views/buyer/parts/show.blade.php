@@ -392,9 +392,8 @@ function handleAddToCart() {
         }
         .gallery-main {
             width: 100%;
-            height: 450px;
+            aspect-ratio: 1 / 1;
             border-radius: var(--radius);
-            border: 2px solid var(--accent);
         }
         .gallery-thumbs {
             display: flex;
@@ -518,10 +517,10 @@ function handleAddToCart() {
         .spec-group-title {
             font-size: 16px;
             font-weight: 600;
-            color: var(--accent);
+            color: var(--text);
             margin-bottom: 14px;
             padding-bottom: 8px;
-            border-bottom: 1px solid var(--line);
+            border-bottom: 3px solid var(--text);
         }
         .spec-table { display: flex; flex-direction: column; gap: 0; }
         .spec-row {
@@ -537,7 +536,7 @@ function handleAddToCart() {
         .part-desc-section {
             margin-top: 40px;
             background: var(--panel);
-            border: 2px solid var(--accent);
+            border: 2px solid var(--line);
             border-radius: var(--radius);
             padding: 30px;
         }
@@ -550,7 +549,7 @@ function handleAddToCart() {
         .compatible-section {
             margin-top: 40px;
             background: var(--panel);
-            border: 2px solid var(--accent);
+            border: 2px solid var(--line);
             border-radius: 16px;
             padding: 30px;
         }
@@ -656,7 +655,6 @@ function handleAddToCart() {
 
         @media (max-width: 720px) {
             .part-detail { grid-template-columns: 1fr; }
-            .gallery-main { height: 280px; }
         }
     </style>
 @endpush

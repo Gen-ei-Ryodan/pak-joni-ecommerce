@@ -309,10 +309,8 @@
         }
         .gallery-main {
             width: 100%;
-            height: 450px;
+            aspect-ratio: 1 / 1;
             border-radius: var(--radius);
-            border: 2px solid var(--accent);
-            margin: 0 auto;
         }
         .gallery-thumbs {
             display: flex;
@@ -429,10 +427,10 @@
         .spec-group-title {
             font-size: 16px;
             font-weight: 600;
-            color: var(--accent);
+            color: var(--text);
             margin-bottom: 14px;
             padding-bottom: 8px;
-            border-bottom: 1px solid var(--line);
+            border-bottom: 3px solid var(--text);
         }
         .spec-table { display: flex; flex-direction: column; gap: 0; }
         .spec-row {
@@ -447,7 +445,7 @@
         .motor-desc-section {
             margin-top: 40px;
             background: var(--panel);
-            border: 2px solid var(--accent);
+            border: 2px solid var(--line);
             border-radius: var(--radius);
             padding: 30px;
         }
@@ -529,7 +527,6 @@
         }
 
         @media (max-width: 720px) {
-            .gallery-main { height: 320px; }
             .motor-tab { padding: 12px 20px; font-size: 13px; }
         }
     </style>
