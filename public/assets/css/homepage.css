@@ -621,7 +621,7 @@
   min-height: 150vh;
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #fff 0%, #fce4ec 30%, #e3f2fd 70%, #fff 100%);
+  background: linear-gradient(180deg, #fff 0%, #eef2ff 25%, #dbeafe 50%, #0055DA 100%);
   padding: 60px 0 50px;
 }
 
