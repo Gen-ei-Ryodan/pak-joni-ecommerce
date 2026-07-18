@@ -23,11 +23,7 @@
         <script src="https://unpkg.com/lenis@1.2.3/dist/lenis.min.js"></script>
 
         <style>
-            .page { animation: pageEnter 0.8s 0.6s cubic-bezier(0.16,1,0.3,1) both; }
-            @keyframes pageEnter {
-                0% { opacity: 0; transform: translateY(30px); }
-                100% { opacity: 1; transform: translateY(0); }
-            }
+            /* page transition handled by JS sliding curtain */
         </style>
         @stack('head')
     </head>
@@ -272,25 +268,42 @@
             document.body.appendChild(overlay);
         }
 
-        // Page transition — 1.5 detik, clean overlay
+        // Page transition — sliding curtain dari bawah ke atas (exit) & atas ke bawah (enter)
         (function() {
-            var TRANSITION_MS = 1500;
+            var DURATION = 1200;
             var overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#fff;opacity:0;transition:opacity ' + TRANSITION_MS + 'ms ease;pointer-events:none;';
             overlay.id = 'pageTransitionOverlay';
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#fff;' +
+                'transform:translateY(0);pointer-events:none;';
             document.body.appendChild(overlay);
 
+            // ENTER: overlay mulai nutup, lalu geser ke bawah — konten muncul dari atas
+            requestAnimationFrame(function() {
+                overlay.style.transition = 'transform ' + DURATION + 'ms cubic-bezier(0.4,0,0.2,1)';
+                overlay.style.transform = 'translateY(100%)';
+            });
+            setTimeout(function() {
+                overlay.style.transition = 'none';
+                overlay.style.transform = 'translateY(100%)';
+            }, DURATION + 50);
+
+            // EXIT: link diklik — overlay naik dari bawah nutupin halaman
             var isLeaving = false;
             document.addEventListener('click', function(e) {
                 var link = e.target.closest('a');
                 if (!link) return;
                 var href = link.getAttribute('href');
-                if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:') || link.hasAttribute('download') || link.hasAttribute('data-no-transition') || e.ctrlKey || e.metaKey || e.shiftKey) return;
+                if (!href || href.startsWith('http') || href.startsWith('#') ||
+                    href.startsWith('mailto:') || href.startsWith('tel:') ||
+                    href.startsWith('javascript:') || link.hasAttribute('download') ||
+                    link.hasAttribute('data-no-transition') || e.ctrlKey || e.metaKey || e.shiftKey) return;
                 if (!document.getElementById('pageWrap') || isLeaving) return;
                 e.preventDefault();
                 isLeaving = true;
-                overlay.style.opacity = '1';
-                setTimeout(function() { window.location.href = href; }, TRANSITION_MS);
+                overlay.style.transition = 'transform ' + DURATION + 'ms cubic-bezier(0.4,0,0.2,1)';
+                void overlay.offsetHeight;
+                overlay.style.transform = 'translateY(0)';
+                setTimeout(function() { window.location.href = href; }, DURATION);
             }, true);
         })();
 
