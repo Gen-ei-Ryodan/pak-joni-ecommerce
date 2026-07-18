@@ -237,8 +237,8 @@
             <div class="contact-credit-grid">
                 {{-- Kolom Kiri: Hubungi Kami --}}
                 <div class="contact-col reveal reveal-delay-1">
-                    <h3 style="font-size:16px;font-weight:600;color:#1a1a2e;">Hubungi Kami</h3>
-                    <p style="font-size:13px;color:#4b5563;margin-top:6px;line-height:1.6;">Konsultasi dan penawaran terbaik untuk produk pilihan Anda.</p>
+                    <h3 style="font-size:16px;font-weight:600;color:#fff;">Hubungi Kami</h3>
+                    <p style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:6px;line-height:1.6;">Konsultasi dan penawaran terbaik untuk produk pilihan Anda.</p>
 
                     <div class="contact-info">
                         <div class="contact-item">
