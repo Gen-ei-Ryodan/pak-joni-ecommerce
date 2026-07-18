@@ -392,7 +392,7 @@ function handleAddToCart() {
         }
         .gallery-main {
             width: 100%;
-            max-height: 480px;
+            max-height: 510px;
             margin: 0 auto;
             aspect-ratio: 1 / 1;
             border-radius: var(--radius);
