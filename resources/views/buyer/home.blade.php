@@ -534,6 +534,10 @@
 
 @push('scripts')
     <script>
+        @guest
+        setTimeout(function() { showAuthConfirm(null); }, 500);
+        @endguest
+
         // Hero Carousel
         (function () {
             const carousel = document.querySelector('[data-hero-carousel]');
