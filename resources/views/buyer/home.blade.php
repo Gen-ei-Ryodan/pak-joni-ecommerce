@@ -288,27 +288,23 @@
                     @endif
 
                     {{-- Google Maps Embed --}}
-                    @if($mapsLocations->isNotEmpty())
-                        <div class="contact-map-wrap">
-                            @foreach($mapsLocations as $loc)
-                                <div class="contact-map-card">
-                                    <h4>{{ $loc->name }}</h4>
-                                    <div class="contact-map-embed">
-                                        <iframe
-                                            width="100%"
-                                            height="200"
-                                            style="border:0;border-radius:12px;"
-                                            loading="lazy"
-                                            allowfullscreen
-                                            referrerpolicy="no-referrer-when-downgrade"
-                                            src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q={{ urlencode($loc->address) }}">
-                                        </iframe>
-                                    </div>
-                                    <p class="contact-map-address">{{ $loc->address }}</p>
-                                </div>
-                            @endforeach
+                    <div class="contact-map-wrap">
+                        <div class="contact-map-card">
+                            <h4>Lokasi Toko</h4>
+                            <div class="contact-map-embed">
+                                <iframe
+                                    width="100%"
+                                    height="200"
+                                    style="border:0;border-radius:12px;"
+                                    loading="lazy"
+                                    allowfullscreen
+                                    referrerpolicy="no-referrer-when-downgrade"
+                                    src="https://www.google.com/maps/embed/v1/place?key={{ config('app.google_maps_key', 'AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8') }}&q=Jl+Kapasari+No+73+Surabaya+Simokerto+Kota+Surabaya+Jawa+Timur+60174">
+                                </iframe>
+                            </div>
+                            <p class="contact-map-address">Jl Kapasari No 73, Simokerto, Kota Surabaya, Jawa Timur 60174</p>
                         </div>
-                    @endif
+                    </div>
                 </div>
 
                 {{-- Kolom Kanan: Simulasi Kredit --}}
