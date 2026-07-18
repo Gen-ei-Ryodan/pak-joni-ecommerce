@@ -17,7 +17,7 @@
         <link rel="stylesheet" href="{{ asset('assets/css/card.css') }}?v=2">
         <link rel="stylesheet" href="{{ asset('assets/css/homepage.css') }}?v=6">
         <link rel="stylesheet" href="{{ asset('assets/css/product.css') }}?v=2">
-        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=4">
+        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=5">
 
         <link rel="stylesheet" href="https://unpkg.com/lenis@1.2.3/dist/lenis.css">
         <script src="https://unpkg.com/lenis@1.2.3/dist/lenis.min.js"></script>
@@ -259,17 +259,16 @@
             if (e && e.preventDefault) e.preventDefault();
             var overlay = document.createElement('div');
             overlay.className = 'auth-confirm-overlay';
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(4px);';
-            overlay.innerHTML = '<div class="auth-confirm-modal" style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;max-width:220px;width:calc(100% - 32px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
-                '<h3 style="font-size:14px;font-weight:600;margin-bottom:4px;">Selamat Datang di</h3>' +
-                '<h3 style="font-size:14px;font-weight:600;margin-top:-2px;margin-bottom:6px;">{{ config('app.name') }}</h3>' +
-                '<p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Silakan pilih salah satu:</p>' +
-                '<div class="popup-actions" style="display:flex;gap:8px;justify-content:center;">' +
-                    '<a href="{{ route('auth.login') }}" class="popup-btn" style="border:none;background:none;padding:0;cursor:pointer;">' +
-                        '<img src="{{ asset('images/popup/biru.png') }}" alt="Login" style="max-height:70px;width:auto;display:block;">' +
+            overlay.innerHTML = '<div class="auth-confirm-modal">' +
+                '<h3>Selamat Datang di</h3>' +
+                '<h3 style="margin-top:-2px;">{{ config('app.name') }}</h3>' +
+                '<p>Silakan pilih salah satu:</p>' +
+                '<div class="popup-actions">' +
+                    '<a href="{{ route('auth.login') }}" class="popup-btn">' +
+                        '<img src="{{ asset('images/popup/biru.png') }}" alt="Login">' +
                     '</a>' +
-                    '<button class="popup-btn" onclick="dismissGuestPopup(event)" style="border:none;background:none;padding:0;cursor:pointer;">' +
-                        '<img src="{{ asset('images/popup/kuning.png') }}" alt="Tutup" style="max-height:70px;width:auto;display:block;">' +
+                    '<button class="popup-btn" onclick="dismissGuestPopup(event)">' +
+                        '<img src="{{ asset('images/popup/kuning.png') }}" alt="Tutup">' +
                     '</button>' +
                 '</div>' +
             '</div>';
