@@ -23,7 +23,14 @@
         <script src="https://unpkg.com/lenis@1.2.3/dist/lenis.min.js"></script>
 
         <style>
-            /* page transition handled by JS sliding curtain */
+            @keyframes curtainDown {
+                from { transform: translateY(0); }
+                to { transform: translateY(100%); }
+            }
+            @keyframes curtainUp {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
         </style>
         @stack('head')
     </head>
@@ -268,26 +275,19 @@
             document.body.appendChild(overlay);
         }
 
-        // Page transition — sliding curtain dari bawah ke atas (exit) & atas ke bawah (enter)
+        // Page transition — CSS @keyframes, fixed 1000ms
         (function() {
-            var DURATION = 1200;
+            var DURATION = 1000;
             var overlay = document.createElement('div');
             overlay.id = 'pageTransitionOverlay';
-            overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#fff;' +
-                'transform:translateY(0);pointer-events:none;';
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#fff;pointer-events:none;';
             document.body.appendChild(overlay);
 
-            // ENTER: overlay mulai nutup, lalu geser ke bawah — konten muncul dari atas
-            requestAnimationFrame(function() {
-                overlay.style.transition = 'transform ' + DURATION + 'ms cubic-bezier(0.4,0,0.2,1)';
-                overlay.style.transform = 'translateY(100%)';
-            });
-            setTimeout(function() {
-                overlay.style.transition = 'none';
-                overlay.style.transform = 'translateY(100%)';
-            }, DURATION + 50);
+            // ENTER: putih turun ke bawah — konten muncul dari atas
+            overlay.style.transform = 'translateY(0)';
+            overlay.style.animation = 'curtainDown ' + DURATION + 'ms cubic-bezier(0.4,0,0.2,1) forwards';
 
-            // EXIT: link diklik — overlay naik dari bawah nutupin halaman
+            // EXIT: link diklik — putih naik dari bawah nutup halaman
             var isLeaving = false;
             document.addEventListener('click', function(e) {
                 var link = e.target.closest('a');
@@ -300,9 +300,8 @@
                 if (!document.getElementById('pageWrap') || isLeaving) return;
                 e.preventDefault();
                 isLeaving = true;
-                overlay.style.transition = 'transform ' + DURATION + 'ms cubic-bezier(0.4,0,0.2,1)';
-                void overlay.offsetHeight;
-                overlay.style.transform = 'translateY(0)';
+                overlay.style.transform = 'translateY(100%)';
+                overlay.style.animation = 'curtainUp ' + DURATION + 'ms cubic-bezier(0.4,0,0.2,1) forwards';
                 setTimeout(function() { window.location.href = href; }, DURATION);
             }, true);
         })();
