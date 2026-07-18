@@ -17,6 +17,10 @@ class StoreAddress extends Model
         'district',
         'province',
         'postal_code',
+        'phone',
+        'email',
+        'latitude',
+        'longitude',
         'is_default',
     ];
 

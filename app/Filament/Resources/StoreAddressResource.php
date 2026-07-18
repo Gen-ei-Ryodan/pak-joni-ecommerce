@@ -53,6 +53,12 @@ class StoreAddressResource extends Resource
                     ->label('Postal Code')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('phone')
+                    ->label('Phone'),
+
+                Tables\Columns\TextColumn::make('email')
+                    ->label('Email'),
+
                 Tables\Columns\IconColumn::make('is_default')
                     ->boolean()
                     ->label('Default'),
@@ -116,6 +122,20 @@ class StoreAddressResource extends Resource
                             ->required()
                             ->maxLength(16)
                             ->placeholder('60111')
+                            ->columnSpan(1),
+
+                        Forms\Components\TextInput::make('phone')
+                            ->label('No. Telepon')
+                            ->tel()
+                            ->maxLength(30)
+                            ->placeholder('(021) 555-1234')
+                            ->columnSpan(1),
+
+                        Forms\Components\TextInput::make('email')
+                            ->label('Email')
+                            ->email()
+                            ->maxLength(255)
+                            ->placeholder('info@jomoto.co.id')
                             ->columnSpan(1),
                     ])
                     ->columns(2)

@@ -262,36 +262,34 @@
 
                     </div>
 
-                    {{-- Dealer Addresses + Maps --}}
-                    @if($dealers->isNotEmpty())
-                        @foreach($dealers as $dealer)
+                    {{-- Store Addresses (dari admin) --}}
+                    @if($storeAddresses->isNotEmpty())
+                        @foreach($storeAddresses as $addr)
                             <div class="contact-dealer-card">
                                 <div class="contact-dealer-header">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                    <h4>{{ $dealer->name }}</h4>
+                                    <h4>{{ $addr->label }} @if($addr->is_default)<span style="font-size:11px;color:#FFD400;font-weight:400;margin-left:6px;">(Alamat Kirim)</span>@endif</h4>
                                 </div>
-                                <p class="contact-dealer-address">{{ $dealer->address }}{{ $dealer->city ? ', ' . $dealer->city : '' }}{{ $dealer->province ? ', ' . $dealer->province : '' }}</p>
-                                @if($dealer->phone)
+                                <p class="contact-dealer-address">{{ $addr->address_line1 }}{{ $addr->address_line2 ? ', ' . $addr->address_line2 : '' }}{{ $addr->district ? ', ' . $addr->district : '' }}, {{ $addr->city }}, {{ $addr->province }} {{ $addr->postal_code }}</p>
+                                @if($addr->phone)
                                     <p class="contact-dealer-phone">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                                        {{ $dealer->phone }}
+                                        {{ $addr->phone }}
+                                    </p>
+                                @endif
+                                @if($addr->email)
+                                    <p class="contact-dealer-phone" style="margin-top:2px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                        {{ $addr->email }}
                                     </p>
                                 @endif
                             </div>
                         @endforeach
-                    @else
-                        <div class="contact-dealer-card">
-                            <div class="contact-dealer-header">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                <h4>Dealer Utama</h4>
-                            </div>
-                            <p class="contact-dealer-address">Jl Kapasari No 73, Surabaya</p>
-                        </div>
                     @endif
 
                     {{-- Google Maps Embed --}}
-                    <div class="contact-map-wrap">
-                        @if($mapsLocations->isNotEmpty())
+                    @if($mapsLocations->isNotEmpty())
+                        <div class="contact-map-wrap">
                             @foreach($mapsLocations as $loc)
                                 <div class="contact-map-card">
                                     <h4>{{ $loc->name }}</h4>
@@ -309,20 +307,8 @@
                                     <p class="contact-map-address">{{ $loc->address }}</p>
                                 </div>
                             @endforeach
-                        @else
-                            <div class="contact-map-embed">
-                                <iframe
-                                    width="100%"
-                                    height="200"
-                                    style="border:0;border-radius:12px;"
-                                    loading="lazy"
-                                    allowfullscreen
-                                    referrerpolicy="no-referrer-when-downgrade"
-                                    src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Jl+Kapasari+No+73+Surabaya">
-                                </iframe>
-                            </div>
-                        @endif
-                    </div>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- Kolom Kanan: Simulasi Kredit --}}

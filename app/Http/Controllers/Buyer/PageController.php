@@ -19,6 +19,7 @@ use App\Models\Part;
 use App\Models\PartCategory;
 use App\Models\HeroVideo;
 use App\Models\ShowroomGallery;
+use App\Models\StoreAddress;
 use App\Models\WhyChooseUs;
 use Illuminate\Http\Request;
 
@@ -57,13 +58,14 @@ class PageController extends Controller
 
         $heroVideo = HeroVideo::query()->where('is_active', true)->first();
 
+        $storeAddresses = StoreAddress::query()->orderBy('is_default', 'desc')->orderBy('id')->get();
         $dealers = Dealer::query()->where('is_active', true)->orderBy('sort_order')->get();
         $mapsLocations = \App\Models\MapsLocation::query()->where('is_active', true)->orderBy('sort_order')->get();
 
         return view('buyer.home', compact(
             'heroBanners', 'promoBanners', 'launchingBanners', 'kegiatanBanners',
             'latestNews', 'brands', 'whyChooseUs', 'latestEvents',
-            'items', 'parts', 'heroVideo', 'dealers', 'mapsLocations'
+            'items', 'parts', 'heroVideo', 'storeAddresses', 'dealers', 'mapsLocations'
         ));
     }
 
