@@ -142,7 +142,7 @@
 @push('head')
     <style>
         .section-category {
-            background: linear-gradient(160deg, #fff 0%, #fdf2f8 30%, #f3e8ff 70%, #fff 100%);
+            background: linear-gradient(160deg, #fff 0%, #eef2ff 30%, #dbeafe 70%, #fff 100%);
         }
         .brand-filter {
             display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;
