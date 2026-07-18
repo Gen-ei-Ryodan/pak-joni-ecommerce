@@ -410,65 +410,59 @@
         .auth-confirm-modal {
             background: #f7f4f0;
             border-radius: 20px;
-            padding: 12px 4px 12px;
-            max-width: 500px;
+            padding: 16px 20px 18px;
+            max-width: 360px;
             width: 92%;
             text-align: center;
             box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            transform: scale(2);
-            overflow: hidden;
         }
         .auth-confirm-modal h3 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
             color: #1a1a2e;
             margin-bottom: 2px;
-            padding: 0 20px;
+            padding: 0 8px;
         }
         .auth-confirm-modal p {
             color: #666;
             font-size: 13px;
-            margin-bottom: 8px;
-            padding: 0 20px;
+            margin-bottom: 12px;
+            padding: 0 8px;
         }
         .popup-actions {
             display: flex;
-            font-size: 0;
+            justify-content: center;
+            gap: 12px;
         }
         .popup-btn {
             border: none;
             background: none;
             cursor: pointer;
             padding: 0;
-            display: block;
-            width: calc(50% + 2px);
+            display: flex;
+            justify-content: center;
             line-height: 0;
-            flex-shrink: 0;
             transition: transform 0.25s ease;
         }
-        .popup-btn:first-child {
-            margin-right: -2px;
-        }
-        .popup-btn:last-child {
-            width: calc(50% + 2px);
-            margin-left: -2px;
-        }
         .popup-btn:hover {
-            transform: scale(1.05);
+            transform: scale(1.08);
         }
         .popup-btn img {
             display: block;
-            width: 100%;
+            width: 300px;
             height: auto;
+            max-width: 100%;
         }
         @media (max-width: 500px) {
             .auth-confirm-modal {
-                padding: 10px 4px 10px;
-                transform: scale(1);
+                padding: 14px 16px 16px;
             }
             .auth-confirm-modal h3,
             .auth-confirm-modal p {
-                padding: 0 12px;
+                padding: 0 8px;
+            }
+            .popup-btn img {
+                width: 130px;
             }
         }
 
