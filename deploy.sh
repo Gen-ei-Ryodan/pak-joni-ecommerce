@@ -6,38 +6,51 @@
 DEPLOY_DIR="/home/alurelab/jomotocenter.com"
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-echo "==> Deploying main branch to $DEPLOY_DIR"
+echo "==> Deploying main branch from $REPO_DIR to $DEPLOY_DIR"
 
-# 1. Sync all files (exclude .git, .env, storage, vendor)
-rsync -a --delete \
-  --exclude='.git' \
-  --exclude='.env' \
-  --exclude='vendor' \
-  --exclude='node_modules' \
-  --exclude='storage/framework/cache/data/*' \
-  --exclude='storage/logs/*' \
-  --exclude='storage/debugbar/*' \
-  "$REPO_DIR/" "$DEPLOY_DIR/"
+# 1. Create target directory if not exists
+mkdir -p "$DEPLOY_DIR"
 
-# 2. Set permissions
+# 2. Sync all files using cp (rsync not available on hosting)
+# Exclude .git, .env, vendor, node_modules
+cd "$REPO_DIR"
+for item in * .[^.]*; do
+    [ "$item" = ".git" ] && continue
+    [ "$item" = ".env" ] && continue
+    [ "$item" = "vendor" ] && continue
+    [ "$item" = "node_modules" ] && continue
+    [ "$item" = "." ] && continue
+    [ "$item" = ".." ] && continue
+    cp -r "$item" "$DEPLOY_DIR/"
+done
+
+# 3. Set permissions
+mkdir -p "$DEPLOY_DIR/storage"
+mkdir -p "$DEPLOY_DIR/bootstrap/cache"
 chmod -R 755 "$DEPLOY_DIR/storage"
 chmod -R 755 "$DEPLOY_DIR/bootstrap/cache"
-chmod 644 "$DEPLOY_DIR/.env"
-
-# 3. Install composer dependencies (if composer available)
-if command -v composer &> /dev/null; then
-    cd "$DEPLOY_DIR" && composer install --no-dev --optimize-autoloader
+if [ -f "$DEPLOY_DIR/.env" ]; then
+    chmod 644 "$DEPLOY_DIR/.env"
 fi
 
-# 4. Laravel optimizations
+# 4. Install composer dependencies (if composer available)
 cd "$DEPLOY_DIR"
-php artisan optimize:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan event:cache
+if command -v composer &> /dev/null; then
+    composer install --no-dev --optimize-autoloader
+fi
 
-# 5. Run migrations
-php artisan migrate --force
+# 5. Laravel optimizations
+if [ -f "artisan" ]; then
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan event:cache
+
+    # 6. Run migrations
+    php artisan migrate --force
+else
+    echo "WARNING: artisan not found in $DEPLOY_DIR"
+fi
 
 echo "==> Deploy complete!"
