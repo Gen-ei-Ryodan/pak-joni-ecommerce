@@ -1,6 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <x-filament-panels::page>
-    <x-filament-panels::form>
-        {{ $this->form }}
-    </x-filament-panels::form>
+    {{ $this->form }}
 </x-filament-panels::page>
