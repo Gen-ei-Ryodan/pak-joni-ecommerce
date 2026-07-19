@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\CompanyProfile;
 use Filament\Actions\Action;
 use Filament\Forms\Components\RichEditor;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -71,17 +72,14 @@ class AboutUs extends Page implements HasForms
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
+
+                Actions::make([
+                    Action::make('save')
+                        ->label('Simpan')
+                        ->submit('save'),
+                ]),
             ])
             ->statePath('data');
-    }
-
-    protected function getFormActions(): array
-    {
-        return [
-            Action::make('save')
-                ->label('Simpan')
-                ->submit('save'),
-        ];
     }
 
     public function save(): void
