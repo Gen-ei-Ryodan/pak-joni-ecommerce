@@ -106,8 +106,11 @@ class ItemResource extends Resource
 
                 Forms\Components\Select::make('category_id')
                     ->label('Kategori')
-                    ->relationship('category', 'name')
-                    ->searchable()->preload(),
+                    ->options(fn ($get) => \App\Models\Category::query()
+                        ->where('category_type_id', $get('category_type_id'))
+                        ->pluck('name', 'id'))
+                    ->searchable()
+                    ->preload(),
 
                 Forms\Components\TextInput::make('name')
                     ->required()->maxLength(255)
