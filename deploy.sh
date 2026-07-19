@@ -1,18 +1,43 @@
 #!/bin/bash
 
-cp -r css ~/public_html/jomotocenter.com/
-cp -r js ~/public_html/jomotocenter.com/
-cp -r assets ~/public_html/jomotocenter.com/
-cp -r fonts ~/public_html/jomotocenter.com/
-cp -r images ~/public_html/jomotocenter.com/
-cp -r laravel ~/public_html/jomotocenter.com/
+# Deploy entire main branch (standard Laravel structure) to hosting
+# Target: /home/alurelab/jomotocenter.com/
 
-# Set permissions for Laravel storage & cache
-chmod -R 755 ~/public_html/jomotocenter.com/laravel/storage
-chmod -R 755 ~/public_html/jomotocenter.com/laravel/bootstrap/cache
-chmod 644 ~/public_html/jomotocenter.com/laravel/.env
+DEPLOY_DIR="/home/alurelab/jomotocenter.com"
+REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-cp index.php ~/public_html/jomotocenter.com/
-cp .htaccess ~/public_html/jomotocenter.com/
-cp favicon.ico ~/public_html/jomotocenter.com/
-cp robots.txt ~/public_html/jomotocenter.com/
+echo "==> Deploying main branch to $DEPLOY_DIR"
+
+# 1. Sync all files (exclude .git, .env, storage, vendor)
+rsync -a --delete \
+  --exclude='.git' \
+  --exclude='.env' \
+  --exclude='vendor' \
+  --exclude='node_modules' \
+  --exclude='storage/framework/cache/data/*' \
+  --exclude='storage/logs/*' \
+  --exclude='storage/debugbar/*' \
+  "$REPO_DIR/" "$DEPLOY_DIR/"
+
+# 2. Set permissions
+chmod -R 755 "$DEPLOY_DIR/storage"
+chmod -R 755 "$DEPLOY_DIR/bootstrap/cache"
+chmod 644 "$DEPLOY_DIR/.env"
+
+# 3. Install composer dependencies (if composer available)
+if command -v composer &> /dev/null; then
+    cd "$DEPLOY_DIR" && composer install --no-dev --optimize-autoloader
+fi
+
+# 4. Laravel optimizations
+cd "$DEPLOY_DIR"
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+
+# 5. Run migrations
+php artisan migrate --force
+
+echo "==> Deploy complete!"
