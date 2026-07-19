@@ -13,10 +13,23 @@ class CreateItem extends CreateRecord
 
     private array $galleryPaths = [];
 
+    public ?string $categoryTypeId = null;
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        $this->categoryTypeId = request()->query('category_type_id');
+
+        if ($this->categoryTypeId) {
+            $this->data['category_type_id'] = $this->categoryTypeId;
+        }
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        if ($typeId = request()->query('category_type_id')) {
-            $data['category_type_id'] = $typeId;
+        if (empty($data['category_type_id']) && $this->categoryTypeId) {
+            $data['category_type_id'] = $this->categoryTypeId;
         }
 
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
