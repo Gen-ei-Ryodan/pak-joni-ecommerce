@@ -8,6 +8,7 @@ use App\Services\OrderService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -18,6 +19,11 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
+        Log::info('[ORDER] index', [
+            'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
+            'session_id' => $request->session()->getId(),
+        ]);
         $status = $request->query('status', '');
         $search = trim((string) $request->query('search', ''));
 
@@ -34,6 +40,15 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order)
     {
+        Log::info('[ORDER] show', [
+            'order_id' => $order->id,
+            'order_user_id' => $order->user_id,
+            'auth_user_id' => $request->user()?->id,
+            'auth_user_email' => $request->user()?->email,
+            'match' => $order->user_id === $request->user()?->id,
+            'session_id' => $request->session()->getId(),
+        ]);
+
         if ($order->user_id !== $request->user()->id) {
             abort(403);
         }

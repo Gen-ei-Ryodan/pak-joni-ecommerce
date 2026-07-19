@@ -14,6 +14,7 @@ use App\Services\BiteshipService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
@@ -25,6 +26,11 @@ class CheckoutController extends Controller
 
     public function address(Request $request)
     {
+        Log::info('[CHECKOUT] address', [
+            'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
+            'session_id' => $request->session()->getId(),
+        ]);
         $cart = $this->loadSelectedCart($request);
 
         if ($cart->items->isEmpty()) {
@@ -51,6 +57,13 @@ class CheckoutController extends Controller
 
         $addressId = (int) $validated['address_id'];
 
+        Log::info('[CHECKOUT] setAddress', [
+            'address_id' => $addressId,
+            'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
+            'session_id' => $request->session()->getId(),
+        ]);
+
         // address_id = 0 means dealer pickup
         if ($addressId === 0) {
             $request->session()->put('checkout.dealer_pickup', true);
@@ -61,6 +74,12 @@ class CheckoutController extends Controller
         }
 
         $address = Address::query()->findOrFail($addressId);
+
+        Log::info('[CHECKOUT] setAddress check', [
+            'address_user_id' => $address->user_id,
+            'auth_user_id' => $request->user()?->id,
+            'match' => $address->user_id === $request->user()?->id,
+        ]);
 
         if ($address->user_id !== $request->user()->id) {
             return redirect()->back()->withErrors(['address' => 'Alamat tidak valid. Silakan pilih alamat lain.']);
@@ -220,6 +239,14 @@ class CheckoutController extends Controller
 
     public function placeOrder(Request $request)
     {
+        Log::info('[CHECKOUT] placeOrder', [
+            'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
+            'session_id' => $request->session()->getId(),
+            'is_dealer_pickup' => $request->session()->get('checkout.dealer_pickup'),
+            'address_id' => $request->session()->get('checkout.address_id'),
+        ]);
+
         $cart = $this->loadSelectedCart($request);
 
         if ($cart->items->isEmpty()) {
@@ -370,6 +397,15 @@ class CheckoutController extends Controller
 
     public function finish(Request $request, Order $order)
     {
+        Log::info('[CHECKOUT] finish', [
+            'order_id' => $order->id,
+            'order_user_id' => $order->user_id,
+            'auth_user_id' => $request->user()?->id,
+            'auth_user_email' => $request->user()?->email,
+            'match' => $order->user_id === $request->user()?->id,
+            'session_id' => $request->session()->getId(),
+        ]);
+
         if ($order->user_id !== $request->user()->id) {
             return redirect('/my/orders')->withErrors(['order' => 'Pesanan tidak ditemukan.']);
         }
