@@ -76,7 +76,7 @@ class AboutUs extends Page implements HasForms
                 Actions::make([
                     Action::make('save')
                         ->label('Simpan')
-                        ->submit('save'),
+                        ->action('save'),
                 ]),
             ])
             ->statePath('data');
