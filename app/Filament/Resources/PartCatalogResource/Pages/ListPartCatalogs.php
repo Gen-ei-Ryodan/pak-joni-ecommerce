@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Filament\Resources\PartCatalogResource\Pages;
+
+use App\Filament\Resources\PartCatalogResource;
+use Filament\Actions;
+use Filament\Resources\Pages\ListRecords;
+
+class ListPartCatalogs extends ListRecords
+{
+    protected static string $resource = PartCatalogResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\CreateAction::make(),
+        ];
+    }
+}

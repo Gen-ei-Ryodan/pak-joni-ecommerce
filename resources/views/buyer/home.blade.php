@@ -34,11 +34,11 @@
         <section class="promo-section overlap-section z3" @if($isScroll) data-promo-horizontal @endif>
             <div class="promo-section-sticky">
                 <div class="container">
-                    <div class="section-header center dark-text">
+                    <div class="section-header center">
                         <div class="reveal">
                             <div class="section-title">Penawaran Terbaik</div>
-                            <h2 class="section-title-text">Promo Spesial</h2>
-                            <div class="section-line center-line"></div>
+                            <h2 class="section-title-text" style="color:#0055DA;">Promo Spesial</h2>
+                            <div class="section-line center-line" style="background:#0055DA;"></div>
                         </div>
                     </div>
 

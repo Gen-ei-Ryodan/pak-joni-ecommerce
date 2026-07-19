@@ -18,18 +18,6 @@
                 </p>
             </div>
 
-            {{-- Brand Filter --}}
-            @if($allBrands->isNotEmpty())
-                <div class="brand-filter">
-                    <a href="{{ route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => 'all']) }}"
-                       class="filter-tag {{ !$brandModel ? 'active' : '' }}">Semua Brand</a>
-                    @foreach($allBrands as $ab)
-                        <a href="{{ route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => $ab->slug]) }}"
-                           class="filter-tag {{ $brandModel && $brandModel->id === $ab->id ? 'active' : '' }}">{{ $ab->name }}</a>
-                    @endforeach
-                </div>
-            @endif
-
             {{-- Category Filter (sub-kategori dalam brand ini) --}}
             @if($categories->isNotEmpty())
                 <div class="brand-filter" style="margin-bottom:24px;">

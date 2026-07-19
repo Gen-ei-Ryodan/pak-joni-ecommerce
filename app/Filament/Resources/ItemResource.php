@@ -96,6 +96,8 @@ class ItemResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
+            Forms\Components\Hidden::make('category_type_id'),
+
             Section::make('Data Utama')->schema([
                 Forms\Components\Select::make('brand_id')
                     ->label('Brand')
@@ -229,47 +231,7 @@ class ItemResource extends Resource
                 ->collapsible()
                 ->collapsed(),
 
-            Section::make('Daftar Harga (PDF)')
-                ->schema([
-                    Forms\Components\Repeater::make('priceLists')
-                        ->relationship('priceLists')
-                        ->schema([
-                            Forms\Components\TextInput::make('name')->label('Nama')->required()->maxLength(255),
-                            Forms\Components\FileUpload::make('pdf_path')
-                                ->label('File PDF')->acceptedFileTypes(['application/pdf'])
-                                ->disk('public')->directory('items/price-lists')->maxSize(10240)->required(),
-                            Forms\Components\Toggle::make('is_active')->label('Active')->default(true),
-                            Forms\Components\TextInput::make('sort_order')->numeric()->default(0)->hidden(),
-                        ])
-                        ->columns(2)
-                        ->orderColumn('sort_order')
-                        ->defaultItems(0)
-                        ->collapsible()
-                        ->addActionLabel('Tambah Daftar Harga'),
-                ])
-                ->collapsible()
-                ->collapsed(),
 
-            Section::make('Katalog Parts (PDF)')
-                ->schema([
-                    Forms\Components\Repeater::make('partCatalogs')
-                        ->relationship('partCatalogs')
-                        ->schema([
-                            Forms\Components\TextInput::make('name')->label('Nama')->required()->maxLength(255),
-                            Forms\Components\FileUpload::make('pdf_path')
-                                ->label('File PDF')->acceptedFileTypes(['application/pdf'])
-                                ->disk('public')->directory('items/part-catalogs')->maxSize(10240)->required(),
-                            Forms\Components\Toggle::make('is_active')->label('Active')->default(true),
-                            Forms\Components\TextInput::make('sort_order')->numeric()->default(0)->hidden(),
-                        ])
-                        ->columns(2)
-                        ->orderColumn('sort_order')
-                        ->defaultItems(0)
-                        ->collapsible()
-                        ->addActionLabel('Tambah Katalog Parts'),
-                ])
-                ->collapsible()
-                ->collapsed(),
         ]);
     }
 

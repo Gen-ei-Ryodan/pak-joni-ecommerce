@@ -23,6 +23,8 @@ class CsrArticleResource extends Resource
     protected static string|UnitEnum|null $navigationGroup = 'Content';
     protected static ?int $navigationSort = 8;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function table(Table $table): Table
     {
         return $table

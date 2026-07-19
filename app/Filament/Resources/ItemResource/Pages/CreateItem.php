@@ -13,12 +13,17 @@ class CreateItem extends CreateRecord
 
     private array $galleryPaths = [];
 
-    protected function mutateFormDataBeforeCreate(array $data): array
+    protected function mutateFormDataBeforeFill(array $data): array
     {
-        if (request()->query('category_type_id')) {
-            $data['category_type_id'] = request()->query('category_type_id');
+        if ($typeId = request()->query('category_type_id')) {
+            $data['category_type_id'] = $typeId;
         }
 
+        return $data;
+    }
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
 
         $this->galleryPaths = $data['gallery'] ?? [];

@@ -115,6 +115,7 @@ class StoreAddressResource extends Resource
                             ->searchable()
                             ->required()
                             ->options(fn (callable $get) => static::loadDistrictOptions($get('city')))
+                            ->live()
                             ->columnSpan(1),
 
                         Forms\Components\TextInput::make('postal_code')

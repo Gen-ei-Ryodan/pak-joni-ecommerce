@@ -12,7 +12,25 @@ class ListItemsByType extends ListRecords
 {
     protected static string $resource = ItemResource::class;
 
+    public ?string $activeCategoryTypeId = null;
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        $this->activeCategoryTypeId = (string) $this->resolveCategoryTypeId();
+    }
+
     public function getCategoryTypeId(): int
+    {
+        if ($this->activeCategoryTypeId !== null) {
+            return (int) $this->activeCategoryTypeId;
+        }
+
+        return $this->resolveCategoryTypeId();
+    }
+
+    private function resolveCategoryTypeId(): int
     {
         $param = request()?->route('categoryType');
 

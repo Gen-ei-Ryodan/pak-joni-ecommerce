@@ -1,40 +1,33 @@
-# JOMOTO - Revision List
+Revisi JOMOTO
+ADMIN
+1. Hapus menu Kegiatan (tidak digunakan/tidak tampil di frontend).
+2. Perbaiki bug pada Filter dan Per Page di menu Item. Saat diubah muncul "No Item" dan data baru tampil setelah halaman di-refresh.
+3. Perbaiki error saat Create New Motor.
+4. Perbaiki error saat Create New Sparepart.
+5. Perbaiki error saat Create New ATV.
+6. Hapus field Daftar Harga (PDF) dan Katalog Parts (PDF) dari form Create/Edit Motor.
+7. Tambahkan menu baru:
+Daftar Harga (PDF) → upload & kelola PDF.
+Katalog Parts (PDF) → upload & kelola PDF.
+8. Hapus menu Map Location di Admin (map hanya digunakan pada halaman Tentang Kami).
+9. Tambahkan menu Tentang Kami untuk mengelola konten halaman Tentang Kami.
+10. Perbaiki error pada Store Address → Edit.
+11. Hapus menu CSR dari Admin.
 
-## Authentication
-- [ ] Saat klik **Simulasi Kredit**, user harus **login terlebih dahulu**. Setelah login berhasil, baru tampil halaman simulasi kredit.
 
-## Homepage
-- [ ] Navbar dibuat lebih **colorful** sesuai branding JOMOTO.
-- [ ] Perbesar ukuran **gambar/icon** pada section **Keunggulan Kami**.
 
-## Hubungi Kami
-- [ ] Tambahkan **alamat dealer**.
-- [ ] Jika terdapat lebih dari satu dealer, tampilkan seluruh alamat dealer.
-- [ ] Ganti **QR Code** menjadi **Google Maps Embed/Maps Location**.
-- [ ] Gabungkan **alamat + maps** dalam satu card/box.
-- [ ] Ubah tulisan **"Email"** menjadi **"Kirim Email ke Jomoto Center"**.
-- [ ] Tambahkan **icon WhatsApp** beserta link WhatsApp.
-- [ ] Tambahkan link **TikTok**: `https://www.tiktok.com/@jomoto.center`.
 
-## Produk
-- [ ] Hapus **Filter Brand** pada halaman Produk.
-- [ ] Tambahkan badge/tag **"OTR SURABAYA"** di samping badge **Ready Stock** pada setiap produk yang relevan.
+GUEST
+1. Hapus filter Merk Produk.
+2. Ubah background section Promo dan Update Terkini menjadi gradient, mengikuti style section Dealer Resmi Untuk.
 
-## E-Commerce
-- [ ] Aktifkan kembali **Payment Gateway**.
-- [ ] Aktifkan kembali fitur **Pengiriman (Shipping)**.
 
-## Footer
-- [ ] Berikan **warna** pada icon social media (tidak monochrome).
 
-## Halaman
-- [ ] Hapus halaman **Tanggung Jawab Sosial Perusahaan** beserta menu yang mengarah ke halaman tersebut.
+lakukan hosting juga di ssh pakai 
 
-## Responsive
-- [ ] Pastikan **SEMUA halaman** telah responsive di perangkat mobile.
-- [ ] Lakukan pengecekan pada seluruh page (Homepage, Produk, Detail Produk, Login, Checkout, Hubungi Kami, dll).
+ssh alurelab
 
-## Testing
-- [ ] Lakukan testing desktop & mobile.
-- [ ] Pastikan tidak ada error setelah seluruh revisi selesai.
-- [ ] Pastikan seluruh link, tombol, dan navigasi berfungsi dengan baik.
+untuk hasil dari git itu ada di home/repositories/pak-joni-ecommerce
+
+untuk domainnya ada di home/jomotocenter.com
+
