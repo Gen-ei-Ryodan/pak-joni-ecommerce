@@ -63,7 +63,7 @@ class CheckoutController extends Controller
         $address = Address::query()->findOrFail($addressId);
 
         if ($address->user_id !== $request->user()->id) {
-            abort(403);
+            return redirect()->back()->withErrors(['address' => 'Alamat tidak valid. Silakan pilih alamat lain.']);
         }
 
         $request->session()->put('checkout.address_id', $address->id);
@@ -371,7 +371,7 @@ class CheckoutController extends Controller
     public function finish(Request $request, Order $order)
     {
         if ($order->user_id !== $request->user()->id) {
-            abort(403);
+            return redirect('/my/orders')->withErrors(['order' => 'Pesanan tidak ditemukan.']);
         }
 
         $order->load('items');
