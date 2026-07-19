@@ -78,10 +78,10 @@ class CheckoutController extends Controller
         Log::info('[CHECKOUT] setAddress check', [
             'address_user_id' => $address->user_id,
             'auth_user_id' => $request->user()?->id,
-            'match' => $address->user_id === $request->user()?->id,
+            'match' => $address->user_id == $request->user()?->id,
         ]);
 
-        if ($address->user_id !== $request->user()->id) {
+        if ($address->user_id != $request->user()->id) {
             return redirect()->back()->withErrors(['address' => 'Alamat tidak valid. Silakan pilih alamat lain.']);
         }
 
@@ -402,11 +402,11 @@ class CheckoutController extends Controller
             'order_user_id' => $order->user_id,
             'auth_user_id' => $request->user()?->id,
             'auth_user_email' => $request->user()?->email,
-            'match' => $order->user_id === $request->user()?->id,
+            'match' => $order->user_id == $request->user()?->id,
             'session_id' => $request->session()->getId(),
         ]);
 
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->user_id != $request->user()->id) {
             return redirect('/my/orders')->withErrors(['order' => 'Pesanan tidak ditemukan.']);
         }
 

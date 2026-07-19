@@ -45,11 +45,11 @@ class OrderController extends Controller
             'order_user_id' => $order->user_id,
             'auth_user_id' => $request->user()?->id,
             'auth_user_email' => $request->user()?->email,
-            'match' => $order->user_id === $request->user()?->id,
+            'match' => $order->user_id == $request->user()?->id,
             'session_id' => $request->session()->getId(),
         ]);
 
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->user_id != $request->user()->id) {
             abort(403);
         }
 
@@ -62,7 +62,7 @@ class OrderController extends Controller
 
     public function confirmReceived(Request $request, Order $order)
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->user_id != $request->user()->id) {
             abort(403);
         }
 
@@ -77,7 +77,7 @@ class OrderController extends Controller
 
     public function payRemaining(Request $request, Order $order)
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->user_id != $request->user()->id) {
             abort(403);
         }
 

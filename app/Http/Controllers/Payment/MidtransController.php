@@ -91,7 +91,7 @@ class MidtransController extends Controller
      */
     public function snapToken(Order $order, Request $request)
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->user_id != $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -119,7 +119,7 @@ class MidtransController extends Controller
      */
     public function status(Order $order, Request $request)
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->user_id != $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
