@@ -372,7 +372,7 @@
         .hero-video-section {
             position: relative;
             width: 100%;
-            height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             background: #000;
         }
@@ -633,6 +633,7 @@
 
         // Horizontal Scroll for Promo Section (5+ items)
         (function() {
+            if (window.innerWidth < 520) return; // disable horizontal scroll on small mobile, fall back to normal grid
             var section = document.querySelector('[data-promo-horizontal]');
             if (!section) return;
             var sticky = section.querySelector('.promo-section-sticky');

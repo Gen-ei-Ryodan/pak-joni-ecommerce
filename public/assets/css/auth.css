@@ -1,8 +1,15 @@
 .auth-wrap {
-  min-height: calc(100vh - 64px);
+  min-height: calc(100dvh - 64px);
   display: grid;
   place-items: center;
   padding: 34px 0;
+}
+
+@media (max-width: 520px) {
+  .auth-wrap {
+    padding: 20px 0;
+    min-height: calc(100dvh - 56px);
+  }
 }
 
 .auth-card {

@@ -7,12 +7,20 @@
 html,
 body {
   height: 100%;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  width: 100%;
+  position: relative;
+}
+
+/* Prevent mobile browser from zooming on input focus */
+@media (max-width: 600px) {
+  input, select, textarea { font-size: 16px; }
 }
 
 img,

@@ -1,16 +1,22 @@
 /* ======= FULL SCREEN SECTIONS ======= */
 .section-full {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   padding: 100px 0;
+}
+
+@media (max-width: 520px) {
+  .section-full {
+    padding: 60px 0;
+  }
 }
 
 /* ======= HERO / BANNER ======= */
 .banner-slider-hero {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: 100dvh;
 }
 
 .carousel-container-hero {
@@ -57,13 +63,38 @@
 .hero-content {
   position: relative;
   z-index: 2;
-  width: min(900px, calc(100% - 64px));
+  width: min(900px, calc(100% - 48px));
   margin: 0 auto;
   text-align: center;
   padding: 60px 0;
   color: #fff;
   top: 50%;
   transform: translateY(-50%);
+}
+
+@media (max-width: 520px) {
+  .hero-content {
+    width: min(900px, calc(100% - 32px));
+    padding: 40px 0;
+  }
+  .hero-title {
+    font-size: clamp(26px, 8vw, 40px);
+  }
+  .hero-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-actions .btn-accent,
+  .hero-actions .btn-outline {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
 }
 
 .hero-label {
@@ -262,10 +293,16 @@
 
 /* Regular mode (1-4 items) */
 .promo-section:not([data-promo-horizontal]) {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   padding: 100px 0 80px;
+}
+
+@media (max-width: 520px) {
+  .promo-section:not([data-promo-horizontal]) {
+    padding: 60px 0 50px;
+  }
 }
 
 .promo-section:not([data-promo-horizontal]) .promo-section-sticky {
@@ -503,12 +540,18 @@
 
 /* ======= LAUNCHING + NEWS COMBINED ======= */
 .launch-news-section {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   background: linear-gradient(180deg, #fff 0%, #eef2ff 25%, #dbeafe 50%, #0055DA 100%);
   color: #1a1a2e;
   padding: 100px 0 80px;
+}
+
+@media (max-width: 520px) {
+  .launch-news-section {
+    padding: 60px 0 50px;
+  }
 }
 
 .launch-news-grid {
@@ -533,6 +576,15 @@
   min-height: 450px;
   display: flex;
   align-items: flex-end;
+}
+
+@media (max-width: 640px) {
+  .launch-card-full {
+    min-height: 300px;
+  }
+  .launch-card-body {
+    padding: 24px;
+  }
 }
 
 .launch-card-full::after {
@@ -581,6 +633,17 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 520px) {
+  .news-card-thumb {
+    width: 72px;
+    height: 60px;
+  }
+  .event-card-thumb {
+    width: 72px;
+    height: 60px;
+  }
+}
+
 .news-card-info {
   flex: 1;
   min-width: 0;
@@ -617,11 +680,17 @@
 
 /* ======= DEALER RESMI + KEUNGGULAN - Top to bottom 200vh ======= */
 .brand-why-section {
-  min-height: 150vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   background: linear-gradient(180deg, #fff 0%, #eef2ff 25%, #dbeafe 50%, #0055DA 100%);
   padding: 60px 0 50px;
+}
+
+@media (max-width: 520px) {
+  .brand-why-section {
+    padding: 40px 0 30px;
+  }
 }
 
 .brand-why-section .container {
@@ -770,6 +839,13 @@
   box-shadow: 0 8px 24px rgba(255, 0, 82, 0.12);
 }
 
+@media (max-width: 640px) {
+  .why-card-new {
+    min-height: 220px;
+    padding: 24px 16px;
+  }
+}
+
 .why-icon-new {
   font-size: 36px;
   margin-bottom: 20px;
@@ -784,6 +860,13 @@
   width: 120px;
   height: 120px;
   object-fit: contain;
+}
+
+@media (max-width: 640px) {
+  .why-icon-new img {
+    width: 80px;
+    height: 80px;
+  }
 }
 
 .why-title-new {
@@ -818,12 +901,18 @@
 
 /* ======= CONTACT + CREDIT SIMULATION 2-COLS ======= */
 .contact-credit-section {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   background: linear-gradient(180deg, #0055DA 0%, #0055DA 40%, #3b82f6 65%, #dbeafe 85%, #fff 100%);
   color: #1a1a2e;
   padding: 100px 0 80px;
+}
+
+@media (max-width: 520px) {
+  .contact-credit-section {
+    padding: 60px 0 50px;
+  }
 }
 
 .contact-credit-grid {
@@ -1255,6 +1344,13 @@
               transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@media (max-width: 520px) {
+  .reveal {
+    transform: translateY(30px);
+    transition-duration: 0.6s;
+  }
+}
+
 .reveal.visible {
   opacity: 1;
   transform: translateY(0);
@@ -1322,15 +1418,22 @@
     gap: 28px;
   }
 
+  .why-card-new {
+    min-height: 260px;
+  }
 }
 
 @media (max-width: 520px) {
   .carousel-arrow {
     width: 36px;
     height: 36px;
+    font-size: 14px;
+    border-width: 1.5px;
   }
-  .carousel-arrow-prev { left: 12px; }
-  .carousel-arrow-next { right: 12px; }
+  .carousel-arrow-prev { left: 8px; }
+  .carousel-arrow-next { right: 8px; }
+  .carousel-dots { bottom: 16px; gap: 8px; }
+  .carousel-dots button { width: 10px; height: 10px; border-width: 1.5px; }
 
   .delivery-options {
     flex-direction: column;

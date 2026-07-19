@@ -9,12 +9,12 @@
 
         <link rel="icon" href="{{ asset('favicon.ico') }}">
 
-        <link rel="stylesheet" href="{{ asset('assets/css/reset.css') }}?v=3">
+        <link rel="stylesheet" href="{{ asset('assets/css/reset.css') }}?v=4">
         <link rel="stylesheet" href="{{ asset('assets/css/variables.css') }}?v=3">
-        <link rel="stylesheet" href="{{ asset('assets/css/layout.css') }}?v=3">
-        <link rel="stylesheet" href="{{ asset('assets/css/navbar.css') }}?v=3">
+        <link rel="stylesheet" href="{{ asset('assets/css/layout.css') }}?v=4">
+        <link rel="stylesheet" href="{{ asset('assets/css/navbar.css') }}?v=4">
         <link rel="stylesheet" href="{{ asset('assets/css/button.css') }}?v=3">
-        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=8">
+        <link rel="stylesheet" href="{{ asset('assets/css/auth.css') }}?v=9">
 
         <link rel="stylesheet" href="https://unpkg.com/lenis@1.2.3/dist/lenis.css">
         <script src="https://unpkg.com/lenis@1.2.3/dist/lenis.min.js"></script>
@@ -209,13 +209,14 @@
 
         <script src="{{ asset('assets/js/app.js') }}" defer></script>
         <script>
-        // Lenis smooth scroll
+        // Lenis smooth scroll — disable on mobile for better native feel
         (function() {
+            if (window.innerWidth < 768) { window.__lenis = null; return; }
             var lenis = new Lenis({
-                duration: 1.6,
+                duration: 1.4,
                 easing: function(t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)) },
-                wheelMultiplier: 1,
-                touchMultiplier: 1.5,
+                wheelMultiplier: 0.8,
+                touchMultiplier: 0.8,
                 infinite: false
             });
             window.__lenis = lenis;
