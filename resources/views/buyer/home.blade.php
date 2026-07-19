@@ -36,9 +36,9 @@
                 <div class="container">
                     <div class="section-header center">
                         <div class="reveal">
-                            <div class="section-title">Penawaran Terbaik</div>
-                            <h2 class="section-title-text" style="color:#0055DA;">Promo Spesial</h2>
-                            <div class="section-line center-line" style="background:#0055DA;"></div>
+                            <div class="section-title" style="color:rgba(255,255,255,0.7);">Penawaran Terbaik</div>
+                            <h2 class="section-title-text" style="color:#fff;">Promo Spesial</h2>
+                            <div class="section-line center-line" style="background:#FFD400;"></div>
                         </div>
                     </div>
 

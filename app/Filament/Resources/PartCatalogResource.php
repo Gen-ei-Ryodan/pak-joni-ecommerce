@@ -75,13 +75,6 @@ class PartCatalogResource extends Resource
                     ->required()
                     ->maxLength(255),
 
-                Forms\Components\Select::make('item_id')
-                    ->label('Item')
-                    ->relationship('item', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->required(),
-
                 Forms\Components\FileUpload::make('pdf_path')
                     ->label('File PDF')
                     ->acceptedFileTypes(['application/pdf'])
