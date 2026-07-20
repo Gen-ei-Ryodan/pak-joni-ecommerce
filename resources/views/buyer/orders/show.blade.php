@@ -211,7 +211,7 @@
 @endsection
 
 @push('head')
-    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ $clientKey }}"></script>
+    <script src="https://{{ config('services.midtrans.is_production') ? 'app.midtrans.com' : 'app.sandbox.midtrans.com' }}/snap/snap.js" data-client-key="{{ $clientKey }}"></script>
 @endpush
 
 @push('scripts')

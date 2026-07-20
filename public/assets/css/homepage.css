@@ -60,6 +60,55 @@
   pointer-events: none;
 }
 
+@media (max-width: 768px) {
+  .banner-slider-hero {
+    height: auto;
+  }
+  .carousel-container-hero {
+    aspect-ratio: 16 / 9;
+    height: auto;
+  }
+  .carousel-slide-hero {
+    position: absolute;
+    inset: 0;
+  }
+  .hero-content {
+    top: auto;
+    bottom: 50px;
+    transform: none;
+    position: absolute;
+    width: min(900px, calc(100% - 32px));
+    padding: 0;
+  }
+  .hero-title {
+    font-size: clamp(18px, 5vw, 28px);
+  }
+  .hero-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+  .hero-actions {
+    margin-top: 12px;
+    gap: 8px;
+  }
+  .hero-actions .btn-accent,
+  .hero-actions .btn-outline {
+    padding: 8px 18px;
+    font-size: 12px;
+  }
+  .carousel-arrow {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+    border-width: 1.5px;
+  }
+  .carousel-arrow-prev { left: 8px; }
+  .carousel-arrow-next { right: 8px; }
+  .carousel-dots { bottom: 10px; gap: 6px; }
+  .carousel-dots button { width: 8px; height: 8px; }
+}
+
 .hero-content {
   position: relative;
   z-index: 2;

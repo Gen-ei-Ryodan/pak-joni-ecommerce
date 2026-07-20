@@ -523,6 +523,13 @@
                 grid-template-columns: 1fr !important;
             }
         }
+
+        @media (max-width: 768px) {
+            .hero-video-section {
+                height: auto !important;
+                aspect-ratio: 16 / 9;
+            }
+        }
     </style>
 @endpush
 

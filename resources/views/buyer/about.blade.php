@@ -193,12 +193,7 @@
                     @endpush
                 @endif
 
-                <div class="about-section" style="margin-top:50px;padding-top:30px;border-top:1px solid var(--line);text-align:center;color:var(--muted);">
-                    <p>
-                {{ config('app.name') }} adalah dealer resmi untuk brand-brand motor premium: WMOTO, SM SPORT, CFMOTO, ZONTES, dan ZEEHO.
-                Kami berkomitmen menyediakan produk berkualitas, suku cadang asli, dan layanan purna jual terbaik untuk pelanggan di seluruh Indonesia.
-            </p>
-                </div>
+               
             </div>
         </div>
     </div>
