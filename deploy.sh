@@ -7,29 +7,34 @@ set -e
 SSH_HOST="alurelab"
 SSH_PORT="31988"
 REMOTE_DIR="/home/alurelab/jomotocenter.com"
+TAR_FILE="/tmp/deploy-$(date +%s).tar.gz"
 
 echo "==> Deploying to $SSH_HOST:$REMOTE_DIR"
 
-# Transfer files via tar over ssh
-tar czf - \
+# Build tar locally first (avoid pipe issues)
+echo "==> Creating archive..."
+tar czf "$TAR_FILE" \
   --exclude='.git' \
   --exclude='.env' \
   --exclude='vendor' \
   --exclude='node_modules' \
   --exclude='storage' \
   --exclude='deploy.sh' \
-  -C "$(dirname "$0")" . | \
-  ssh -n -p "$SSH_PORT" "$SSH_HOST" "
-    mkdir -p '$REMOTE_DIR'
-    cd '$REMOTE_DIR'
-    tar xzf - --overwrite 2>/dev/null
-    chmod -R 755 storage bootstrap/cache 2>/dev/null
-  "
+  --exclude="$TAR_FILE" \
+  -C "$(dirname "$0")" .
 
-# Run artisan commands separately (avoid pipe stdin conflict)
+# Copy tar to server
+echo "==> Transferring archive..."
+scp -P "$SSH_PORT" "$TAR_FILE" "$SSH_HOST:$REMOTE_DIR/deploy.tar.gz"
+
+# Extract and run artisan commands
+echo "==> Extracting & running post-deploy tasks..."
 ssh -n -p "$SSH_PORT" "$SSH_HOST" "
   export PATH=\$PATH:/usr/local/cpanel/3rdparty/lib/path-bin:/opt/alt/php84/usr/bin
   cd '$REMOTE_DIR'
+  tar xzf deploy.tar.gz --overwrite
+  rm -f deploy.tar.gz
+  chmod -R 755 storage bootstrap/cache 2>/dev/null
   if [ -f '.env' ]; then chmod 644 .env; fi
   if command -v composer &> /dev/null; then
     composer install --no-dev --optimize-autoloader
@@ -43,5 +48,8 @@ ssh -n -p "$SSH_PORT" "$SSH_HOST" "
     php artisan migrate --force
   fi
 "
+
+# Clean up local tar
+rm -f "$TAR_FILE"
 
 echo "==> Deploy complete!"
