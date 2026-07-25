@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -51,3 +52,16 @@ Artisan::command('ensure:database', function () {
     $this->info("Database ensured: {$database}");
     return 0;
 })->purpose('Ensure MySQL database exists based on current DB config');
+
+if (config('services.mforce.sync.enabled')) {
+    $interval = config('services.mforce.sync.interval');
+    $time = config('services.mforce.sync.time');
+
+    if ($interval > 0 && $interval < 1440) {
+        Schedule::command('mforce:sync')->everyMinutes($interval);
+    } else {
+        Schedule::command('mforce:sync')->dailyAt($time);
+    }
+}
+
+// Note: mforce:sync command calls syncAll('cli') internally

@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ItemImage extends Model
+class ItemSpecification extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['item_id', 'path', 'sort_order', 'mforce_id', 'is_active'];
+    protected $fillable = ['item_id', 'group', 'key', 'value', 'sort_order', 'mforce_id', 'is_active'];
 
     protected function casts(): array
     {

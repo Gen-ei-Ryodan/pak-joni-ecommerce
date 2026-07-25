@@ -48,4 +48,18 @@ return [
         'is_3ds' => true,
     ],
 
+    'biteship' => [
+        'api_key' => env('BITESHIP_API_KEY'),
+        'base_url' => 'https://api.biteship.com',
+    ],
+
+    'mforce' => [
+        'base_url' => env('MFORCE_API_BASE_URL', 'https://mforce.co.id/api'),
+        'sync' => [
+            'enabled' => env('MFORCE_SYNC_ENABLED', false),
+            'interval' => (int) env('MFORCE_SYNC_INTERVAL', 1440),
+            'time' => env('MFORCE_SYNC_TIME', '02:00'),
+        ],
+    ],
+
 ];

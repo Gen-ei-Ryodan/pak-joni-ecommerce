@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ItemImage extends Model
+class Item360Image extends Model
 {
     use HasFactory;
+
+    protected $table = 'item_360_images';
 
     protected $fillable = ['item_id', 'path', 'sort_order', 'mforce_id', 'is_active'];
 
