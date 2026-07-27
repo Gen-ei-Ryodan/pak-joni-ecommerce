@@ -247,7 +247,9 @@
                             </div>
                             <div class="contact-item-info">
                                 <h4>WhatsApp</h4>
-                                <a href="https://wa.me/{{ config('app.social.whatsapp_link') }}?text=Halo%20{{ urlencode(config('app.name')) }}%2C%20saya%20ingin%20konsultasi%20dan%20penawaran." target="_blank" rel="noopener" style="display:inline-block;padding:6px 16px;background:#25D366;color:#fff;border-radius:6px;font-size:13px;font-weight:500;text-decoration:none;margin-top:4px;">klik disini</a>
+                                <p style="font-size:14px;color:rgba(255,255,255,0.9);margin:2px 0;">{{ config('app.social.whatsapp') }}</p>
+                                <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0 0 6px;">Hubungi kami via WhatsApp</p>
+                                <a href="https://wa.me/{{ config('app.social.whatsapp_link') }}?text=Halo%20{{ urlencode(config('app.name')) }}%2C%20saya%20ingin%20konsultasi%20dan%20penawaran." target="_blank" rel="noopener" style="display:inline-block;padding:6px 16px;background:#25D366;color:#fff;border-radius:6px;font-size:13px;font-weight:500;text-decoration:none;">klik disini</a>
                             </div>
                         </div>
                         <div class="contact-item">
