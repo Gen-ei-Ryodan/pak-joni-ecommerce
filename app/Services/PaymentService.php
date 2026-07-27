@@ -112,6 +112,14 @@ class PaymentService
                 'transaction_details' => $transactionDetails,
                 'item_details' => $items,
                 'customer_details' => $customerDetails,
+                'enabled_payments' => [
+                    'bca_va',
+                    'bni_va',
+                    'bri_va',
+                    'echannel',
+                    'permata_va',
+                    'other_va',
+                ],
                 'callbacks' => [
                     'finish' => route('buyer.orders.show', $order),
                 ],

@@ -19,6 +19,7 @@ tar czf "$TAR_FILE" \
   --exclude='vendor' \
   --exclude='node_modules' \
   --exclude='storage' \
+  --exclude='bootstrap/cache' \
   --exclude='deploy.sh' \
   --exclude="$TAR_FILE" \
   -C "$(dirname "$0")" .
@@ -35,6 +36,7 @@ ssh -n -p "$SSH_PORT" "$SSH_HOST" "
   tar xzf deploy.tar.gz --overwrite
   rm -f deploy.tar.gz
   chmod -R 755 storage bootstrap/cache 2>/dev/null
+  rm -f bootstrap/cache/packages.php bootstrap/cache/services.php
   if [ -f '.env' ]; then chmod 644 .env; fi
   if command -v composer &> /dev/null; then
     composer install --no-dev --optimize-autoloader
