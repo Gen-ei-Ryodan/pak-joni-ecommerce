@@ -124,6 +124,71 @@
             var checkStatusUrl = '{{ route('payment.midtrans.status', $order) }}';
             var orderShowUrl = '{{ route('buyer.orders.show', $order) }}';
             var isPaying = false;
+            var pollTimer = null;
+
+            function startPolling(maxAttempts) {
+                maxAttempts = maxAttempts || 30;
+                var attempts = 0;
+                var hint = document.getElementById('payment-hint');
+
+                function poll() {
+                    attempts++;
+                    if (hint) {
+                        hint.textContent = 'Memeriksa status pembayaran... (' + attempts + '/' + maxAttempts + ')';
+                    }
+
+                    fetch(checkStatusUrl)
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            if (data.paid || data.status === 'paid') {
+                                stopPolling();
+                                if (hint) hint.textContent = 'Pembayaran berhasil! Mengalihkan...';
+                                setTimeout(function() { window.location.href = orderShowUrl; }, 1000);
+                            } else if (data.status === 'failed' || data.status === 'expired') {
+                                stopPolling();
+                                alert('Pembayaran ' + (data.status === 'expired' ? 'kadaluwarsa' : 'gagal') + '.');
+                                window.location.href = '{{ route('buyer.cart.index') }}';
+                            } else if (attempts >= maxAttempts) {
+                                stopPolling();
+                                if (hint) hint.textContent = 'Status belum terkonfirmasi. Silakan cek di halaman pesanan.';
+                                resetPayButtons();
+                            } else {
+                                pollTimer = setTimeout(poll, 3000);
+                            }
+                        })
+                        .catch(function () {
+                            if (attempts < maxAttempts) {
+                                pollTimer = setTimeout(poll, 5000);
+                            } else {
+                                stopPolling();
+                                resetPayButtons();
+                            }
+                        });
+                }
+
+                poll();
+            }
+
+            function stopPolling() {
+                if (pollTimer) {
+                    clearTimeout(pollTimer);
+                    pollTimer = null;
+                }
+            }
+
+            function resetPayButtons() {
+                isPaying = false;
+                var payBtn = document.getElementById('pay-button');
+                var reopenBtn = document.getElementById('reopen-button');
+                if (payBtn) {
+                    payBtn.disabled = false;
+                    payBtn.textContent = 'Bayar Sekarang — Rp {{ number_format((float) $order->total, 0, ',', '.') }}';
+                }
+                if (reopenBtn) {
+                    reopenBtn.disabled = false;
+                    reopenBtn.textContent = 'Buka Pembayaran Lagi';
+                }
+            }
 
             function openSnapPopup() {
                 if (isPaying) return;
@@ -142,26 +207,17 @@
 
                 snap.pay(snapToken, {
                     onSuccess: function(result) {
-                        window.location.href = orderShowUrl;
+                        startPolling(30);
                     },
                     onPending: function(result) {
-                        window.location.href = orderShowUrl;
+                        startPolling(30);
                     },
                     onError: function(result) {
-                        isPaying = false;
-                        if (payBtn) {
-                            payBtn.disabled = false;
-                            payBtn.textContent = 'Bayar Sekarang — Rp {{ number_format((float) $order->total, 0, ',', '.') }}';
-                        }
-                        if (reopenBtn) {
-                            reopenBtn.disabled = false;
-                            reopenBtn.textContent = 'Buka Pembayaran Lagi';
-                        }
+                        resetPayButtons();
                         alert('Pembayaran gagal. Silakan coba lagi.');
                     },
                     onClose: function() {
                         isPaying = false;
-                        // Hide main pay button, show reopen area
                         if (payBtn) payBtn.style.display = 'none';
                         var reopenArea = document.getElementById('reopen-area');
                         if (reopenArea) reopenArea.style.display = 'block';

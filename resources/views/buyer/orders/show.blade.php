@@ -12,10 +12,10 @@
     @endphp
 
     @if($order->status === 'unpaid' && $order->payment_status === 'pending')
-        <div class="payment-banner">
+        <div class="payment-banner" id="payment-banner">
             <div>
                 <div style="font-weight:600;font-size:14px;">Menunggu Pembayaran</div>
-                <div class="muted" style="margin-top:4px;font-size:13px;">Selesaikan pembayaran Anda untuk memproses pesanan ini.</div>
+                <div class="muted" style="margin-top:4px;font-size:13px;" id="payment-banner-text">Selesaikan pembayaran Anda untuk memproses pesanan ini.</div>
             </div>
             <button id="pay-button" class="btn btn-primary" type="button" style="flex-shrink:0;">Bayar Sekarang</button>
         </div>
@@ -219,6 +219,7 @@
         var snapTokenUrl = '{{ route('payment.midtrans.snap-token', $order) }}';
         var checkStatusUrl = '{{ route('payment.midtrans.status', $order) }}';
         var isPaying = false;
+        var pollTimer = null;
 
         function getSnapToken(callback) {
             fetch(snapTokenUrl)
@@ -235,6 +236,65 @@
                 });
         }
 
+        function startPolling(maxAttempts) {
+            maxAttempts = maxAttempts || 30;
+            var attempts = 0;
+            var bannerText = document.getElementById('payment-banner-text');
+
+            function poll() {
+                attempts++;
+                if (bannerText) {
+                    bannerText.textContent = 'Memeriksa status pembayaran... (' + attempts + '/' + maxAttempts + ')';
+                }
+
+                fetch(checkStatusUrl)
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.paid || data.status === 'paid') {
+                            stopPolling();
+                            if (bannerText) bannerText.textContent = 'Pembayaran berhasil! Memuat halaman...';
+                            setTimeout(function() { window.location.reload(); }, 1000);
+                        } else if (data.status === 'failed' || data.status === 'expired') {
+                            stopPolling();
+                            if (bannerText) bannerText.textContent = 'Pembayaran ' + (data.status === 'expired' ? 'kadaluwarsa' : 'gagal') + '.';
+                            setTimeout(function() { window.location.reload(); }, 2000);
+                        } else if (attempts >= maxAttempts) {
+                            stopPolling();
+                            if (bannerText) bannerText.textContent = 'Status pembayaran belum terkonfirmasi. Silakan refresh halaman secara manual.';
+                            resetPayButtons();
+                        } else {
+                            pollTimer = setTimeout(poll, 3000);
+                        }
+                    })
+                    .catch(function() {
+                        if (attempts < maxAttempts) {
+                            pollTimer = setTimeout(poll, 5000);
+                        } else {
+                            stopPolling();
+                            resetPayButtons();
+                        }
+                    });
+            }
+
+            poll();
+        }
+
+        function stopPolling() {
+            if (pollTimer) {
+                clearTimeout(pollTimer);
+                pollTimer = null;
+            }
+        }
+
+        function resetPayButtons() {
+            isPaying = false;
+            var allPayBtns = document.querySelectorAll('#pay-button, #pay-button-sidebar');
+            allPayBtns.forEach(function(b) {
+                b.disabled = false;
+                b.textContent = 'Bayar Sekarang';
+            });
+        }
+
         function payWithMidtrans(el) {
             if (isPaying) return;
             isPaying = true;
@@ -247,38 +307,24 @@
 
             getSnapToken(function(error, token) {
                 if (error) {
-                    isPaying = false;
-                    allPayBtns.forEach(function(b) {
-                        b.disabled = false;
-                        b.textContent = 'Bayar Sekarang';
-                    });
+                    resetPayButtons();
                     alert(error);
                     return;
                 }
 
                 snap.pay(token, {
                     onSuccess: function(result) {
-                        window.location.reload();
+                        startPolling(30);
                     },
                     onPending: function(result) {
-                        window.location.reload();
+                        startPolling(30);
                     },
                     onError: function(result) {
-                        isPaying = false;
-                        allPayBtns.forEach(function(b) {
-                            b.disabled = false;
-                            b.textContent = 'Bayar Sekarang';
-                        });
+                        resetPayButtons();
                         alert('Pembayaran gagal. Silakan coba lagi.');
                     },
                     onClose: function() {
-                        isPaying = false;
-                        allPayBtns.forEach(function(b) {
-                            b.disabled = false;
-                            b.textContent = 'Bayar Sekarang';
-                        });
-                        var reopenHint = document.getElementById('reopen-hint');
-                        if (reopenHint) reopenHint.style.display = 'block';
+                        startPolling(10);
                     }
                 });
             });
