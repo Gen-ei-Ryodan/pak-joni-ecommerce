@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Deploy to hosting via git pull + rsync
+# Deploy to hosting via git pull + cp
 # Target: alurelab@emerald.hidden-server.net
 # Repository: /home/alurelab/repositories/pak-joni-ecommerce
 # Public: /home/alurelab/jomotocenter.com
@@ -23,19 +23,23 @@ ssh -n -p "$SSH_PORT" "$SSH_HOST" "
   git reset --hard origin/main
   
   echo '==> Syncing to public directory...'
-  rsync -a --delete \
-    --exclude='.git' \
-    --exclude='.env' \
-    --exclude='.env.*' \
-    --exclude='vendor' \
-    --exclude='node_modules' \
-    --exclude='storage' \
-    --exclude='bootstrap/cache' \
-    --exclude='deploy.sh' \
-    --exclude='.github' \
-    --exclude='tests' \
-    --exclude='.phpunit.cache' \
-    '$REPO_DIR/' '$PUBLIC_DIR/'
+  cd '$REPO_DIR'
+  
+  # Copy app files
+  cp -r app '$PUBLIC_DIR/'
+  cp -r bootstrap '$PUBLIC_DIR/'
+  cp -r config '$PUBLIC_DIR/'
+  cp -r database '$PUBLIC_DIR/'
+  cp -r public '$PUBLIC_DIR/'
+  cp -r resources '$PUBLIC_DIR/'
+  cp -r routes '$PUBLIC_DIR/'
+  
+  # Copy individual files
+  cp artisan '$PUBLIC_DIR/'
+  cp composer.json '$PUBLIC_DIR/'
+  cp composer.lock '$PUBLIC_DIR/'
+  cp package.json '$PUBLIC_DIR/' 2>/dev/null || true
+  cp vite.config.js '$PUBLIC_DIR/' 2>/dev/null || true
   
   echo '==> Setting permissions...'
   cd '$PUBLIC_DIR'
