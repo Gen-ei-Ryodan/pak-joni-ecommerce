@@ -87,7 +87,7 @@ class ItemResource extends Resource
                     ->relationship('category', 'name')->searchable()->preload(),
             ])
             ->actions([
-                Tables\Actions\Action::make('adjust_stock')
+                \Filament\Actions\Action::make('adjust_stock')
                     ->label('Stok')
                     ->icon('heroicon-o-arrow-path')
                     ->color('primary')
@@ -111,7 +111,7 @@ class ItemResource extends Resource
                             ->success()
                             ->send();
                     }),
-                Tables\Actions\Action::make('stock_history')
+                \Filament\Actions\Action::make('stock_history')
                     ->label('Riwayat')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->color('gray')
