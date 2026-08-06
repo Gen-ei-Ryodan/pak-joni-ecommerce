@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('stock_mutations', function (Blueprint $table) {
             $table->id();
-            $table->morphs('stockable');
+            $table->string('stockable_type', 100);
+            $table->unsignedBigInteger('stockable_id');
             $table->integer('quantity');
             $table->integer('previous_stock');
             $table->integer('current_stock');
             $table->string('type')->default('manual');
-            $table->string('reference_type')->nullable();
+            $table->string('reference_type', 100)->nullable();
             $table->unsignedBigInteger('reference_id')->nullable();
             $table->text('notes')->nullable();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
