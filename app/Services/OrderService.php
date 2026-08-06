@@ -2,11 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\ItemColor;
 use App\Models\Order;
+use App\Models\PartVariant;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
+    public function __construct(
+        protected StockService $stockService
+    ) {}
+
     public function updateStatus(Order $order, string $newStatus, array $extra = []): bool
     {
         if (! $order->canTransitionTo($newStatus)) {
@@ -51,10 +57,16 @@ class OrderService
 
     public function markAsPaid(Order $order): bool
     {
-        return $this->updateStatus($order, 'paid', [
+        $result = $this->updateStatus($order, 'paid', [
             'payment_status' => 'paid',
             'paid_at' => now(),
         ]);
+
+        if ($result) {
+            $this->decreaseStockOnOrder($order);
+        }
+
+        return $result;
     }
 
     public function processOrder(Order $order): bool
@@ -73,5 +85,30 @@ class OrderService
     public function markAsCompleted(Order $order): bool
     {
         return $this->updateStatus($order, 'completed');
+    }
+
+    protected function decreaseStockOnOrder(Order $order): void
+    {
+        foreach ($order->items as $orderItem) {
+            if ($orderItem->itemable_type === ItemColor::class) {
+                $color = ItemColor::find($orderItem->itemable_id);
+                if ($color) {
+                    try {
+                        $this->stockService->decreaseStockOnOrder($color, $orderItem->quantity, $order->id);
+                    } catch (\InvalidArgumentException $e) {
+                        report($e);
+                    }
+                }
+            } elseif ($orderItem->itemable_type === PartVariant::class) {
+                $variant = PartVariant::find($orderItem->itemable_id);
+                if ($variant) {
+                    try {
+                        $this->stockService->decreaseStockOnOrder($variant, $orderItem->quantity, $order->id);
+                    } catch (\InvalidArgumentException $e) {
+                        report($e);
+                    }
+                }
+            }
+        }
     }
 }

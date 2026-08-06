@@ -71,8 +71,11 @@ class ItemResource extends Resource
                 Tables\Columns\TextColumn::make('category.name')->label('Kategori')->sortable(),
                 Tables\Columns\TextColumn::make('year')->label('Tahun')->numeric()->sortable()->toggleable(),
                 Tables\Columns\TextColumn::make('price')->money('IDR')->sortable(),
-                Tables\Columns\TextColumn::make('stock')->label('Stok')->numeric()->sortable()
-                    ->description(fn ($record) => $record->stock_updated_at ? 'Diperbarui: ' . $record->stock_updated_at->format('d M Y H:i') : null),
+                Tables\Columns\TextColumn::make('total_stock')
+                    ->label('Total Stok')
+                    ->numeric()
+                    ->getStateUsing(fn ($record) => $record->colors->sum('stock'))
+                    ->description(fn ($record) => $record->colors->count() . ' varian'),
                 Tables\Columns\TextColumn::make('stock_status')->label('Status Stok')->badge()
                     ->color(fn ($s) => match ($s) { 'ready' => 'success', 'indent' => 'warning', default => 'gray' })
                     ->formatStateUsing(fn ($s) => match ($s) { 'ready' => 'Ready', 'indent' => 'Indent', default => $s }),
@@ -87,38 +90,13 @@ class ItemResource extends Resource
                     ->relationship('category', 'name')->searchable()->preload(),
             ])
             ->actions([
-                \Filament\Actions\Action::make('adjust_stock')
-                    ->label('Stok')
-                    ->icon('heroicon-o-arrow-path')
+                \Filament\Actions\Action::make('manage_stock')
+                    ->label('Kelola Stok')
+                    ->icon('heroicon-o-archive-box')
                     ->color('primary')
-                    ->form([
-                        Forms\Components\TextInput::make('new_stock')
-                            ->label('Stok Baru')
-                            ->numeric()
-                            ->required()
-                            ->minValue(0)
-                            ->default(fn ($record) => $record->stock),
-                        Forms\Components\Textarea::make('notes')
-                            ->label('Catatan')
-                            ->rows(2)
-                            ->placeholder('Alasan perubahan stok...'),
-                    ])
-                    ->action(function (Item $record, array $data) {
-                        $stockService = app(StockService::class);
-                        $stockService->setStock($record, (int) $data['new_stock'], $data['notes'] ?? null);
-                        \Filament\Notifications\Notification::make()
-                            ->title('Stok berhasil diperbarui')
-                            ->success()
-                            ->send();
-                    }),
-                \Filament\Actions\Action::make('stock_history')
-                    ->label('Riwayat')
-                    ->icon('heroicon-o-clipboard-document-list')
-                    ->color('gray')
-                    ->modalHeading('Riwayat Perubahan Stok')
-                    ->modalContent(fn ($record) => view('filament.modals.stock-history', [
-                        'mutations' => $record->stockMutations()->with('user')->orderByDesc('created_at')->limit(50)->get(),
-                        'item' => $record,
+                    ->modalHeading('Kelola Stok per Varian')
+                    ->modalContent(fn ($record) => view('filament.modals.item-stock-management', [
+                        'item' => $record->load('colors'),
                     ]))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Tutup'),
@@ -170,16 +148,15 @@ class ItemResource extends Resource
                     ->disableToolbarButtons(['link', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table', 'attachFiles']),
             ])->columns(2),
 
-            Section::make('Harga & Stok')->schema([
+            Section::make('Harga')->schema([
                 Forms\Components\TextInput::make('price')->label('Harga')
                     ->numeric()->prefix('Rp'),
-                Forms\Components\TextInput::make('stock')->label('Stok')
-                    ->numeric()->default(0),
                 Forms\Components\Toggle::make('is_active')->label('Active')->default(true),
                 Forms\Components\TextInput::make('sort_order')->numeric()->default(0),
             ])->columns(2),
 
-            Section::make('Varian Warna')
+            Section::make('Varian Warna & Stok')
+                ->description('Stok dikelola per varian warna. Total stok adalah jumlah dari semua varian.')
                 ->schema([
                     Forms\Components\Repeater::make('colors')
                         ->relationship('colors')
@@ -191,12 +168,18 @@ class ItemResource extends Resource
                             Forms\Components\FileUpload::make('image_path')
                                 ->label('Gambar Warna')->image()->imagePreviewHeight('100')
                                 ->disk('public')->directory('items/colors')->maxSize(5120),
+                            Forms\Components\TextInput::make('stock')
+                                ->label('Stok')
+                                ->integer()
+                                ->minValue(0)
+                                ->default(0)
+                                ->required(),
                             Forms\Components\TextInput::make('weight')
                                 ->label('Weight (gram)')->integer()->minValue(0)->default(100),
                             Forms\Components\TextInput::make('sort_order')
                                 ->numeric()->default(0)->hidden(),
                         ])
-                        ->columns(2)
+                        ->columns(3)
                         ->orderColumn('sort_order')
                         ->defaultItems(0)
                         ->collapsible()

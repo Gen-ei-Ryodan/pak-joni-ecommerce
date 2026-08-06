@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Item;
+use App\Models\ItemColor;
 use App\Models\PartVariant;
 use App\Models\StockMutation;
 use Illuminate\Database\Eloquent\Model;
@@ -63,6 +64,10 @@ class StockService
             return (int) $stockable->stock;
         }
 
+        if ($stockable instanceof ItemColor) {
+            return (int) $stockable->stock;
+        }
+
         if ($stockable instanceof PartVariant) {
             return (int) $stockable->stock;
         }
@@ -73,6 +78,11 @@ class StockService
     protected function updateStock(Model $stockable, int $newStock): void
     {
         if ($stockable instanceof Item) {
+            $stockable->update([
+                'stock' => $newStock,
+                'stock_updated_at' => now(),
+            ]);
+        } elseif ($stockable instanceof ItemColor) {
             $stockable->update([
                 'stock' => $newStock,
                 'stock_updated_at' => now(),
@@ -92,5 +102,17 @@ class StockService
             ->orderByDesc('created_at')
             ->limit($limit)
             ->get();
+    }
+
+    public function decreaseStockOnOrder(Model $stockable, int $quantity, int $orderId): StockMutation
+    {
+        return $this->adjustStock(
+            $stockable,
+            -$quantity,
+            'order',
+            'Order #' . $orderId,
+            'order',
+            $orderId
+        );
     }
 }

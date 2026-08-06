@@ -16,7 +16,7 @@ class MotorController
             abort(404, 'Category type not found');
         }
 
-        $query = Item::with(['brand', 'category'])
+        $query = Item::with(['brand', 'category', 'colors'])
             ->where('category_type_id', $type->id)
             ->where('status', 'active')
             ->where('is_active', true);
@@ -74,7 +74,7 @@ class MotorController
         $parts = $partsQuery->with(['category', 'defaultVariant'])->paginate(12);
 
         // Related items
-        $relatedItems = Item::with(['brand', 'type'])
+        $relatedItems = Item::with(['brand', 'type', 'colors'])
             ->where('category_type_id', $item->category_type_id)
             ->where('id', '!=', $item->id)
             ->where('status', 'active')

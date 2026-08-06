@@ -56,13 +56,16 @@
                     @endif
 
                     {{-- Stock Info --}}
+                    @php
+                        $totalStock = $item->colors->sum('stock');
+                    @endphp
                     <div style="text-align:center;margin-bottom:16px;">
                         @if($item->stock_status === 'ready')
-                            <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:rgba(34,197,94,0.1);color:#22c55e;">
+                            <span id="stockBadge" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:rgba(34,197,94,0.1);color:#22c55e;">
                                 <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>
                                 Ready Stock
-                                @if($item->stock > 0)
-                                    - {{ $item->stock }} unit tersedia
+                                @if($totalStock > 0)
+                                    - {{ $totalStock }} unit tersedia
                                 @else
                                     - Habis
                                 @endif
@@ -82,14 +85,16 @@
                             <div class="motor-colors-list">
                                 @foreach($item->colors as $loopIdx => $color)
                                     <button type="button" class="color-item color-btn {{ $loopIdx === 0 ? 'active' : '' }}"
+                                        data-stock="{{ $color->stock }}"
                                         @if($color->image_path)
                                             data-img="{{ image_url($color->image_path) }}"
                                         @else
                                             data-img="{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}"
                                         @endif
-                                        onclick="var main=document.getElementById('galleryMain');if(this.dataset.img){main.style.backgroundImage='url('+this.dataset.img+')';}document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelector('[data-color-id]').value='{{ $color->id }}';">
+                                        onclick="var main=document.getElementById('galleryMain');if(this.dataset.img){main.style.backgroundImage='url('+this.dataset.img+')';}document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelector('[data-color-id]').value='{{ $color->id }}';updateStockDisplay(parseInt(this.dataset.stock));">
                                         <span class="color-dot" style="background:{{ $color->color_code ?: '#666' }};"></span>
                                         <span class="color-name">{{ $color->name }}</span>
+                                        <span class="color-stock" style="font-size:10px;color:{{ $color->stock > 0 ? '#22c55e' : '#ef4444' }};">({{ $color->stock }})</span>
                                     </button>
                                 @endforeach
                             </div>
@@ -100,11 +105,14 @@
                             <input type="hidden" name="itemable_type" value="item_color">
                             <input type="hidden" name="itemable_id" value="{{ $item->colors->first()->id ?? '' }}" data-color-id>
                             <input type="hidden" name="quantity" value="1">
-                            <button type="submit" class="btn btn-primary" style="width:100%;"
-                                @if($item->stock_status === 'ready' && $item->stock <= 0) disabled @endif>
+                            @php
+                                $firstColorStock = $item->colors->first()->stock ?? 0;
+                            @endphp
+                            <button type="submit" class="btn btn-primary" style="width:100%;" id="addToCartBtn"
+                                @if($item->stock_status === 'ready' && $firstColorStock <= 0) disabled @endif>
                                 @if($item->stock_status === 'indent')
                                     Pre-Order (Indent) - DP 50%
-                                @elseif($item->stock_status === 'ready' && $item->stock <= 0)
+                                @elseif($item->stock_status === 'ready' && $firstColorStock <= 0)
                                     Stok Habis
                                 @else
                                     Add to Cart
@@ -116,7 +124,7 @@
                             <div class="indent-notice">
                                 Produk ini tersedia secara indent. DP 50% akan dibayarkan saat checkout.
                             </div>
-                        @elseif($item->stock_status === 'ready' && $item->stock <= 0)
+                        @elseif($item->stock_status === 'ready' && $totalStock <= 0)
                             <div class="indent-notice" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #dc2626;">
                                 Maaf, stok motor ini sedang habis. Silakan hubungi kami untuk informasi lebih lanjut.
                             </div>
@@ -545,6 +553,37 @@
         }
     </style>
 @endpush
+
+@if($tab === 'detail' && $item->colors->count())
+    @push('scripts')
+        <script>
+            function updateStockDisplay(stock) {
+                var badge = document.getElementById('stockBadge');
+                var btn = document.getElementById('addToCartBtn');
+                if (badge) {
+                    if (stock > 0) {
+                        badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span> Ready Stock - ' + stock + ' unit tersedia';
+                        badge.style.background = 'rgba(34,197,94,0.1)';
+                        badge.style.color = '#22c55e';
+                    } else {
+                        badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;"></span> Stok Habis';
+                        badge.style.background = 'rgba(239,68,68,0.1)';
+                        badge.style.color = '#ef4444';
+                    }
+                }
+                if (btn) {
+                    if (stock > 0) {
+                        btn.disabled = false;
+                        btn.textContent = 'Add to Cart';
+                    } else {
+                        btn.disabled = true;
+                        btn.textContent = 'Stok Habis';
+                    }
+                }
+            }
+        </script>
+    @endpush
+@endif
 
 @if($item->images360->count() >= 4 && $tab === 'detail')
     @push('scripts')

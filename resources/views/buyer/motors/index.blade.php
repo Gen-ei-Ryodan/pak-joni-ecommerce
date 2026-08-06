@@ -20,6 +20,9 @@
 
             <div class="grid grid-3">
                 @forelse ($items as $item)
+                    @php
+                        $totalStock = $item->colors->sum('stock');
+                    @endphp
                     <div class="card motor-card">
                         <a class="card-media-link" href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" style="display:block;text-decoration:none;">
                             <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
@@ -40,8 +43,8 @@
                                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #22c55e;"></span>
                                         Ready Stock
                                     </span>
-                                    @if($item->stock > 0)
-                                        <span style="font-size: 11px; color: var(--muted);">({{ $item->stock }} unit)</span>
+                                    @if($totalStock > 0)
+                                        <span style="font-size: 11px; color: var(--muted);">({{ $totalStock }} unit)</span>
                                     @else
                                         <span style="font-size: 11px; color: #ef4444;">(Habis)</span>
                                     @endif

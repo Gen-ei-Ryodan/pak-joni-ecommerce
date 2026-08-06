@@ -11,7 +11,15 @@ class ItemColor extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['item_id', 'name', 'color_code', 'image_path', 'weight', 'sort_order'];
+    protected $fillable = ['item_id', 'name', 'color_code', 'image_path', 'weight', 'sort_order', 'stock', 'stock_updated_at'];
+
+    protected function casts(): array
+    {
+        return [
+            'stock' => 'integer',
+            'stock_updated_at' => 'datetime',
+        ];
+    }
 
     public function item(): BelongsTo
     {
@@ -26,5 +34,10 @@ class ItemColor extends Model
     public function orderItems(): MorphMany
     {
         return $this->morphMany(OrderItem::class, 'itemable');
+    }
+
+    public function stockMutations(): MorphMany
+    {
+        return $this->morphMany(StockMutation::class, 'stockable');
     }
 }

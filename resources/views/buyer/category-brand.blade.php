@@ -45,6 +45,9 @@
 
                 <div class="grid grid-3">
                     @forelse ($items as $item)
+                        @php
+                            $totalStock = $item->colors->sum('stock');
+                        @endphp
                         <div class="card motor-card">
                             <a class="card-media-link" href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" style="display:block;text-decoration:none;">
                                 <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:220px;"></div>
@@ -63,8 +66,8 @@
                                     <span class="stock-badge indent">Indent</span>
                                 @elseif($item->stock_status === 'ready')
                                     <span class="stock-badge ready">Ready Stock</span>
-                                    @if($item->stock > 0)
-                                        <span class="stock-badge ready">({{ $item->stock }} unit)</span>
+                                    @if($totalStock > 0)
+                                        <span class="stock-badge ready">({{ $totalStock }} unit)</span>
                                     @else
                                         <span class="stock-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">(Habis)</span>
                                     @endif
