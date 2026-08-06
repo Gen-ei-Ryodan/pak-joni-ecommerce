@@ -37,4 +37,9 @@ class PartVariant extends Model
     {
         return $this->morphMany(OrderItem::class, 'itemable');
     }
+
+    public function stockMutations(): MorphMany
+    {
+        return $this->morphMany(StockMutation::class, 'stockable');
+    }
 }

@@ -63,6 +63,11 @@
                                     <span class="stock-badge indent">Indent</span>
                                 @elseif($item->stock_status === 'ready')
                                     <span class="stock-badge ready">Ready Stock</span>
+                                    @if($item->stock > 0)
+                                        <span class="stock-badge ready">({{ $item->stock }} unit)</span>
+                                    @else
+                                        <span class="stock-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">(Habis)</span>
+                                    @endif
                                     <span class="stock-badge otr">OTR SURABAYA</span>
                                 @endif
                             </div>

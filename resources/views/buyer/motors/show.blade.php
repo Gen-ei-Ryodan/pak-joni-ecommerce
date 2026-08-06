@@ -60,7 +60,12 @@
                         @if($item->stock_status === 'ready')
                             <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:rgba(34,197,94,0.1);color:#22c55e;">
                                 <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>
-                                Ready Stock - Available
+                                Ready Stock
+                                @if($item->stock > 0)
+                                    - {{ $item->stock }} unit tersedia
+                                @else
+                                    - Habis
+                                @endif
                             </span>
                             <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:#0055DA;color:#fff;margin-left:8px;">OTR SURABAYA</span>
                         @elseif($item->stock_status === 'indent')
@@ -95,9 +100,12 @@
                             <input type="hidden" name="itemable_type" value="item_color">
                             <input type="hidden" name="itemable_id" value="{{ $item->colors->first()->id ?? '' }}" data-color-id>
                             <input type="hidden" name="quantity" value="1">
-                            <button type="submit" class="btn btn-primary" style="width:100%;">
+                            <button type="submit" class="btn btn-primary" style="width:100%;"
+                                @if($item->stock_status === 'ready' && $item->stock <= 0) disabled @endif>
                                 @if($item->stock_status === 'indent')
                                     Pre-Order (Indent) - DP 50%
+                                @elseif($item->stock_status === 'ready' && $item->stock <= 0)
+                                    Stok Habis
                                 @else
                                     Add to Cart
                                 @endif
@@ -107,6 +115,10 @@
                         @if($item->stock_status === 'indent')
                             <div class="indent-notice">
                                 Produk ini tersedia secara indent. DP 50% akan dibayarkan saat checkout.
+                            </div>
+                        @elseif($item->stock_status === 'ready' && $item->stock <= 0)
+                            <div class="indent-notice" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #dc2626;">
+                                Maaf, stok motor ini sedang habis. Silakan hubungi kami untuk informasi lebih lanjut.
                             </div>
                         @endif
                     @endif

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ItemResource\Pages;
 use App\Models\CategoryType;
 use App\Models\Item;
+use App\Services\StockService;
 use Filament\Forms;
 use Filament\Navigation\NavigationItem;
 use Filament\Resources\Resource;
@@ -70,8 +71,9 @@ class ItemResource extends Resource
                 Tables\Columns\TextColumn::make('category.name')->label('Kategori')->sortable(),
                 Tables\Columns\TextColumn::make('year')->label('Tahun')->numeric()->sortable()->toggleable(),
                 Tables\Columns\TextColumn::make('price')->money('IDR')->sortable(),
-                Tables\Columns\TextColumn::make('stock')->numeric()->sortable(),
-                Tables\Columns\TextColumn::make('stock_status')->label('Stok')->badge()
+                Tables\Columns\TextColumn::make('stock')->label('Stok')->numeric()->sortable()
+                    ->description(fn ($record) => $record->stock_updated_at ? 'Diperbarui: ' . $record->stock_updated_at->format('d M Y H:i') : null),
+                Tables\Columns\TextColumn::make('stock_status')->label('Status Stok')->badge()
                     ->color(fn ($s) => match ($s) { 'ready' => 'success', 'indent' => 'warning', default => 'gray' })
                     ->formatStateUsing(fn ($s) => match ($s) { 'ready' => 'Ready', 'indent' => 'Indent', default => $s }),
                 Tables\Columns\TextColumn::make('status')->badge()
@@ -85,6 +87,41 @@ class ItemResource extends Resource
                     ->relationship('category', 'name')->searchable()->preload(),
             ])
             ->actions([
+                Tables\Actions\Action::make('adjust_stock')
+                    ->label('Stok')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('primary')
+                    ->form([
+                        Forms\Components\TextInput::make('new_stock')
+                            ->label('Stok Baru')
+                            ->numeric()
+                            ->required()
+                            ->minValue(0)
+                            ->default(fn ($record) => $record->stock),
+                        Forms\Components\Textarea::make('notes')
+                            ->label('Catatan')
+                            ->rows(2)
+                            ->placeholder('Alasan perubahan stok...'),
+                    ])
+                    ->action(function (Item $record, array $data) {
+                        $stockService = app(StockService::class);
+                        $stockService->setStock($record, (int) $data['new_stock'], $data['notes'] ?? null);
+                        \Filament\Notifications\Notification::make()
+                            ->title('Stok berhasil diperbarui')
+                            ->success()
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('stock_history')
+                    ->label('Riwayat')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->color('gray')
+                    ->modalHeading('Riwayat Perubahan Stok')
+                    ->modalContent(fn ($record) => view('filament.modals.stock-history', [
+                        'mutations' => $record->stockMutations()->with('user')->orderByDesc('created_at')->limit(50)->get(),
+                        'item' => $record,
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup'),
                 \Filament\Actions\EditAction::make(),
                 \Filament\Actions\DeleteAction::make(),
             ])

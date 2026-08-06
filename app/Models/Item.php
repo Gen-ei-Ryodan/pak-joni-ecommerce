@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Item extends Model
 {
@@ -76,5 +77,10 @@ class Item extends Model
     public function partCatalogs(): HasMany
     {
         return $this->hasMany(ItemPartCatalog::class)->orderBy('sort_order');
+    }
+
+    public function stockMutations(): MorphMany
+    {
+        return $this->morphMany(StockMutation::class, 'stockable');
     }
 }

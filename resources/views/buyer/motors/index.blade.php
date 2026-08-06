@@ -34,6 +34,24 @@
                             @if($item->price)
                                 <div class="price">Rp {{ number_format($item->price, 0, ',', '.') }}</div>
                             @endif
+                            <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                                @if($item->stock_status === 'ready')
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: rgba(34,197,94,0.1); color: #22c55e;">
+                                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #22c55e;"></span>
+                                        Ready Stock
+                                    </span>
+                                    @if($item->stock > 0)
+                                        <span style="font-size: 11px; color: var(--muted);">({{ $item->stock }} unit)</span>
+                                    @else
+                                        <span style="font-size: 11px; color: #ef4444;">(Habis)</span>
+                                    @endif
+                                @elseif($item->stock_status === 'indent')
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: #fef3c7; color: #92400e;">
+                                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #f59e0b;"></span>
+                                        Indent
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                         <div class="card-actions">
                             <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" class="card-action-btn primary">Lihat {{ $item->type->name }}</a>
