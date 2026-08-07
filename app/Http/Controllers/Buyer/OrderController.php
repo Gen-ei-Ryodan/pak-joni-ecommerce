@@ -91,14 +91,11 @@ class OrderController extends Controller
 
         // Simulate full payment for the remaining amount
         DB::transaction(function () use ($order) {
-            $order->update([
-                'payment_status' => 'paid',
-                'paid_at' => now(),
+            $this->orderService->markAsPaid($order, [
                 'total' => $order->subtotal + $order->shipping_cost,
                 'dp_amount' => $order->dp_amount,
                 'remaining_amount' => 0,
                 'indent_status' => 'paid_full',
-                'status' => 'paid',
             ]);
 
             // Update payment record

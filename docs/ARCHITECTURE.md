@@ -1,64 +1,70 @@
 # ARCHITECTURE.md
 
 ## Arsitektur Umum
-Proyek ini menggunakan arsitektur **MVC (Model-View-Controller)** dengan framework Laravel. Arsitektur ini memisahkan logika bisnis (Model), presentasi (View), dan kontrol alur aplikasi (Controller).
+Proyek menggunakan arsitektur **MVC (Model-View-Controller)** di atas **Laravel 13**, dengan **Service Layer** untuk logika bisnis. Admin panel memakai **Filament v4**, storefront memakai Blade + Livewire.
+
+```
+Laravel 13 (JOMOTO Center)
+├── Admin Panel       app/Filament/Resources/*   (Filament v4)
+├── Storefront        app/Http/Controllers/Buyer/* + resources/views/buyer/*
+├── Services          app/Services/*             (logika bisnis terpusat)
+├── Models            app/Models/*               (40+ Eloquent models)
+├── Migrations        database/migrations/*      (38 migration)
+└── Routes            routes/web.php
+```
 
 ## Frontend
-*   **Blade Templates:** Template engine bawaan Laravel untuk rendering HTML.
-*   **JavaScript/Vue.js:** Digunakan untuk interaktivitas pada komponen tertentu.
-*   **CSS:** Styling dengan kemungkinan framework seperti Tailwind CSS atau Bootstrap.
+*   **Blade Templates:** Template engine Laravel untuk storefront (`resources/views/buyer/`).
+*   **Livewire:** Komponen reaktif tertentu.
+*   **Tailwind + Vite:** Styling dan asset bundling.
+*   **Admin:** Filament v4 (render sendiri); modal custom `resources/views/filament/modals/`.
 
 ## Backend
-*   **Laravel Framework:** Framework PHP yang menyediakan struktur MVC, routing, ORM (Eloquent), dan banyak fitur lainnya.
-*   **Eloquent ORM:** Object-Relational Mapping untuk interaksi dengan database.
-*   **Service Pattern:** Logika bisnis kompleks dipisahkan ke dalam kelas Service untuk menjaga Controller tetap ringan.
-*   **Repository Pattern (Opsional):** Digunakan untuk mengabstraksi logika akses data.
+*   **Laravel Framework 13** dengan Eloquent ORM, routing, auth (session).
+*   **Service Layer (pola utama):** logika bisnis terpusat di `app/Services/`, Controller tetap tipis.
+*   **TIDAK memakai Repository Pattern** — ikuti Service Layer yang sudah ada.
+
+### Services Utama
+| Service | Fungsi |
+|---------|--------|
+| `StockService` | Semua operasi stok varian + mutasi (adjust, set, get history, decrease on order) |
+| `OrderService` | Update status order, cancel, markAsPaid, auto-decrease stok saat paid |
+| `PaymentService` | Integrasi pembayaran (Midtrans) |
+| `BiteshipService` | Integrasi pengiriman |
+| `ImageService` | Pengolahan gambar |
+
+## Model Data Utama
+- `Item` → variasi warna `ItemColor` (stok di ItemColor). Item = motor/mobil/ATV.
+- `Part` → variasi `PartVariant` (stok). Part = sparepart.
+- `StockMutation` — polymorphic ke Item/ItemColor/PartVariant, mencatat riwayat.
+- `Order` / `OrderItem` — order item terhubung via polymorphic `itemable`.
+- `Cart` / `CartItem` — polymorphic `itemable`.
+- Content: Banner, Event, News, Career, Dealer, HeroVideo, ShowroomGallery, MapsLocation, WhyChooseUs, StoreAddress.
 
 ## Database
-*   **MySQL/PostgreSQL:** Database relasional.
-*   **Eloquent Migrations:** Untuk versioning skema database.
-*   **Eloquent Seeders:** Untuk mengisi data awal (seeding).
+*   MySQL; Eloquent Migrations (38 file). **Jangan `migrate:fresh` di production.**
+*   Tabel stok: `stock_mutations`, kolom `stock`/`stock_updated_at` di `item_colors`. Lihat DATABASE.md.
 
-## Struktur Folder
-*   `app/`: Inti aplikasi
-    *   `Models/`: Entitas data (User, Product, Order, dll.)
-    *   `Http/Controllers/`: Controller untuk menangani request
-    *   `Services/`: Kelas Service untuk logika bisnis kompleks
-    *   `Providers/`: Service Providers Laravel
-*   `resources/`: Aset dan view
-    *   `views/`: Blade templates
-    *   `js/`: File JavaScript
-    *   `css/`: File CSS
-*   `database/`: Konfigurasi database
-    *   `migrations/`: File migrasi
-    *   `seeders/`: File seeder
-*   `routes/`: Definisi rute aplikasi (web.php, api.php)
-*   `config/`: File konfigurasi Laravel
-*   `public/`: File yang dapat diakses publik (assets, index.php)
-*   `storage/`: File yang diunggah, cache, log
-*   `tests/`: Unit dan fitur tes
-
-## Manajemen State
-*   **Session:** Untuk data pengguna yang bersifat sementara (keranjang, login).
-*   **Database:** Untuk data persisten (produk, pesanan, pengguna).
-
-## Autentikasi & Otorisasi
-*   **Laravel Sanctum/Passport:** Untuk autentikasi API (jika ada).
-*   **Middleware Role/Permission:** Untuk kontrol akses berdasarkan peran pengguna (Admin, Customer).
-
-## Pola Desain yang Digunakan
-1.  **MVC:** Arsitektur utama.
-2.  **Service Pattern:** Memisahkan logika bisnis dari Controller.
-3.  **Repository Pattern (Opsional):** Abstraksi akses data.
-4.  **Dependency Injection:** Untuk injeksi dependensi di Service dan Controller.
+## Pola Desain
+1.  **MVC** arsitektur utama.
+2.  **Service Layer** memisahkan logika bisnis dari Controller.
+3.  **Polymorphic relations** (`stockable`, `itemable`, `reference`) untuk generalisasi antar tipe.
+4.  **Dependency Injection** di Service & Controller.
+5.  **DB Transactions** untuk operasi yang konsisten (pengurangan stok).
 
 ## Alur Request
-1.  Request masuk ke `routes/web.php` atau `routes/api.php`.
-2.  Router mengarahkan request ke Controller yang sesuai.
-3.  Controller memanggil Service atau Model untuk logika bisnis.
-4.  Controller mengembalikan response (View untuk web, JSON untuk API).
+1.  Request masuk ke `routes/web.php`.
+2.  Router → Controller (Buyer/* atau Filament).
+3.  Controller/Service → Model untuk logika bisnis.
+4.  Response: Blade view (storefront), Filament (admin).
+
+## Alur Khusus — Stok
+1.  Admin kelola stok per varian → `StockService::adjustStock` → update stok + `StockMutation`.
+2.  Order dibayar (`OrderService::markAsPaid`) → `StockService::decreaseStockOnOrder` per item itemable ke `ItemColor`/`PartVariant`.
+3.  **Semua jalur yang menandai order menjadi `paid` WAJIB lewat `OrderService::markAsPaid`** agar penurunan stok selalu tercatat. Jalur tersebut: admin (Filament `OrderResource` & `Admin/OrderController`), `PaymentService` (webhook `markPaymentSuccess`, `simulateSuccessPayment`, `checkStatusFromMidtrans`) dan `Buyer/OrderController::payRemaining`.
+4.  Stok **tidak** dikurangi saat order dibuat (`CheckoutController::placeOrder`) — hanya saat order `paid`, sesuai BUSINESS_RULES.md.
 
 ## Deployment
-*   **Server:** Nginx/Apache
-*   **Environment:** `.env` file untuk konfigurasi environment-specific.
-*   **Docker (Opsional):** Untuk containerization dan deployment yang konsisten.
+*   `deploy.sh` → SSH ke `emerald.hidden-server.net:31988`, git pull + `cp -r` (rsync tidak ada).
+*   PHP server 8.4.23 di path `/opt/alt/php84/usr/bin`.
+*   Public dir: `/home/alurelab/jomotocenter.com`. Lihat DEPLOYMENT.md.

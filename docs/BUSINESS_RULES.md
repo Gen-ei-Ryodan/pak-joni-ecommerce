@@ -4,54 +4,51 @@
 
 ### 1. Manajemen Produk
 *   **Produk tidak aktif:** Produk dengan status `inactive` tidak dapat ditambahkan ke keranjang atau dibeli.
-*   **Stok habis:** Produk dengan stok `0` tidak dapat ditambahkan ke keranjang.
-*   **Harga:** Harga produk tidak boleh negatif.
 *   **Kategori:** Setiap produk harus memiliki setidaknya satu kategori.
+*   **Item (motor/mobil/ATV):** memiliki varian warna (`ItemColor`); stok di level varian.
+*   **Part (sparepart):** memiliki varian (`PartVariant`); stok di level varian.
 
-### 2. Keranjang Belanja
-*   **Kuantitas maksimum:** Kuantitas item di keranjang tidak boleh melebihi stok yang tersedia.
-*   **Validasi stok:** Saat checkout, sistem harus memvalidasi bahwa stok masih tersedia untuk semua item di keranjang.
-*   **Waktu kedaluwarsa:** Keranjang belanja dapat kedaluwarsa setelah periode waktu tertentu (misalnya, 30 menit).
+### 2. Inventaris & Stok (TERBARU — variant-level)
+*   **Unit stok terkecil:** stok dikelola pada varian (`ItemColor` untuk Item, `PartVariant` untuk Part), bukan pada produk utama.
+*   **Stok tidak boleh negatif:** `StockService::adjustStock` melempar `InvalidArgumentException` jika hasil akhir negatif (dicek dalam DB transaction).
+*   **Total stok tampilan:** total stok produk = sum stok semua varian.
+*   **Stok habis:** Varian dengan stok `0` tidak dapat ditambahkan ke keranjang; tombol add-to-cart disabled sampai varian stok > 0 dipilih.
+*   **Semua perubahan tercatat:** setiap perubahan stok menghasilkan `StockMutation` (riwayat: previous_stock, current_stock, quantity, type, user, reference).
+*   **Tipe mutasi:** `manual` (admin), `order` (auto saat paid), `restock`, `adjustment`.
+*   **Pengurangan stok saat order:** stok dikurangi **saat order berstatus `paid`** (bukan saat masuk keranjang), di `OrderService::markAsPaid` → `StockService::decreaseStockOnOrder`.
+*   **Gagal penurunan stok tidak menggagalkan order:** jika stok kurang, exception di-catch + `report()`, order tetap berlanjut.
+*   **Kuantitas maksimum keranjang:** kuantitas item di keranjang tidak boleh melebihi stok varian yang tersedia.
+*   **Validasi stok saat checkout:** sistem harus memvalidasi bahwa stok masih tersedia untuk semua item di keranjang.
 
-### 3. Pesanan
-*   **Pesanan tidak dapat dihapus:** Setelah pesanan dibuat, tidak dapat dihapus. Hanya dapat dibatalkan atau dikembalikan sesuai dengan kebijakan.
-*   **Status pesanan:** Alur status pesanan harus mengikuti urutan: `pending` → `confirmed` → `processing` → `shipped` → `delivered` → `completed`. Status `cancelled` dapat terjadi kapan saja sebelum `shipped`.
-*   **Pembatalan pesanan:** Pelanggan dapat membatalkan pesanan hanya jika statusnya masih `pending` atau `confirmed`.
-*   **Pembaruan status:** Hanya admin yang dapat mengubah status pesanan setelah `confirmed`.
+### 3. Keranjang Belanja
+*   **Polymorphic:** cart item dapat berupa Item/ItemColor/Part/PartVariant.
+*   **Waktu kedaluwarsa:** keranjang belanja dapat kedaluwarsa setelah periode waktu tertentu.
 
-### 4. Pembayaran
-*   **Konfirmasi pembayaran:** Pesanan hanya diproses setelah pembayaran dikonfirmasi.
-*   **Waktu pembayaran:** Pembayaran harus diselesaikan dalam waktu tertentu (misalnya, 24 jam) setelah pesanan dibuat, atau pesanan akan dibatalkan secara otomatis.
-*   **Metode pembayaran:** Hanya metode pembayaran yang aktif yang dapat digunakan.
+### 4. Pesanan
+*   **Pesanan tidak dapat dihapus:** Setelah pesanan dibuat, tidak dapat dihapus. Hanya dapat dibatalkan atau dikembalikan sesuai kebijakan.
+*   **Status pesanan (aktual):** `pending` → `processing` → `shipped` → `completed`. Status `cancelled` dapat terjadi; ada penanganan `waiting_stock` untuk part indent.
+*   **Pembatalan pesanan:** pelanggan dapat membatalkan pesanan hanya jika statusnya masih memungkinkan (via `canTransitionTo`).
+*   **Pembaruan status:** admin yang mengubah status (via OrderService).
 
-### 5. Pengiriman
-*   **Alamat pengiriman:** Alamat pengiriman harus lengkap dan valid sebelum pesanan dapat diproses.
-*   **Biaya pengiriman:** Biaya pengiriman dihitung berdasarkan lokasi dan berat produk.
-*   **Ambil di Dealer:** Pelanggan dapat memilih opsi "Ambil di Dealer" saat checkout. Pesanan dengan opsi ini tidak dikenakan biaya pengiriman dan melewati langkah pemilihan kurir.
-*   **Shipping type:** Setiap pesanan memiliki `shipping_type` yang membedakan antara `courier` (dikirim) dan `dealer_pickup` (ambil di dealer).
-*   **Pelacakan pengiriman:** Nomor pelacakan harus diisi oleh admin setelah pesanan dikirim.
+### 5. Pembayaran
+*   **Konfirmasi pembayaran:** pesanan hanya diproses setelah pembayaran dikonfirmasi (status `paid`).
+*   **Stok berkurang saat paid:** transisi ke `paid` memicu pengurangan stok varian.
+*   **Metode pembayaran:** Midtrans (Snap.js) dengan auto-poll status pembayaran.
 
-### 6. Pengguna & Peran
-*   **Admin:** Memiliki akses penuh ke semua fitur dan data.
-*   **Pelanggan:** Hanya dapat melihat dan mengelola data mereka sendiri (pesanan, profil, keranjang).
-*   **Registrasi:** Email harus unik untuk setiap pengguna.
-*   **Verifikasi email:** Pengguna harus memverifikasi email mereka sebelum dapat melakukan pembelian.
+### 6. Pengiriman
+*   **Alamat pengiriman:** harus lengkap dan valid sebelum pesanan diproses.
+*   **Ambil di Dealer:** pelanggan dapat memilih "Ambil di Dealer" saat checkout; tidak dikenakan biaya ongkir dan melewati langkah pemilihan kurir.
+*   **Shipping type:** `courier` (dikirim) atau `dealer_pickup` (ambil di dealer).
+*   **Pelacakan pengiriman:** nomor resi diisi admin saat pesanan dikirim.
 
-### 7. Diskon & Promosi
-*   **Diskon berlaku:** Diskon hanya berlaku untuk produk yang memenuhi syarat dan dalam periode waktu yang ditentukan.
-*   **Diskon tumpang tindih:** Jika ada beberapa diskon yang berlaku, sistem harus menerapkan diskon dengan nilai tertinggi (atau sesuai aturan prioritas).
-*   **Kode promo:** Kode promo harus unik dan memiliki batas penggunaan.
+### 7. Pengguna & Peran
+*   **Admin:** akses penuh ke semua fitur dan data (termasuk kelola stok per varian).
+*   **Pelanggan:** hanya mengelola data sendiri (pesanan, profil, keranjang, wishlist).
+*   **Registrasi:** email harus unik.
 
-### 8. Inventaris
-*   **Pengurangan stok:** Stok produk dikurangi saat pesanan dikonfirmasi (bukan saat ditambahkan ke keranjang).
-*   **Peningkatan stok:** Stok dapat ditingkatkan melalui manajemen inventaris admin.
-*   **Stok rendah:** Sistem harus memberi peringatan ketika stok produk di bawah ambang batas tertentu.
+### 8. Konten & Lainnya
+*   Banner, promo, event, news, career, dealer, showroom, maps location dikelola via Filament.
+*   Harga tidak boleh negatif.
 
-### 9. Laporan & Analitik
-*   **Data penjualan:** Hanya admin yang dapat mengakses laporan penjualan dan data analitik.
-*   **Privasi data:** Data pelanggan tidak boleh dibagikan kepada pihak ketiga tanpa izin.
-
-### 10. Keamanan
-*   **Kata sandi:** Kata sandi harus memenuhi persyaratan keamanan minimum (panjang, karakter khusus).
-*   **Sesi:** Sesi pengguna harus kedaluwarsa setelah periode tidak aktif.
-*   **API rate limiting:** API harus memiliki batasan kecepatan untuk mencegah penyalahgunaan.
+### 9. Keamanan
+*   Kata sandi aman, CSRF protection, validasi input, hindari XSS dengan Blade escaping.

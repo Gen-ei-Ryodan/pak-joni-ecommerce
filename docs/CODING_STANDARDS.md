@@ -3,7 +3,7 @@
 ## Standar Pengkodean Umum
 
 ### 1. PHP
-*   **Versi PHP:** Gunakan PHP 8.1 atau lebih tinggi.
+*   **Versi PHP:** Gunakan PHP 8.3 atau lebih tinggi (production 8.4.23).
 *   **Strict Types:** Selalu gunakan `declare(strict_types=1);` di awal file PHP.
 *   **Type Declarations:** Gunakan type declarations untuk parameter dan return type.
 *   **PSR-12:** Ikuti standar PSR-12 untuk formatting kode.
@@ -25,8 +25,8 @@
 
 ### 4. Code Structure
 *   **Controller Methods:** Maksimal 10-15 baris per method. Pindahkan logika bisnis ke Service.
-*   **Service Classes:** Gunakan untuk logika bisnis kompleks.
-*   **Repository Pattern (Opsional):** Gunakan untuk mengabstraksi query database.
+*   **Service Layer:** Gunakan `app/Services/` untuk logika bisnis kompleks (StockService, OrderService, PaymentService, BiteshipService, ImageService).
+*   **Bukan Repository Pattern:** project ini memakai Service Layer, tidak memakai repository.
 *   **Dependency Injection:** Gunakan dependency injection di Controller dan Service.
 
 ### 5. Error Handling
@@ -60,3 +60,8 @@
 *   **Eager Loading:** Gunakan eager loading untuk menghindari N+1 query problem.
 *   **Caching:** Gunakan caching untuk data yang sering diakses.
 *   **Database Indexes:** Tambahkan indexes untuk kolom yang sering di-query.
+
+### 11. Filament v4 (khusus proyek ini)
+*   **Header action namespace:** gunakan `\Filament\Actions\Action` untuk header actions. **JANGAN** pakai `Filament\Tables\Actions\Action` untuk action header (causes `Class not found`).
+*   **Stok per varian:** stok dikelola per `ItemColor`/`PartVariant`, bukan pada Item/Part utama.
+*   **TIDAK menggunakan Repository Pattern** — ikuti Service Layer (`app/Services/`) yang sudah ada.

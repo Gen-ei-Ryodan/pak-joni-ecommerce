@@ -1,49 +1,58 @@
 # PROJECT_CONTEXT.md
 
 ## Nama Proyek
-E-commerce Platform
+**JOMOTO Center** — E-commerce Platform Dealer Motor, Mobil, ATV & Sparepart (Client: Pak Joni)
 
 ## Tujuan Proyek
-Platform e-commerce ini bertujuan untuk menyediakan solusi lengkap bagi penjual dan pembeli untuk melakukan transaksi jual beli produk secara online. Ini mencakup fitur-fitur mulai dari penelusuran produk, keranjang belanja, pembayaran, hingga manajemen pesanan dan pengiriman.
+Platform e-commerce untuk dealer motor/mobil/ATV dan sparepart (JOMOTO Center). Menyediakan katalog produk, keranjang, checkout, pembayaran (Midtrans), pesanan, pengiriman (Biteship), serta admin panel Filament untuk pengelolaan master data, order, dan stok. Berjalan di production: `https://jomotocenter.com`.
 
-## Tech Stack
-*   **Backend:** PHP (Laravel Framework)
-*   **Frontend:** Blade Templates (dengan kemungkinan integrasi JavaScript/Vue.js untuk interaktivitas)
-*   **Database:** MySQL/PostgreSQL (relasional)
-*   **Server:** Nginx/Apache
-*   **Deployment:** Docker (opsional)
+## Lokasi & Repo
+- Source: `/Users/10969sosho/PROJECT/CVSS/ON_PROGRES/PAK JONI/ECOMMERCE/`
+- Git: `https://github.com/Gen-ei-Ryodan/pak-joni-ecommerce.git` (branch `main`)
+- Production remote: `alurelab@emerald.hidden-server.net:31988`
+
+## Tech Stack (Aktual)
+*   **Backend:** PHP 8.3+ (local 8.5, server 8.4.23), **Laravel 13** (`laravel/framework ^13.0`)
+*   **Admin Panel:** **Filament v4** (`filament/filament ^4.0`)
+*   **Frontend:** Blade Templates + Livewire, Tailwind CSS, Vite
+*   **Database:** MySQL (cPanel shared hosting)
+*   **Auth:** Laravel (session based), Dusk untuk browser test
+*   **Payment:** Midtrans Snap.js
+*   **Shipping:** Biteship
 
 ## Modul Utama
-1.  **Manajemen Produk:** Penambahan, pengeditan, penghapusan, dan penelusuran produk.
-2.  **Manajemen Pengguna:** Registrasi, login, profil pengguna, dan manajemen peran (Admin, Pelanggan).
-3.  **Keranjang Belanja:** Menambah, menghapus, dan memperbarui item di keranjang.
-4.  **Checkout & Pembayaran:** Proses checkout, integrasi gateway pembayaran.
-5.  **Manajemen Pesanan:** Pelacakan pesanan, pembaruan status pesanan.
-6.  **Manajemen Pengiriman:** Integrasi dengan layanan pengiriman.
-7.  **Admin Dashboard:** Panel kontrol untuk mengelola produk, pesanan, pengguna, dll.
+1.  **Manajemen Produk (Item & Part):** Items = motor/mobil/ATV dengan varian warna (`ItemColor`), Parts = sparepart dengan varian (`PartVariant`). Relasi: images, specifications, 360 images, catalog, price list, kategori.
+2.  **Manajemen Stok:** Stok per varian (`ItemColor`/`PartVariant`), riwayat mutasi (`stock_mutations`), auto-decrease saat order paid, kelola via modal di admin.
+3.  **Keranjang & Wishlist:** Polymorphic (Item/ItemColor/Part/PartVariant).
+4.  **Checkout & Pembayaran:** Midtrans, opsi ambil di dealer (`dealer_pickup`) atau kurir (`courier`).
+5.  **Manajemen Pesanan:** Status lifecycle (pending → processing → shipped → completed; cancellable).
+6.  **Manajemen Pengiriman:** Biteship.
+7.  **Admin Dashboard (Filament v4):** 30+ resources (produk, part, order, banner, event, news, career, dealer, showroom, dll).
 
 ## Peran Pengguna
-*   **Admin:** Mengelola seluruh platform (produk, pesanan, pengguna, kategori, dll.).
-*   **Pelanggan:** Menjelajahi produk, melakukan pembelian, melacak pesanan.
-*   **(Opsional) Penjual:** Mengelola produk dan pesanan mereka sendiri (jika ini adalah platform multi-vendor).
+*   **Admin:** Mengelola seluruh platform via Filament (produk, stok, order, pengguna, kategori, konten).
+*   **Pelanggan (Customer):** Menjelajah produk, cart, wishlist, checkout, melacak pesanan, quotation request.
+*   **Guest:** Melihat katalog (termasuk stok), bisa lihat detail produk.
 
 ## Alur Bisnis Singkat
-1.  **Registrasi/Login:** Pelanggan mendaftar atau masuk ke akun mereka.
-2.  **Penelusuran Produk:** Pelanggan mencari dan melihat detail produk.
-3.  **Tambah ke Keranjang:** Pelanggan menambahkan produk yang diinginkan ke keranjang belanja.
-4.  **Checkout:** Pelanggan melanjutkan ke proses checkout, memilih alamat pengiriman dan metode pembayaran.
-5.  **Pembayaran:** Pelanggan menyelesaikan pembayaran melalui gateway yang terintegrasi.
-6.  **Konfirmasi Pesanan:** Pesanan dikonfirmasi dan penjual/admin diberitahu.
-7.  **Pengiriman:** Produk dikemas dan dikirim ke pelanggan.
-8.  **Penerimaan Pesanan:** Pelanggan menerima produk.
+1.  Pelanggan menjelajah produk dan melihat stok per varian.
+2.  Tambah ke keranjang (varian dipilih; jika stok 0, item tidak bisa ditambahkan).
+3.  Checkout — pilih alamat + metode pengiriman (kurir / ambil di dealer).
+4.  Pembayaran via Midtrans → status `paid`.
+5.  Saat `paid`, **stok varian otomatis berkurang** + dicatat di `stock_mutations`.
+6.  Admin proses order → shipped → completed.
 
 ## Struktur Folder Utama
-*   `app/`: Logika aplikasi utama (Models, Controllers, Providers, dll.)
-*   `resources/`: View (Blade templates), aset (CSS, JS)
-*   `database/`: Migrasi, seeder, factory
-*   `public/`: File yang dapat diakses publik
-*   `routes/`: Definisi rute aplikasi
-*   `config/`: File konfigurasi
-*   `storage/`: File yang diunggah, cache, log
-*   `docs/`: Dokumentasi proyek (yang sedang kita buat ini)
-*   `tests/`: Unit dan fitur tes
+*   `app/Filament/Resources/`: Admin resources (30+)
+*   `app/Http/Controllers/Buyer/`: Storefront controllers (Motor, Part, Cart, Checkout, Order, dll.)
+*   `app/Services/`: Logika bisnis (StockService, OrderService, PaymentService, BiteshipService, ImageService)
+*   `app/Models/`: 40+ Eloquent models
+*   `resources/views/`: Blade (buyer/ + filament modals)
+*   `database/migrations/`: 38 migration
+*   `routes/web.php`: Definisi rute
+*   `docs/`: Dokumen proyek
+*   `tests/`: Unit & feature tests
+
+## Deployment
+- Skrip: `deploy.sh` (SSH ke emerald.hidden-server.net port 31988, git pull + `cp -r` — rsync TIDAK tersedia di server).
+- Public dir: `/home/alurelab/jomotocenter.com`. Lihat DEPLOYMENT.md untuk detail.

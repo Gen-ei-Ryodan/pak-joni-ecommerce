@@ -1,57 +1,36 @@
 # API_REFERENCE.md
 
-## Daftar Endpoint API
+## Catatan Penting
+Project ini **bukan API-only**. Tidak ada `routes/api.php` / REST API untuk public. Aplikasi adalah full-stack web (Blade storefront + Filament admin). Berikut endpoint HTTP yang tersedia (routes/web.php).
 
-### Autentikasi
+## Endpoint Publik (Guest)
+| Method | URL | Fungsi |
+|--------|-----|--------|
+| GET | `/` | Home |
+| GET | `/about` | Tentang |
+| GET | `/kategori/{categoryType}/{brand}` | Daftar produk per kategori/brand (menampilkan stok varian) |
+| GET | `/cari` | Pencarian |
+| GET | `/motors/{slug}` | Detail motor (varian, stok, gambar) |
+| GET | `/parts/{part:slug}` | Detail part |
+| GET | `/daftar-harga` | Daftar harga |
+| GET | `/part-katalog` | Katalog part |
+| GET | `/berita`, `/acara`, `/karir`, `/kegiatan-internal`, `/showroom` | Halaman konten |
+| GET | `/whatsapp/{type}/{id}` | Redirect chat whatsapp |
+| GET | `/regions/provinces`, `/regions/regencies/{provinceCode}`, `/regions/districts/{regencyCode}`, `/regions/villages/{districtCode}` | Wilayah Indonesia (JSON) |
 
-#### POST /api/login
-*   **Deskripsi:** Login pengguna.
-*   **Request Body:** `{"email": "user@example.com", "password": "password"}`
-*   **Response:** `{"token": "jwt_token", "user": {...}}`
+## Endpoint Pembayaran (Midtrans)
+| Method | URL | Fungsi |
+|--------|-----|--------|
+| POST | `/payment/midtrans/notification` | Webhook notifikasi status pembayaran dari Midtrans |
+| GET | `/payment/midtrans/finish` | Redirect setelah pembayaran selesai |
+| GET | `/payment/midtrans/unfinish` | Redirect jika pembayaran dibatalkan |
 
-#### POST /api/register
-*   **Deskripsi:** Registrasi pengguna baru.
-*   **Request Body:** `{"name": "John Doe", "email": "user@example.com", "password": "password", "password_confirmation": "password"}`
-*   **Response:** `{"token": "jwt_token", "user": {...}}`
+## Auth & Area Customer
+- Registrasi/login, profil, address, cart, wishlist, checkout, order — semua via web session di `routes/web.php` (controllers `app/Http/Controllers/Buyer/`).
 
-### Produk
+## Admin (Filament)
+- Akses panel via Filament di path `/admin` (auth session, role admin).
 
-#### GET /api/products
-*   **Deskripsi:** Mendapatkan daftar produk.
-*   **Query Parameters:** `?category=id&search=keyword&page=1`
-*   **Response:** `{"data": [...], "meta": {...}}`
-
-#### GET /api/products/{id}
-*   **Deskripsi:** Mendapatkan detail produk.
-*   **Response:** `{"id": 1, "name": "Product Name", ...}`
-
-### Keranjang
-
-#### GET /api/cart
-*   **Deskripsi:** Mendapatkan item keranjang pengguna.
-*   **Headers:** `Authorization: Bearer {token}`
-*   **Response:** `{"items": [...], "total": 100}`
-
-#### POST /api/cart
-*   **Deskripsi:** Menambahkan produk ke keranjang.
-*   **Headers:** `Authorization: Bearer {token}`
-*   **Request Body:** `{"product_id": 1, "quantity": 2}`
-*   **Response:** `{"message": "Product added to cart"}`
-
-### Pesanan
-
-#### POST /api/orders
-*   **Deskripsi:** Membuat pesanan baru.
-*   **Headers:** `Authorization: Bearer {token}`
-*   **Request Body:** `{"shipping_address_id": 1, "payment_method": "credit_card"}`
-*   **Response:** `{"order_id": 123, "status": "pending"}`
-
-#### GET /api/orders
-*   **Deskripsi:** Mendapatkan daftar pesanan pengguna.
-*   **Headers:** `Authorization: Bearer {token}`
-*   **Response:** `{"orders": [...]}`
-
-#### GET /api/orders/{id}
-*   **Deskripsi:** Mendapatkan detail pesanan.
-*   **Headers:** `Authorization: Bearer {token}`
-*   **Response:** `{"id": 123, "items": [...], "status": "processing"}`
+## Catatan Integrasi
+- **Midtrans** — webhook notification memicu pembaruan status pembayaran; saat `paid`, OrderService memanggil StockService untuk auto-decrease stok varian.
+- **Biteship** — untuk perhitungan & pengiriman kurir.

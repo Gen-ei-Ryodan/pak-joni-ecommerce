@@ -55,12 +55,12 @@ class OrderService
         return true;
     }
 
-    public function markAsPaid(Order $order): bool
+    public function markAsPaid(Order $order, array $extra = []): bool
     {
-        $result = $this->updateStatus($order, 'paid', [
+        $result = $this->updateStatus($order, 'paid', array_merge([
             'payment_status' => 'paid',
             'paid_at' => now(),
-        ]);
+        ], $extra));
 
         if ($result) {
             $this->decreaseStockOnOrder($order);

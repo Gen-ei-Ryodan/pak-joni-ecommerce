@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentService
 {
+    public function __construct(
+        protected OrderService $orderService,
+    ) {}
+
     /**
      * Configure Midtrans global settings.
      */
@@ -270,19 +274,14 @@ class PaymentService
      */
     private function markPaymentSuccess(Order $order, \Midtrans\Notification $notif): void
     {
-        DB::transaction(function () use ($order, $notif) {
-            $paymentType = $notif->payment_type ?? 'unknown';
-            $transactionId = $notif->transaction_id ?? ('MT-'.$order->order_no.'-'.now()->timestamp);
+        $paymentType = $notif->payment_type ?? 'unknown';
+        $transactionId = $notif->transaction_id ?? ('MT-'.$order->order_no.'-'.now()->timestamp);
 
-            $order->update([
-                'payment_status' => 'paid',
-                'status' => 'paid',
-                'paid_at' => now(),
-                'payment_method' => $paymentType,
-                'payment_provider' => 'midtrans',
-                'payment_reference' => $transactionId,
-            ]);
-        });
+        $this->orderService->markAsPaid($order, [
+            'payment_method' => $paymentType,
+            'payment_provider' => 'midtrans',
+            'payment_reference' => $transactionId,
+        ]);
     }
 
     /**
@@ -291,10 +290,7 @@ class PaymentService
     public function simulateSuccessPayment(Order $order): void
     {
         DB::transaction(function () use ($order) {
-            $order->update([
-                'payment_status' => 'paid',
-                'status' => 'paid',
-                'paid_at' => now(),
+            $this->orderService->markAsPaid($order, [
                 'payment_method' => 'simulated',
                 'payment_provider' => 'simulated',
             ]);
@@ -342,9 +338,6 @@ class PaymentService
                 ['order_id' => $order->id],
                 ['status' => 'expired']
             );
-
-            // Return reserved stock
-            $this->returnStock($order);
         });
     }
 
@@ -396,13 +389,11 @@ class PaymentService
         // If Midtrans says paid but local DB not updated yet, sync it
         if ($paid && $order->payment_status !== 'paid') {
             DB::transaction(function () use ($order, $data) {
-                $order->update([
-                    'payment_status' => 'paid',
-                    'status' => 'paid',
-                    'paid_at' => $data['settlement_time'] ?? now(),
+                $this->orderService->markAsPaid($order, [
                     'payment_method' => $data['payment_type'] ?? 'unknown',
                     'payment_provider' => 'midtrans',
                     'payment_reference' => $data['transaction_id'] ?? null,
+                    'paid_at' => $data['settlement_time'] ?? now(),
                 ]);
 
                 $order->payment()->updateOrCreate(
@@ -449,25 +440,5 @@ class PaymentService
         }
 
         return true;
-    }
-
-    /**
-     * Return reserved stock when payment expires.
-     */
-    private function returnStock(Order $order): void
-    {
-        foreach ($order->items as $item) {
-            if ($item->itemable_type === 'App\\Models\\PartVariant') {
-                $variant = \App\Models\PartVariant::lockForUpdate()->find($item->itemable_id);
-                if ($variant) {
-                    $readyQty = max(0, $item->quantity - (int)($item->indent_quantity ?? 0));
-                    if ($readyQty > 0) {
-                        $variant->stock += $readyQty;
-                        $variant->stock_updated_at = now();
-                        $variant->save();
-                    }
-                }
-            }
-        }
     }
 }

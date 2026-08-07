@@ -343,19 +343,6 @@ class CheckoutController extends Controller
             $this->paymentService->createPayment($order);
 
             foreach ($cart->items as $it) {
-                // Decrement stock for part variants
-                if ($it->itemable_type === PartVariant::class) {
-                    $variant = PartVariant::lockForUpdate()->find($it->itemable_id);
-                    if ($variant) {
-                        $readyQty = max(0, $it->quantity - (int)($it->indent_quantity ?? 0));
-                        if ($readyQty > 0) {
-                            $variant->stock = max(0, $variant->stock - $readyQty);
-                            $variant->stock_updated_at = now();
-                            $variant->save();
-                        }
-                    }
-                }
-
                 $partId = null;
                 $sku = '';
                 if ($it->itemable_type === PartVariant::class) {

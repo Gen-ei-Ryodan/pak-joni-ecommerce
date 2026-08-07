@@ -88,6 +88,13 @@ class CartCheckoutTest extends TestCase
             'payment_status' => 'pending',
         ]);
 
+        // Stock is NOT reduced at order placement; it is reduced only when the order is marked paid
+        $variant->refresh();
+        $this->assertSame(10, $variant->stock);
+
+        $order = \App\Models\Order::query()->where('user_id', $user->id)->latest('id')->first();
+        app(\App\Services\OrderService::class)->markAsPaid($order);
+
         $variant->refresh();
         $this->assertSame(8, $variant->stock);
 
