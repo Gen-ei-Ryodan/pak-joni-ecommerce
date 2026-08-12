@@ -6,6 +6,9 @@ use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Midtrans\Config;
+use Midtrans\Notification;
+use Midtrans\Snap;
 
 class PaymentService
 {
@@ -20,14 +23,14 @@ class PaymentService
     {
         $isProduction = config('services.midtrans.is_production', false);
 
-        \Midtrans\Config::$serverKey = config('services.midtrans.server_key');
-        \Midtrans\Config::$clientKey = config('services.midtrans.client_key');
-        \Midtrans\Config::$isProduction = $isProduction;
-        \Midtrans\Config::$isSanitized = config('services.midtrans.is_sanitized', true);
-        \Midtrans\Config::$is3ds = config('services.midtrans.is_3ds', true);
+        Config::$serverKey = config('services.midtrans.server_key');
+        Config::$clientKey = config('services.midtrans.client_key');
+        Config::$isProduction = $isProduction;
+        Config::$isSanitized = config('services.midtrans.is_sanitized', true);
+        Config::$is3ds = config('services.midtrans.is_3ds', true);
 
         if (! $isProduction) {
-            \Midtrans\Config::$overrideNotifUrl = route('payment.midtrans.notification');
+            Config::$overrideNotifUrl = route('payment.midtrans.notification');
         }
     }
 
@@ -77,7 +80,7 @@ class PaymentService
 
             // Add shipping as a separate item (only for non-dealer-pickup)
             $shippingCost = (int) round((float) $order->shipping_cost);
-            if ($shippingCost > 0 && !$order->isDealerPickup()) {
+            if ($shippingCost > 0 && ! $order->isDealerPickup()) {
                 $items[] = [
                     'id' => 'SHIPPING',
                     'price' => $shippingCost,
@@ -129,7 +132,7 @@ class PaymentService
                 ],
             ];
 
-            $snapToken = \Midtrans\Snap::getSnapToken($params);
+            $snapToken = Snap::getSnapToken($params);
 
             // Store snap token in payment payload
             $order->payment()->update([
@@ -146,6 +149,7 @@ class PaymentService
                 'order_id' => $order->id,
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return null;
         }
     }
@@ -161,15 +165,16 @@ class PaymentService
             // Verify webhook signature
             if (! $this->verifyWebhookSignature($payload)) {
                 Log::warning('Midtrans webhook signature verification failed', ['payload' => $payload]);
+
                 return ['success' => false, 'message' => 'Invalid signature'];
             }
 
             // Idempotency check: prevent processing the same notification twice
             $idempotencyKey = ($payload['transaction_id'] ?? '')
-                . '-' . ($payload['transaction_status'] ?? '')
-                . '-' . ($payload['status_code'] ?? '');
+                .'-'.($payload['transaction_status'] ?? '')
+                .'-'.($payload['status_code'] ?? '');
 
-            $notif = new \Midtrans\Notification();
+            $notif = new Notification;
 
             $transactionStatus = $notif->transaction_status;
             $fraudStatus = $notif->fraud_status;
@@ -192,6 +197,7 @@ class PaymentService
                     'order_no' => $orderId,
                     'idempotency_key' => $idempotencyKey,
                 ]);
+
                 return ['success' => true, 'message' => 'Duplicate notification skipped'];
             }
 
@@ -232,47 +238,15 @@ class PaymentService
                 'payload' => $payload,
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 
     /**
-     * Handle Midtrans callback from redirect (user arrives at finish/redirect URL).
-     */
-    public function midtransCallbackHandler(array $payload): array
-    {
-        $orderId = $payload['order_id'] ?? null;
-        $transactionStatus = $payload['transaction_status'] ?? null;
-
-        if (! $orderId || ! $transactionStatus) {
-            return ['success' => false, 'message' => 'Invalid payload'];
-        }
-
-        $order = Order::query()->with('payment')->where('order_no', $orderId)->first();
-
-        if (! $order) {
-            return ['success' => false, 'message' => 'Order not found'];
-        }
-
-        // Avoid re-processing if already paid
-        if ($order->payment_status === 'paid') {
-            return ['success' => true, 'message' => 'Already paid'];
-        }
-
-        match ($transactionStatus) {
-            'settlement', 'capture' => $this->simulateSuccessPayment($order),
-            'deny', 'cancel' => $this->paymentFailed($order),
-            'expire' => $this->paymentExpired($order),
-            default => null,
-        };
-
-        return ['success' => true];
-    }
-
-    /**
      * Mark order as paid (internal, from midtrans notification).
      */
-    private function markPaymentSuccess(Order $order, \Midtrans\Notification $notif): void
+    private function markPaymentSuccess(Order $order, Notification $notif): void
     {
         $paymentType = $notif->payment_type ?? 'unknown';
         $transactionId = $notif->transaction_id ?? ('MT-'.$order->order_no.'-'.now()->timestamp);
@@ -282,29 +256,6 @@ class PaymentService
             'payment_provider' => 'midtrans',
             'payment_reference' => $transactionId,
         ]);
-    }
-
-    /**
-     * Simulate successful payment (for testing/simulated mode).
-     */
-    public function simulateSuccessPayment(Order $order): void
-    {
-        DB::transaction(function () use ($order) {
-            $this->orderService->markAsPaid($order, [
-                'payment_method' => 'simulated',
-                'payment_provider' => 'simulated',
-            ]);
-
-            $order->payment()->updateOrCreate(
-                ['order_id' => $order->id],
-                [
-                    'provider' => 'simulated',
-                    'provider_reference' => 'SIM-'.$order->order_no.'-'.now()->timestamp,
-                    'status' => 'success',
-                    'payload' => ['simulated' => true, 'paid_at' => now()->toDateTimeString()],
-                ]
-            );
-        });
     }
 
     /**
@@ -349,9 +300,9 @@ class PaymentService
     {
         $this->configureMidtrans();
 
-        $url = \Midtrans\Config::$isProduction
-            ? 'https://api.midtrans.com/v2/' . $order->order_no . '/status'
-            : 'https://api.sandbox.midtrans.com/v2/' . $order->order_no . '/status';
+        $url = Config::$isProduction
+            ? 'https://api.midtrans.com/v2/'.$order->order_no.'/status'
+            : 'https://api.sandbox.midtrans.com/v2/'.$order->order_no.'/status';
 
         $serverKey = config('services.midtrans.server_key');
 
@@ -361,7 +312,7 @@ class PaymentService
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             'Accept: application/json',
-            'Authorization: Basic ' . base64_encode($serverKey . ':'),
+            'Authorization: Basic '.base64_encode($serverKey.':'),
         ]);
 
         $response = curl_exec($ch);
@@ -374,6 +325,7 @@ class PaymentService
                 'http_code' => $httpCode,
                 'response' => $response,
             ]);
+
             return ['paid' => false, 'transaction_status' => 'pending'];
         }
 
@@ -428,7 +380,7 @@ class PaymentService
         $signatureKey = $payload['signature_key'] ?? '';
 
         // Midtrans signature format: SHA512(order_id + status_code + gross_amount + server_key)
-        $computedSignature = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
+        $computedSignature = hash('sha512', $orderId.$statusCode.$grossAmount.$serverKey);
 
         if (! hash_equals($computedSignature, (string) $signatureKey)) {
             Log::warning('Midtrans webhook signature mismatch', [
@@ -436,6 +388,7 @@ class PaymentService
                 'computed' => $computedSignature,
                 'received' => $signatureKey,
             ]);
+
             return false;
         }
 

@@ -2,6 +2,24 @@
 
 ## Catatan Perubahan Proyek
 
+### v1.4.0 (2026-08-12) — OWASP Security Hardening
+
+#### Kerentanan Kritis Diperbaiki
+*   **Payment bypass via Midtrans `finish` redirect** (`MidtransController::finish`). Sebelumnya endpoint GET publik `/payment/midtrans/finish` menerima `order_id` + `transaction_status` dari query string dan memanggil `midtransCallbackHandler()` → `simulateSuccessPayment()` yang menandai order **paid tanpa verifikasi**. Kini endpoint hanya redirect UX; status pembayaran hanya diperbarui lewat webhook `notification` (signature-verified) atau endpoint `status` (verifikasi API server-side). Metode `midtransCallbackHandler` & `simulateSuccessPayment` dihapus.
+*   **Open redirect pada login** (`LoginController::store`). `redirect` param dari query di-validasi: hanya path internal/same-host yang diperbolehkan.
+*   **Ongkir manipulatif** (`CheckoutController::setShipping`). `shipping_cost` dari client tidak lagi dipercaya — harga ongkir selalu diambil ulang server-side dari Biteship untuk kurir/layanan terpilih.
+
+#### Kerentanan Tinggi Diperbaiki
+*   **Dependency CVEs** — `guzzlehttp/guzzle` 7.13.2 → 7.15.3 dan `league/commonmark` 2.8.2 → 2.10.0 (12 advisories termasuk HIGH) via `composer update`; `composer audit` kini clean.
+
+#### Penguatan
+*   `deploy.sh`: `.env` kini `chmod 600` (bukan 644/world-readable), storage `chmod 775`.
+*   `trustProxies`: tidak lagi `*`; hanya mempercayai proxy yang terdaftar di env `TRUSTED_PROXIES` (mencegah spoofing header X-Forwarded-*).
+*   Rate limiting `throttle:auth` (10/menit/IP) pada login/register/forgot-password/reset-password.
+*   Middleware baru `SecurityHeaders` (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS) dipasang ke grup `web`.
+*   Validasi kode wilayah (`RegionController`) — mencegah manipulasi path pada API wilayah.
+*   Regression tests baru `tests/Feature/SecurityRegressionTest.php` (payment bypass, open redirect, security headers).
+
 ### v1.3.1 (2026-08-07) — Perbaikan Stok Tidak Berkurang Setelah Checkout
 
 #### Diperbaiki

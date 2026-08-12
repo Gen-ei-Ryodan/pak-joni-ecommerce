@@ -30,10 +30,34 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        if ($request->filled('redirect')) {
-            return redirect($request->input('redirect'));
+        // Only allow redirect to internal (same-origin) paths to block open redirects.
+        $redirect = $request->input('redirect');
+
+        if ($redirect && $this->isSafeRedirect($redirect)) {
+            return redirect($redirect);
         }
 
         return redirect()->intended('/dashboard');
+    }
+
+    /**
+     * Ensure the target redirect path is internal (relative path on this host).
+     */
+    private function isSafeRedirect(string $target): bool
+    {
+        if (str_starts_with($target, '//')) {
+            return false;
+        }
+
+        if (str_starts_with($target, '/')) {
+            return true;
+        }
+
+        $host = parse_url($target, PHP_URL_HOST);
+        if (! $host) {
+            return false;
+        }
+
+        return $host === request()->getHost();
     }
 }

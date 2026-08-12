@@ -28,6 +28,7 @@ class MidtransController extends Controller
 
         if (! $result['success']) {
             Log::error('Midtrans notification processing failed', $result);
+
             return response()->json($result, 400);
         }
 
@@ -37,21 +38,24 @@ class MidtransController extends Controller
     /**
      * Handle finish redirect after Midtrans payment.
      * Called when Midtrans redirects user back to the app.
+     *
+     * NOTE: This is a UX-only redirect. The order is NEVER marked as paid here
+     * because the browser redirect and its query parameters are not trustworthy.
+     * Payment state is only updated via the signed server-to-server notification
+     * webhook or the authenticated, server-side status endpoint.
      */
     public function finish(Request $request)
     {
-        $orderId = $request->query('order_id');
-        $transactionStatus = $request->query('transaction_status');
+        if ($request->user()) {
+            $orderId = $request->query('order_id');
 
-        if ($orderId && $transactionStatus) {
-            $this->paymentService->midtransCallbackHandler([
-                'order_id' => $orderId,
-                'transaction_status' => $transactionStatus,
-            ]);
-        }
+            if ($orderId) {
+                $order = Order::query()->where('order_no', $orderId)->where('user_id', $request->user()->id)->first();
 
-        if ($orderId) {
-            return redirect()->route('buyer.orders.show', $orderId);
+                if ($order) {
+                    return redirect()->route('buyer.orders.show', $order);
+                }
+            }
         }
 
         return redirect()->route('buyer.dashboard');

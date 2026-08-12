@@ -132,15 +132,71 @@ class CheckoutController extends Controller
             'service_name' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $addressId = (int) ($request->session()->get('checkout.address_id') ?? 0);
+        if (! $addressId) {
+            return redirect('/checkout')->with('status', 'Pilih alamat dulu.');
+        }
+
+        $address = Address::query()->where('user_id', $request->user()->id)->find($addressId);
+        if (! $address || empty($address->postal_code)) {
+            return redirect()->back()->withErrors(['shipping' => 'Alamat tidak valid.']);
+        }
+
+        // Security: never trust client-provided shipping_cost. Re-query the carrier
+        // rates server-side and use the quoted price for the selected service.
+        $cart = $this->loadSelectedCart($request);
+        if ($cart->items->isEmpty()) {
+            return redirect('/cart')->with('status', 'Cart masih kosong.');
+        }
+
+        $serverCost = $this->serverShippingCost($cart, $address, $validated['courier'], $validated['service']);
+
+        if ($serverCost === null) {
+            return redirect()->back()->withErrors(['shipping' => 'Ongkos kirim tidak valid. Silakan pilih ulang kurir.']);
+        }
+
         $request->session()->put('checkout.shipping', [
             'courier' => $validated['courier'],
             'service' => $validated['service'],
-            'shipping_cost' => (float) $validated['shipping_cost'],
+            'shipping_cost' => $serverCost,
             'courier_name' => $validated['courier_name'] ?? $validated['courier'],
             'service_name' => $validated['service_name'] ?? $validated['service'],
         ]);
 
         return redirect('/checkout/payment');
+    }
+
+    /**
+     * Query the carrier rate server-side and return the quoted price for the
+     * selected courier/service, or null when no match is found.
+     */
+    private function serverShippingCost(Cart $cart, Address $address, string $courier, string $service): ?float
+    {
+        try {
+            $items = $this->biteshipService->buildItemsFromCart($cart->items);
+            $result = $this->biteshipService->getRates(
+                items: $items,
+                destinationPostalCode: $address->postal_code,
+                originPostalCode: null, // auto from store address
+                couriers: strtoupper($courier),
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Server shipping rate check failed', ['error' => $e->getMessage()]);
+            return null;
+        }
+
+        if (! ($result['success'] ?? false)) {
+            return null;
+        }
+
+        foreach (($result['pricing'] ?? []) as $rate) {
+            if (($rate['courier_code'] ?? '') === $courier
+                && ($rate['courier_service_code'] ?? '') === $service) {
+                return (float) ($rate['price'] ?? 0);
+            }
+        }
+
+        return null;
     }
 
     public function rates(Request $request)

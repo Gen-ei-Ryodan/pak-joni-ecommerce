@@ -21,16 +21,20 @@ Project ini **bukan API-only**. Tidak ada `routes/api.php` / REST API untuk publ
 ## Endpoint Pembayaran (Midtrans)
 | Method | URL | Fungsi |
 |--------|-----|--------|
-| POST | `/payment/midtrans/notification` | Webhook notifikasi status pembayaran dari Midtrans |
-| GET | `/payment/midtrans/finish` | Redirect setelah pembayaran selesai |
-| GET | `/payment/midtrans/unfinish` | Redirect jika pembayaran dibatalkan |
+| POST | `/payment/midtrans/notification` | Webhook notifikasi status pembayaran dari Midtrans (signature-verified, CSRF-exempt, throttled) |
+| GET | `/payment/midtrans/finish` | Redirect UX setelah pembayaran — **tidak** mengubah status pembayaran |
+| GET | `/payment/midtrans/unfinish` | Redirect UX jika pembayaran dibatalkan |
+| GET | `/payment/midtrans/error` | Redirect UX jika terjadi kesalahan pembayaran |
+| GET | `/payment/midtrans/status/{order}` | Cek status via API Midtrans server-side (auth + ownership) |
+| GET | `/payment/midtrans/snap-token/{order}` | Generate Snap token (auth + ownership) |
 
 ## Auth & Area Customer
 - Registrasi/login, profil, address, cart, wishlist, checkout, order — semua via web session di `routes/web.php` (controllers `app/Http/Controllers/Buyer/`).
+- Endpoint auth (`/login`, `/register`, `/forgot-password`, `/reset-password`) dilindungi `throttle:auth` (10/menit/IP).
 
 ## Admin (Filament)
 - Akses panel via Filament di path `/admin` (auth session, role admin).
 
 ## Catatan Integrasi
-- **Midtrans** — webhook notification memicu pembaruan status pembayaran; saat `paid`, OrderService memanggil StockService untuk auto-decrease stok varian.
-- **Biteship** — untuk perhitungan & pengiriman kurir.
+- **Midtrans** — webhook notification memicu pembaruan status pembayaran; saat `paid`, OrderService memanggil StockService untuk auto-decrease stok varian. Endpoint `finish` hanya redirect dan tidak pernah menandai order `paid`.
+- **Biteship** — untuk perhitungan & pengiriman kurir; `shipping_cost` selalu divalidasi server-side.

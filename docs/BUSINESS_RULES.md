@@ -34,12 +34,15 @@
 *   **Konfirmasi pembayaran:** pesanan hanya diproses setelah pembayaran dikonfirmasi (status `paid`).
 *   **Stok berkurang saat paid:** transisi ke `paid` memicu pengurangan stok varian.
 *   **Metode pembayaran:** Midtrans (Snap.js) dengan auto-poll status pembayaran.
+*   **Verifikasi pembayaran (WAJIB):** status pembayaran **hanya** diperbarui via (a) webhook `notification` yang signature-nya diverifikasi, atau (b) endpoint `status` yang memverifikasi ke API Midtrans server-side. Endpoint redirect `finish`/`unfinish`/`error` **tidak boleh** mengubah status pembayaran — ia murni redirect UX.
+*   **Tidak ada pembayaran simulasi:** `simulateSuccessPayment`/`midtransCallbackHandler` tidak digunakan lagi.
 
 ### 6. Pengiriman
 *   **Alamat pengiriman:** harus lengkap dan valid sebelum pesanan diproses.
 *   **Ambil di Dealer:** pelanggan dapat memilih "Ambil di Dealer" saat checkout; tidak dikenakan biaya ongkir dan melewati langkah pemilihan kurir.
 *   **Shipping type:** `courier` (dikirim) atau `dealer_pickup` (ambil di dealer).
 *   **Pelacakan pengiriman:** nomor resi diisi admin saat pesanan dikirim.
+*   **Ongkir (WAJIB):** harga ongkir **tidak pernah** diambil dari input client. Nilai `shipping_cost` selalu dihitung ulang server-side dari Biteship untuk kurir/layanan yang dipilih (`CheckoutController::serverShippingCost`). Jika tidak ada rate yang cocok, checkout ditolak.
 
 ### 7. Pengguna & Peran
 *   **Admin:** akses penuh ke semua fitur dan data (termasuk kelola stok per varian).

@@ -44,11 +44,14 @@ ssh -n -p "$SSH_PORT" "$SSH_HOST" "
   echo '==> Setting permissions...'
   cd '$PUBLIC_DIR'
   chmod -R 755 storage bootstrap/cache 2>/dev/null || true
-  
+
   echo '==> Running post-deploy tasks...'
   rm -f bootstrap/cache/packages.php bootstrap/cache/services.php
-  
-  if [ -f '.env' ]; then chmod 644 .env; fi
+
+  # .env must be readable only by the owner — never world-readable on a shared host
+  if [ -f '.env' ]; then chmod 600 .env; fi
+  # storage must stay writable by the web server/PHP process
+  chmod -R 775 storage bootstrap/cache 2>/dev/null || true
   
   if command -v composer &> /dev/null; then
     echo '==> Installing dependencies...'

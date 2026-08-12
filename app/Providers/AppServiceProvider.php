@@ -28,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(60);
         });
 
+        RateLimiter::for('auth', function ($job) {
+            return Limit::perMinute(10)->by($job->ip());
+        });
+
         RateLimiter::for('payment-actions', function ($job) {
             return Limit::perMinute(10)->by($job->user()?->id ?: $job->ip());
         });

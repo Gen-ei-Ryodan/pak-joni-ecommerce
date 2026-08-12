@@ -92,7 +92,7 @@ Route::middleware(['auth', 'throttle:10,1'])->group(function () {
     Route::get('/payment/midtrans/snap-token/{order}', [MidtransController::class, 'snapToken'])->name('payment.midtrans.snap-token');
 });
 
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest', 'throttle:auth'])->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('auth.login');
     Route::post('/login', [LoginController::class, 'store'])->name('auth.login.store');
 

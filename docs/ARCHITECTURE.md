@@ -61,8 +61,14 @@ Laravel 13 (JOMOTO Center)
 ## Alur Khusus — Stok
 1.  Admin kelola stok per varian → `StockService::adjustStock` → update stok + `StockMutation`.
 2.  Order dibayar (`OrderService::markAsPaid`) → `StockService::decreaseStockOnOrder` per item itemable ke `ItemColor`/`PartVariant`.
-3.  **Semua jalur yang menandai order menjadi `paid` WAJIB lewat `OrderService::markAsPaid`** agar penurunan stok selalu tercatat. Jalur tersebut: admin (Filament `OrderResource` & `Admin/OrderController`), `PaymentService` (webhook `markPaymentSuccess`, `simulateSuccessPayment`, `checkStatusFromMidtrans`) dan `Buyer/OrderController::payRemaining`.
+3.  **Semua jalur yang menandai order menjadi `paid` WAJIB lewat `OrderService::markAsPaid`** agar penurunan stok selalu tercatat. Jalur tersebut: admin (Filament `OrderResource` & `Admin/OrderController`), `PaymentService` (webhook `markPaymentSuccess`, `checkStatusFromMidtrans`) dan `Buyer/OrderController::payRemaining`. **Tidak ada lagi jalur simulasi payment** (`simulateSuccessPayment`/`midtransCallbackHandler` dihapus pada v1.4.0).
 4.  Stok **tidak** dikurangi saat order dibuat (`CheckoutController::placeOrder`) — hanya saat order `paid`, sesuai BUSINESS_RULES.md.
+
+## Security Middleware
+*   `app/Http/Middleware/SecurityHeaders.php` — set baseline security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS) pada grup `web`.
+*   `app/Http/Middleware/RoleMiddleware.php` — alias `role` (unused saat ini; admin diatur via `User::canAccessPanel`).
+*   Rate limiters di `AppServiceProvider`: `auth` (10/menit/IP), `midtrans-webhook`, `payment-actions`.
+*   Trusted proxies dikonfigurasi via env `TRUSTED_PROXIES` (comma-separated) — bukan `*`.
 
 ## Deployment
 *   `deploy.sh` → SSH ke `emerald.hidden-server.net:31988`, git pull + `cp -r` (rsync tidak ada).

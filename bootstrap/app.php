@@ -15,7 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
         $middleware->redirectGuestsTo(fn () => route('auth.login'));
-        $middleware->trustProxies(at: '*', headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR | \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST | \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT | \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO);
+        $middleware->appendToGroup('web', \App\Http\Middleware\SecurityHeaders::class);
+
+        // Security headers. Only trust the real proxy IPs configured in TRUSTED_PROXIES
+        // (comma-separated) — never trust arbitrary X-Forwarded-* headers from clients,
+        // which would allow spoofing HTTPS detection, rate-limit keys and audit logs.
+        $trustedProxies = array_values(array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', '')))));
+        $middleware->trustProxies(at: $trustedProxies ?: null, headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR | \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST | \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT | \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO);
 
         $middleware->validateCsrfTokens(except: [
             'payment/midtrans/notification',

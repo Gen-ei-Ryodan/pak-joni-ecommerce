@@ -7,8 +7,10 @@ use App\Models\CartItem;
 use App\Models\Part;
 use App\Models\PartCategory;
 use App\Models\PartVariant;
+use App\Models\StoreAddress;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -55,6 +57,30 @@ class CartCheckoutTest extends TestCase
             'province' => 'DKI',
             'postal_code' => '12345',
             'is_default' => true,
+        ]);
+
+        StoreAddress::create([
+            'label' => 'Store',
+            'address_line1' => 'Jl. Toko',
+            'city' => 'Jakarta',
+            'province' => 'DKI',
+            'postal_code' => '12345',
+            'is_default' => true,
+        ]);
+
+        Http::fake([
+            'api.biteship.com/*' => Http::response([
+                'success' => true,
+                'pricing' => [
+                    [
+                        'courier_code' => 'JNE',
+                        'courier_service_code' => 'REG',
+                        'courier_name' => 'JNE',
+                        'courier_service_name' => 'REG',
+                        'price' => 10000,
+                    ],
+                ],
+            ], 200),
         ]);
 
         $this->actingAs($user)
