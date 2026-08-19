@@ -6,6 +6,7 @@
 *   Dropdown Produk pada navbar diubah menjadi panel visual dengan kartu Motor, ATV, dan Part menggunakan asset gambar lokal.
 *   Link brand tetap tersedia di bawah kartu kategori, sementara Daftar Harga dan Part Katalog ditampilkan sebagai kartu katalog yang lebih besar dan mudah diklik.
 *   Layout dibuat responsive untuk menu mobile tanpa mengubah route atau struktur menu navbar lainnya.
+*   Navbar pada halaman login kini menggunakan panel visual dan asset kategori yang sama dengan navbar storefront (`MOTOR.jpeg`, `ATV.jpeg`, dan `PARTS.jpeg`).
 
 ### v1.4.0 (2026-08-12) — OWASP Security Hardening
 

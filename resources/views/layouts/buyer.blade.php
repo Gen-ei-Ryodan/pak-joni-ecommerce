@@ -60,9 +60,9 @@
                                  @php
                                      $navCategoryMap = $navCategoryTypes->keyBy('slug');
                                      $navProductCards = [
-                                         ['slug' => 'motor', 'label' => 'Motor', 'eyebrow' => 'Kendaraan harian', 'image' => 'images/seeder/5.jpeg'],
-                                         ['slug' => 'atv', 'label' => 'ATV', 'eyebrow' => 'Petualangan tanpa batas', 'image' => 'images/seeder/6.jpeg'],
-                                         ['slug' => 'sparepart', 'label' => 'Part', 'eyebrow' => 'Suku cadang pilihan', 'image' => 'images/seeder/part1.jpeg'],
+                                         ['slug' => 'motor', 'label' => 'Motor', 'eyebrow' => 'Kendaraan harian', 'image' => 'MOTOR.jpeg'],
+                                         ['slug' => 'atv', 'label' => 'ATV', 'eyebrow' => 'Petualangan tanpa batas', 'image' => 'ATV.jpeg'],
+                                         ['slug' => 'sparepart', 'label' => 'Part', 'eyebrow' => 'Suku cadang pilihan', 'image' => 'PARTS.jpeg'],
                                      ];
                                  @endphp
 
