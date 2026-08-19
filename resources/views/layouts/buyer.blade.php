@@ -54,36 +54,86 @@
                             use App\Models\Brand;
                             $navCategoryTypes = CategoryType::where('is_active', true)->orderBy('sort_order')->get();
                         @endphp
-                        <div class="nav-dropdown">
-                            <button class="nav-dropdown-toggle" data-dropdown-toggle="produk">Produk <span class="dd-arrow">&#9662;</span></button>
-                            <div class="nav-dropdown-menu" data-dropdown-menu="produk">
-                                @foreach($navCategoryTypes as $ct)
-                                    @php
-                                        $ctBrands = Brand::whereHas('items', fn($q) => $q->where('category_type_id', $ct->id)->where('status', 'active')->where('is_active', true))
+                         <div class="nav-dropdown">
+                             <button class="nav-dropdown-toggle" data-dropdown-toggle="produk">Produk <span class="dd-arrow">&#9662;</span></button>
+                             <div class="nav-dropdown-menu nav-product-menu" data-dropdown-menu="produk">
+                                 @php
+                                     $navCategoryMap = $navCategoryTypes->keyBy('slug');
+                                     $navProductCards = [
+                                         ['slug' => 'motor', 'label' => 'Motor', 'eyebrow' => 'Kendaraan harian', 'image' => 'images/seeder/5.jpeg'],
+                                         ['slug' => 'atv', 'label' => 'ATV', 'eyebrow' => 'Petualangan tanpa batas', 'image' => 'images/seeder/6.jpeg'],
+                                         ['slug' => 'sparepart', 'label' => 'Part', 'eyebrow' => 'Suku cadang pilihan', 'image' => 'images/seeder/part1.jpeg'],
+                                     ];
+                                 @endphp
+
+                                 <div class="nav-product-heading">
+                                     <span class="nav-product-kicker">Jelajahi koleksi</span>
+                                     <span class="nav-product-title">Pilih kebutuhan Anda</span>
+                                 </div>
+
+                                 <div class="nav-product-categories">
+                                     @foreach($navProductCards as $card)
+                                         @php
+                                             $ct = $navCategoryMap->get($card['slug']);
+                                             $ctBrands = $ct ? Brand::whereHas('items', fn($q) => $q->where('category_type_id', $ct->id)->where('status', 'active')->where('is_active', true))
+                                                 ->where('is_active', true)
+                                                 ->orderBy('sort_order')
+                                                 ->get() : collect();
+                                         @endphp
+                                         @if($ct)
+                                             <div class="nav-product-category">
+                                                 <a class="nav-product-card" href="{{ route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => 'all']) }}">
+                                                     <span class="nav-product-image"><img src="{{ asset($card['image']) }}" alt="{{ $card['label'] }}"></span>
+                                                     <span class="nav-product-card-copy">
+                                                         <span class="nav-product-eyebrow">{{ $card['eyebrow'] }}</span>
+                                                         <strong>{{ $card['label'] }}</strong>
+                                                     </span>
+                                                     <span class="nav-product-arrow" aria-hidden="true">&#8594;</span>
+                                                 </a>
+                                                 @if($ctBrands->isNotEmpty())
+                                                     <div class="nav-product-brands" aria-label="Brand {{ $card['label'] }}">
+                                                         @foreach($ctBrands as $brand)
+                                                             <a href="{{ route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => $brand->slug]) }}">{{ $brand->name }}</a>
+                                                         @endforeach
+                                                     </div>
+                                                 @endif
+                                             </div>
+                                         @endif
+                                     @endforeach
+                                 </div>
+
+                                 <div class="nav-product-divider"></div>
+                                 <div class="nav-catalog-heading">Katalog produk</div>
+                                 <div class="nav-catalog-links">
+                                     <a class="nav-catalog-card" href="{{ route('buyer.price-list') }}">
+                                         <span class="nav-catalog-icon" aria-hidden="true">
+                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 12h6M9 16h6"/></svg>
+                                         </span>
+                                         <span><strong>Katalog Harga Motor</strong><small>Lihat daftar harga terbaru</small></span>
+                                         <span class="nav-product-arrow" aria-hidden="true">&#8594;</span>
+                                     </a>
+                                     <a class="nav-catalog-card" href="{{ route('buyer.part-catalog') }}">
+                                         <span class="nav-catalog-icon" aria-hidden="true">
+                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m14.7 6.3 3-3 3 3-3 3M3 21l8.8-8.8M12.5 4.5l7 7M5 5h4v4H5zM15 15h4v4h-4z"/></svg>
+                                         </span>
+                                         <span><strong>Katalog Harga Part Motor</strong><small>Temukan part yang Anda butuhkan</small></span>
+                                         <span class="nav-product-arrow" aria-hidden="true">&#8594;</span>
+                                     </a>
+                                 </div>
+
+                                 {{-- Keep the complete category data available for future categories without adding them to the visual menu. --}}
+                                 @foreach($navCategoryTypes as $ct)
+                                     @php
+                                         $ctBrands = Brand::whereHas('items', fn($q) => $q->where('category_type_id', $ct->id)->where('status', 'active')->where('is_active', true))
                                             ->where('is_active', true)
                                             ->orderBy('sort_order')
                                             ->get();
                                     @endphp
-                                    @if($ctBrands->isNotEmpty())
-                                        <div class="nav-submenu">
-                                            <span class="nav-submenu-toggle">{{ $ct->name }} <span class="sub-arrow">&#9656;</span></span>
-                                            <div class="nav-submenu-menu">
-                                                @foreach($ctBrands as $brand)
-                                                    <a href="{{ route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => $brand->slug]) }}">{{ $brand->name }}</a>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    @elseif($ct->slug === 'sparepart')
-                                        <a href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">{{ $ct->name }}</a>
-                                    @else
-                                        <a href="{{ route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => 'all']) }}">{{ $ct->name }}</a>
-                                    @endif
-                                @endforeach
-                                <hr style="border-color:var(--line);margin:4px 0;">
-                                <a href="{{ route('buyer.price-list') }}">Daftar Harga</a>
-                                <a href="{{ route('buyer.part-catalog') }}">Part Katalog</a>
-                            </div>
-                        </div>
+                                     @continue(in_array($ct->slug, ['motor', 'atv', 'sparepart'], true))
+                                     <a class="nav-product-extra-link" href="{{ route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => 'all']) }}">{{ $ct->name }}</a>
+                                 @endforeach
+                             </div>
+                         </div>
 
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" data-dropdown-toggle="beritaacara">Berita dan Acara <span class="dd-arrow">&#9662;</span></button>

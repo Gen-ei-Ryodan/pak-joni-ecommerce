@@ -18,6 +18,7 @@ Laravel 13 (JOMOTO Center)
 *   **Livewire:** Komponen reaktif tertentu.
 *   **Tailwind + Vite:** Styling dan asset bundling.
 *   **Admin:** Filament v4 (render sendiri); modal custom `resources/views/filament/modals/`.
+*   **Storefront navigation:** Navbar buyer berada di `resources/views/layouts/buyer.blade.php`, dengan perilaku dropdown di `public/assets/js/app.js` dan styling di `public/assets/css/navbar.css`. Dropdown Produk memakai kartu visual kategori dan kartu katalog, tanpa mengubah route kategori yang sudah ada.
 
 ## Backend
 *   **Laravel Framework 13** dengan Eloquent ORM, routing, auth (session).
