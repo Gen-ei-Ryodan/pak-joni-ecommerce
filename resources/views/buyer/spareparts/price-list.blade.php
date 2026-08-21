@@ -6,7 +6,7 @@
     <section class="section">
         <div class="container">
             <div class="section-header center">
-                <h2 class="section-title-text">Daftar Harga Spare Part</h2>
+                <h2 class="section-title-text">Daftar Harga Sepeda Motor</h2>
                 <div class="section-line center-line"></div>
                 <p style="color:var(--muted);max-width:600px;margin:12px auto 0;">Pilih tipe motor untuk melihat daftar harga suku cadang.</p>
             </div>
