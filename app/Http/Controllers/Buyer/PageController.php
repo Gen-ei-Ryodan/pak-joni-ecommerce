@@ -197,13 +197,70 @@ class PageController extends Controller
         return view('buyer.spareparts.part-catalog', compact('catalogs', 'q'));
     }
 
+    public function productChoose(string $categoryType)
+    {
+        $type = CategoryType::where('slug', $categoryType)->where('is_active', true)->firstOrFail();
+
+        $brands = Brand::query()
+            ->where('is_active', true)
+            ->whereHas('items', fn($q) => $q
+                ->where('category_type_id', $type->id)
+                ->where('status', 'active')
+                ->where('is_active', true)
+            )
+            ->withCount(['items' => fn($q) => $q
+                ->where('category_type_id', $type->id)
+                ->where('status', 'active')
+                ->where('is_active', true)
+            ])
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('buyer.product.choose', compact('type', 'brands'));
+    }
+
+    public function productCategories(Request $request, string $categoryType, string $brand)
+    {
+        $type = CategoryType::where('slug', $categoryType)->where('is_active', true)->firstOrFail();
+
+        $brandModel = Brand::where('slug', $brand)->where('is_active', true)->firstOrFail();
+
+        $categories = \App\Models\Category::query()
+            ->where('category_type_id', $type->id)
+            ->where('is_active', true)
+            ->whereHas('items', fn($q) => $q
+                ->where('brand_id', $brandModel->id)
+                ->where('status', 'active')
+                ->where('is_active', true)
+            )
+            ->withCount(['items' => fn($q) => $q
+                ->where('brand_id', $brandModel->id)
+                ->where('status', 'active')
+                ->where('is_active', true)
+            ])
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('buyer.product.categories', compact('type', 'brandModel', 'categories'));
+    }
+
     public function categoryBrand($categoryType, $brand, Request $request)
     {
         $type = CategoryType::where('slug', $categoryType)->where('is_active', true)->firstOrFail();
 
-        // Special handling for 'sparepart' — show full parts catalog with filters
-        if ($type->slug === 'sparepart') {
-            return $this->sparepartCatalog($request, $brand);
+        // Alur baru: /kategori/{type}/all dialihkan ke halaman pilih merk → kategori (semua tipe)
+        if ($brand === 'all' && !$request->query('category')) {
+            $hasBrands = Brand::query()
+                ->where('is_active', true)
+                ->whereHas('items', fn($q) => $q
+                    ->where('category_type_id', $type->id)
+                    ->where('status', 'active')
+                    ->where('is_active', true)
+                )
+                ->exists();
+            if ($hasBrands) {
+                return redirect()->route('buyer.product.choose', ['categoryType' => $type->slug]);
+            }
         }
 
         $brandModel = null;
@@ -220,6 +277,11 @@ class PageController extends Controller
                 ->where('status', 'active')
                 ->where('is_active', true)
             ))
+            ->withCount(['items' => fn($q) => $q
+                ->where('brand_id', $brandModel->id)
+                ->where('status', 'active')
+                ->where('is_active', true)
+            ])
             ->orderBy('sort_order')
             ->get();
 

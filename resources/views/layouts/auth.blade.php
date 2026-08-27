@@ -48,6 +48,7 @@
                                     $navCategoryMap = $navCategoryTypes->keyBy('slug');
                                     $navProductCards = [
                                         ['slug' => 'motor', 'label' => 'Motor', 'eyebrow' => 'Kendaraan harian', 'image' => 'MOTOR.jpeg'],
+                                        ['slug' => 'mobil', 'label' => 'Mobil', 'eyebrow' => 'Kenyamanan berkendara', 'image' => 'MOBIL.jpeg'],
                                         ['slug' => 'atv', 'label' => 'ATV', 'eyebrow' => 'Petualangan tanpa batas', 'image' => 'ATV.jpeg'],
                                         ['slug' => 'sparepart', 'label' => 'Part', 'eyebrow' => 'Suku cadang pilihan', 'image' => 'PARTS.jpeg'],
                                     ];
@@ -62,14 +63,13 @@
                                     @foreach($navProductCards as $card)
                                         @php
                                             $ct = $navCategoryMap->get($card['slug']);
-                                            $ctBrands = $ct ? Brand::whereHas('items', fn($q) => $q->where('category_type_id', $ct->id)->where('status', 'active')->where('is_active', true))
-                                                ->where('is_active', true)
-                                                ->orderBy('sort_order')
-                                                ->get() : collect();
+                                            $cardUrl = ($ct && $ct->slug !== 'sparepart')
+                                                ? route('buyer.product.choose', ['categoryType' => $ct->slug])
+                                                : route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => 'all']);
                                         @endphp
                                         @if($ct)
                                             <div class="nav-product-category">
-                                                <a class="nav-product-card" href="{{ route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => 'all']) }}">
+                                                <a class="nav-product-card" href="{{ $cardUrl }}">
                                                     <span class="nav-product-image"><img src="{{ asset($card['image']) }}" alt="{{ $card['label'] }}"></span>
                                                     <span class="nav-product-card-copy">
                                                         <span class="nav-product-eyebrow">{{ $card['eyebrow'] }}</span>
@@ -77,13 +77,6 @@
                                                     </span>
                                                     <span class="nav-product-arrow" aria-hidden="true">&#8594;</span>
                                                 </a>
-                                                @if($ctBrands->isNotEmpty())
-                                                    <div class="nav-product-brands" aria-label="Brand {{ $card['label'] }}">
-                                                        @foreach($ctBrands as $brand)
-                                                            <a href="{{ route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => $brand->slug]) }}">{{ $brand->name }}</a>
-                                                        @endforeach
-                                                    </div>
-                                                @endif
                                             </div>
                                         @endif
                                     @endforeach
@@ -105,7 +98,7 @@
                                 </div>
 
                                 @foreach($navCategoryTypes as $ct)
-                                    @continue(in_array($ct->slug, ['motor', 'atv', 'sparepart'], true))
+                                    @continue(in_array($ct->slug, ['motor', 'mobil', 'atv', 'sparepart'], true))
                                     <a class="nav-product-extra-link" href="{{ route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => 'all']) }}">{{ $ct->name }}</a>
                                 @endforeach
                             </div>

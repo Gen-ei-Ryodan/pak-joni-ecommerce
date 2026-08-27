@@ -7,11 +7,18 @@
         <div class="container">
             {{-- Header --}}
             <div class="section-header center">
-                <h2 class="section-title-text">{{ $brandModel ? $brandModel->name : 'Semua ' . $type->name }}</h2>
+                @php
+                    $selectedCategoryModel = $selectedCategory ? $categories->firstWhere('slug', $selectedCategory) : null;
+                @endphp
+                <h2 class="section-title-text">
+                    {{ $brandModel?->name ?? ($selectedCategoryModel?->name ? $type->name . ' ' . $selectedCategoryModel->name : 'Semua ' . $type->name) }}
+                </h2>
                 <div class="section-line center-line"></div>
                 <p style="color:var(--muted);max-width:600px;margin:12px auto 0;">
                     @if($brandModel)
                         Jelajahi koleksi {{ $type->name }} {{ $brandModel->name }} dan sparepart pendukungnya.
+                    @elseif($selectedCategoryModel)
+                        Jelajahi {{ strtolower($type->name) }} kategori <strong>{{ $selectedCategoryModel->name }}</strong>{{ $type->slug === 'sparepart' && $selectedCategoryModel->group ? ' (' . $selectedCategoryModel->group . ')' : '' }}.
                     @else
                         Jelajahi seluruh koleksi {{ $type->name }} dari berbagai brand.
                     @endif
@@ -19,10 +26,10 @@
             </div>
 
             {{-- Category Filter (sub-kategori dalam brand ini) --}}
-            @if($categories->isNotEmpty())
+            @if($categories->isNotEmpty() && !$selectedCategory)
                 <div class="brand-filter" style="margin-bottom:24px;">
                     <a href="{{ route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => $brandModel?->slug ?? 'all']) }}"
-                       class="filter-tag filter-tag-sm {{ !$selectedCategory ? 'active' : '' }}">Semua Kategori</a>
+                       class="filter-tag filter-tag-sm active">Semua Kategori</a>
                     @foreach($categories as $cat)
                         @php
                             $catUrl = route('buyer.category-brand', [
@@ -32,12 +39,12 @@
                             ]);
                         @endphp
                         <a href="{{ $catUrl }}"
-                           class="filter-tag filter-tag-sm {{ $selectedCategory === $cat->slug ? 'active' : '' }}">{{ $cat->name }}</a>
+                           class="filter-tag filter-tag-sm">{{ $cat->name }}</a>
                     @endforeach
                 </div>
             @endif
 
-            {{-- ========== MOTOR SECTION ========== --}}
+            {{-- ========== PRODUCT SECTION (all types incl. sparepart) ========== --}}
             <div style="margin-bottom:32px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
                     <h3 style="font-size:20px;font-weight:700;">{{ $type->name }}</h3>
@@ -88,49 +95,6 @@
                     <div style="margin-top:30px;">{{ $items->links('pagination.simple-dark') }}</div>
                 @endif
             </div>
-
-            {{-- ========== SPAREPART SECTION ========== --}}
-            @if($parts->isNotEmpty())
-                <div style="margin-top:40px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-                        <h3 style="font-size:20px;font-weight:700;">Sparepart {{ $brandModel ? $brandModel->name : '' }}</h3>
-                    </div>
-
-                    <p style="color:var(--muted);font-size:13px;margin-bottom:20px;">
-                        Sparepart yang kompatibel {{ $brandModel ? 'dengan ' . $brandModel->name : '' }}.
-                    </p>
-
-                    <div class="grid grid-3">
-                        @forelse ($parts as $p)
-                            <a class="card" href="{{ route('buyer.parts.show', $p->slug) }}">
-                                <div class="card-media" style="background-image:url('{{ $p->thumbnail_path ? image_url($p->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:220px;"></div>
-                                <div class="card-body">
-                                    @if($p->category)
-                                        <div class="card-meta" style="font-size:10px;text-transform:none;letter-spacing:0;">{{ $p->category->group }} &rsaquo; {{ $p->category->name }}</div>
-                                    @endif
-                                    <div class="card-title">{{ $p->name }}</div>
-                                    @if($p->defaultVariant)
-                                        <div class="price">Rp {{ number_format($p->defaultVariant->price, 0, ',', '.') }}</div>
-                                    @elseif($p->base_price)
-                                        <div class="price">Rp {{ number_format($p->base_price, 0, ',', '.') }}</div>
-                                    @endif
-                                    @if($p->stock_status === 'indent')
-                                        <span class="stock-badge indent">Indent</span>
-                                    @elseif($p->stock_status === 'ready')
-                                        <span class="stock-badge ready">Ready Stock ({{ $p->totalStock() }})</span>
-                                    @endif
-                                </div>
-                            </a>
-                        @empty
-                            <div class="empty-state">Belum ada sparepart tersedia {{ $brandModel ? 'untuk brand ini' : '' }}.</div>
-                        @endforelse
-                    </div>
-
-                    @if(method_exists($parts, 'links'))
-                        <div style="margin-top:30px;">{{ $parts->links('pagination.simple-dark') }}</div>
-                    @endif
-                </div>
-            @endif
         </div>
     </section>
 @endsection

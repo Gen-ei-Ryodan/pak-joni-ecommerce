@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [BuyerPageController::class, 'home'])->name('buyer.home');
 Route::get('/about', [BuyerPageController::class, 'about'])->name('buyer.about');
 Route::get('/kategori/{categoryType}/{brand}', [BuyerPageController::class, 'categoryBrand'])->name('buyer.category-brand');
+Route::get('/pilih/{categoryType}', [BuyerPageController::class, 'productChoose'])->name('buyer.product.choose');
+Route::get('/pilih/{categoryType}/{brand}/kategori', [BuyerPageController::class, 'productCategories'])->name('buyer.product.categories');
 Route::get('/cari', [BuyerPageController::class, 'search'])->name('buyer.search');
 
 Route::get('/regions/provinces', [RegionController::class, 'provinces']);
@@ -28,7 +30,7 @@ Route::get('/regions/regencies/{provinceCode}', [RegionController::class, 'regen
 Route::get('/regions/districts/{regencyCode}', [RegionController::class, 'districts']);
 Route::get('/regions/villages/{districtCode}', [RegionController::class, 'villages']);
 
-Route::redirect('/motors', '/kategori/motor/all', 301);
+Route::redirect('/motors', '/pilih/motor', 301);
 Route::get('/parts/{part:slug}', [BuyerPartController::class, 'show'])->name('buyer.parts.show');
 Route::get('/motors/{slug}', function ($slug) {
     $item = \App\Models\Item::where('slug', $slug)->where('status', 'active')->where('is_active', true)->first();

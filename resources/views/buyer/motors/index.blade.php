@@ -10,7 +10,7 @@
                     <h2 class="section-title-text">Katalog Motor</h2>
                     <div class="section-line"></div>
                 </div>
-                <a class="btn btn-outline" href="{{ route('buyer.category-brand', ['categoryType' => 'motor', 'brand' => 'all']) }}">Lihat Semua Motor</a>
+                <a class="btn btn-outline" href="{{ route('buyer.product.choose', ['categoryType' => 'motor']) }}">Lihat Semua Motor</a>
             </div>
 
             <form method="get" style="display:flex;gap:10px;margin-bottom:24px;">
