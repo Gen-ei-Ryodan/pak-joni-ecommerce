@@ -1,10 +1,12 @@
 .grid {
   display: grid;
   gap: 16px;
+  overflow: hidden;
 }
 
 .grid-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 100%;
 }
 
 .card {

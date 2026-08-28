@@ -16,9 +16,23 @@
             <style>
                 .product-brand-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                    grid-template-columns: repeat(3, 1fr);
                     gap: 20px;
                     margin-top: 40px;
+                    overflow: hidden;
+                    max-width: 100%;
+                }
+
+                @media (max-width: 980px) {
+                    .product-brand-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+
+                @media (max-width: 640px) {
+                    .product-brand-grid {
+                        grid-template-columns: 1fr;
+                    }
                 }
 
                 .product-brand-card {
