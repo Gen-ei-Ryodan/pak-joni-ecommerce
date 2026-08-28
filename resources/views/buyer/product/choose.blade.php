@@ -1,6 +1,6 @@
 @extends('layouts.buyer')
 
-@section('title', 'Pilih Merk {{ $type->name }}')
+@section('title', 'Pilih Merk ' . $type->name)
 
 @section('content')
     <section class="section section-category">
