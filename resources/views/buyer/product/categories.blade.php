@@ -1,6 +1,6 @@
 @extends('layouts.buyer')
 
-@section('title', '{{ $brandModel->name }} - Kategori {{ $type->name }}')
+@section('title', $brandModel->name . ' - Kategori ' . $type->name)
 
 @section('content')
     <section class="section section-category">
@@ -16,9 +16,23 @@
             <style>
                 .product-cat-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                    grid-template-columns: repeat(3, 1fr);
                     gap: 20px;
                     margin-top: 40px;
+                    overflow: hidden;
+                    max-width: 100%;
+                }
+
+                @media (max-width: 980px) {
+                    .product-cat-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+
+                @media (max-width: 640px) {
+                    .product-cat-grid {
+                        grid-template-columns: 1fr;
+                    }
                 }
 
                 .product-cat-card {
