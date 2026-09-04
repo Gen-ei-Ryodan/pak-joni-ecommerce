@@ -65,7 +65,7 @@
                                             $ct = $navCategoryMap->get($card['slug']);
                                             $cardUrl = ($ct && $ct->slug !== 'sparepart')
                                                 ? route('buyer.product.choose', ['categoryType' => $ct->slug])
-                                                : route('buyer.category-brand', ['categoryType' => $ct->slug, 'brand' => 'all']);
+                                                : route('buyer.category-brand', ['categoryType' => $ct?->slug ?? $card['slug'], 'brand' => 'all']);
                                         @endphp
                                         @if($ct)
                                             <div class="nav-product-category">

@@ -31,7 +31,7 @@ class RegionController extends Controller
 
     public function districts($regencyCode)
     {
-        if (! preg_match('/^\d{1,4}$/', $regencyCode)) {
+        if (! preg_match('/^[\d.]+$/', $regencyCode)) {
             abort(404);
         }
 
@@ -44,7 +44,7 @@ class RegionController extends Controller
 
     public function villages($districtCode)
     {
-        if (! preg_match('/^\d{1,9}$/', $districtCode)) {
+        if (! preg_match('/^[\d.]+$/', $districtCode)) {
             abort(404);
         }
 

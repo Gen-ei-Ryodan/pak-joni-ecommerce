@@ -149,7 +149,7 @@ class CheckoutController extends Controller
             return redirect('/cart')->with('status', 'Cart masih kosong.');
         }
 
-        $serverCost = $this->serverShippingCost($cart, $address, $validated['courier'], $validated['service']);
+            $serverCost = $this->serverShippingCost($cart, $address, strtolower($validated['courier']), strtolower($validated['service']));
 
         if ($serverCost === null) {
             return redirect()->back()->withErrors(['shipping' => 'Ongkos kirim tidak valid. Silakan pilih ulang kurir.']);
@@ -178,7 +178,7 @@ class CheckoutController extends Controller
                 items: $items,
                 destinationPostalCode: $address->postal_code,
                 originPostalCode: null, // auto from store address
-                couriers: strtoupper($courier),
+                couriers: $courier,
             );
         } catch (\Throwable $e) {
             Log::warning('Server shipping rate check failed', ['error' => $e->getMessage()]);
@@ -434,6 +434,10 @@ class CheckoutController extends Controller
 
             return $order;
         });
+
+        // Send sales order email
+        \Illuminate\Support\Facades\Mail::to($result->user->email)
+            ->send(new \App\Mail\SalesOrderMail($result));
 
         return redirect('/checkout/finish/'.$result->id);
     }

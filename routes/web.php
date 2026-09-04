@@ -16,6 +16,7 @@ use App\Http\Controllers\Buyer\WishlistController as BuyerWishlistController;
 use App\Http\Controllers\Payment\MidtransController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RegionController;
+use App\Models\Order;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [BuyerPageController::class, 'home'])->name('buyer.home');
@@ -144,6 +145,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/my/orders/{order:order_no}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
     Route::post('/my/orders/{order:order_no}/confirm-received', [BuyerOrderController::class, 'confirmReceived'])->name('buyer.orders.confirmReceived');
     Route::post('/my/orders/{order:order_no}/pay-remaining', [BuyerOrderController::class, 'payRemaining'])->name('buyer.orders.payRemaining');
+
+    // Preview sales order email
+    Route::get('/preview/sales-order/{order}', function (Order $order) {
+        $order->load(['items', 'user']);
+        return new \App\Mail\SalesOrderMail($order);
+    })->name('preview.sales-order');
 });
 
 
