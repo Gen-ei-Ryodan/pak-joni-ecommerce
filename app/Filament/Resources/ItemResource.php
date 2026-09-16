@@ -143,9 +143,20 @@ class ItemResource extends Resource
                     ->image()->imageEditor()->disk('public')->directory('items/thumbnails')->maxSize(5120),
 
                 Forms\Components\Textarea::make('short_description')->maxLength(500)->columnSpanFull(),
+
                 Forms\Components\RichEditor::make('description')
                     ->columnSpanFull()
-                    ->disableToolbarButtons(['link', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table', 'attachFiles']),
+                    ->disableToolbarButtons(['link', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table', 'attachFiles'])
+                    ->visible(fn ($get) => $get('category_type_id') != \App\Models\CategoryType::where('slug', 'motor')->first()?->id),
+
+                Forms\Components\FileUpload::make('document_path')
+                    ->label('Unduh Dokumen')
+                    ->disk('public')
+                    ->directory('items/documents')
+                    ->maxSize(10240)
+                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
+                    ->columnSpanFull()
+                    ->visible(fn ($get) => $get('category_type_id') == \App\Models\CategoryType::where('slug', 'motor')->first()?->id),
             ])->columns(2),
 
             Section::make('Harga')->schema([

@@ -16,7 +16,7 @@ class Item extends Model
     protected $fillable = [
         'category_type_id', 'brand_id', 'category_id',
         'name', 'slug', 'year', 'description', 'short_description',
-        'price', 'thumbnail_path', 'stock', 'stock_status',
+        'price', 'thumbnail_path', 'document_path', 'stock', 'stock_status',
         'stock_updated_at', 'status', 'is_active', 'sort_order',
     ];
 

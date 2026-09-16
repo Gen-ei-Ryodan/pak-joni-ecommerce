@@ -92,7 +92,7 @@
             <div class="product-brand-grid">
                 @forelse ($brands as $brand)
                     <a class="product-brand-card"
-                       href="{{ route('buyer.product.categories', ['categoryType' => $type->slug, 'brand' => $brand->slug]) }}">
+                       href="{{ route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => $brand->slug]) }}">
                         <span class="product-brand-logo">
                             @if($brand->logo_path)
                                 <img src="{{ image_url($brand->logo_path) }}" alt="{{ $brand->name }}">
