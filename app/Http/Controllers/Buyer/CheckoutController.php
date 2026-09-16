@@ -3,24 +3,27 @@
 namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SalesOrderMail;
 use App\Models\Address;
 use App\Models\Cart;
-use App\Models\CartItem;
 use App\Models\ItemColor;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PartVariant;
 use App\Services\BiteshipService;
+use App\Services\OcbcPaymentService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
     public function __construct(
         private PaymentService $paymentService,
+        private OcbcPaymentService $ocbcPaymentService,
         private BiteshipService $biteshipService,
     ) {}
 
@@ -149,7 +152,7 @@ class CheckoutController extends Controller
             return redirect('/cart')->with('status', 'Cart masih kosong.');
         }
 
-            $serverCost = $this->serverShippingCost($cart, $address, strtolower($validated['courier']), strtolower($validated['service']));
+        $serverCost = $this->serverShippingCost($cart, $address, strtolower($validated['courier']), strtolower($validated['service']));
 
         if ($serverCost === null) {
             return redirect()->back()->withErrors(['shipping' => 'Ongkos kirim tidak valid. Silakan pilih ulang kurir.']);
@@ -182,6 +185,7 @@ class CheckoutController extends Controller
             );
         } catch (\Throwable $e) {
             Log::warning('Server shipping rate check failed', ['error' => $e->getMessage()]);
+
             return null;
         }
 
@@ -190,8 +194,8 @@ class CheckoutController extends Controller
         }
 
         foreach (($result['pricing'] ?? []) as $rate) {
-            if (($rate['courier_code'] ?? '') === $courier
-                && ($rate['courier_service_code'] ?? '') === $service) {
+            if (strtolower((string) ($rate['courier_code'] ?? '')) === $courier
+                && strtolower((string) ($rate['courier_service_code'] ?? '')) === $service) {
                 return (float) ($rate['price'] ?? 0);
             }
         }
@@ -327,8 +331,10 @@ class CheckoutController extends Controller
             foreach ($cart->items as $it) {
                 if ($it->itemable_type === PartVariant::class) {
                     $variant = PartVariant::lockForUpdate()->find($it->itemable_id);
-                    if (! $variant) continue;
-                    $readyQty = max(0, $it->quantity - (int)($it->indent_quantity ?? 0));
+                    if (! $variant) {
+                        continue;
+                    }
+                    $readyQty = max(0, $it->quantity - (int) ($it->indent_quantity ?? 0));
                     if ($variant->stock < $readyQty) {
                         return redirect('/cart')->withErrors(['stock' => 'Stock tidak cukup untuk '.$it->product_name.' (ready: '.$variant->stock.')']);
                     }
@@ -396,7 +402,7 @@ class CheckoutController extends Controller
                 'shipping_snapshot' => $shippingSnapshot,
             ]);
 
-            $this->paymentService->createPayment($order);
+            $this->paymentService->createPayment($order, 'qris', 'ocbc');
 
             foreach ($cart->items as $it) {
                 $partId = null;
@@ -436,8 +442,8 @@ class CheckoutController extends Controller
         });
 
         // Send sales order email
-        \Illuminate\Support\Facades\Mail::to($result->user->email)
-            ->send(new \App\Mail\SalesOrderMail($result));
+        Mail::to($result->user->email)
+            ->send(new SalesOrderMail($result));
 
         return redirect('/checkout/finish/'.$result->id);
     }
@@ -459,11 +465,19 @@ class CheckoutController extends Controller
 
         $order->load('items');
 
-        // Generate Midtrans Snap token
-        $snapToken = $this->paymentService->getSnapToken($order);
-        $clientKey = config('services.midtrans.client_key');
+        $qrContent = null;
+        $qrError = null;
+        try {
+            $qrContent = $this->ocbcPaymentService->generateQr($order)['qr_content'] ?? null;
+        } catch (\Throwable $e) {
+            Log::error('OCBC QR generation failed on checkout finish', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+            $qrError = 'QR pembayaran belum dapat dibuat. Silakan coba dari halaman detail pesanan.';
+        }
 
-        return view('buyer.checkout.finish', compact('order', 'snapToken', 'clientKey'));
+        return view('buyer.checkout.finish', compact('order', 'qrContent', 'qrError'));
     }
 
     /**
@@ -483,7 +497,9 @@ class CheckoutController extends Controller
         // Also check underlying product stock_status
         foreach ($cart->items as $it) {
             $indentQty = (int) ($it->indent_quantity ?? 0);
-            if ($indentQty > 0) continue; // already counted
+            if ($indentQty > 0) {
+                continue;
+            } // already counted
 
             if ($it->itemable_type === ItemColor::class) {
                 $color = ItemColor::with('item')->find($it->itemable_id);
@@ -500,6 +516,7 @@ class CheckoutController extends Controller
         }
 
         $dp = (int) round($indentSubtotal * 0.5);
+
         return [
             'dp' => $dp,
             'remaining' => (int) round($indentSubtotal) - $dp,
@@ -526,6 +543,7 @@ class CheckoutController extends Controller
                 }
             }
         }
+
         return false;
     }
 
@@ -537,7 +555,7 @@ class CheckoutController extends Controller
     private function loadSelectedCart(Request $request): Cart
     {
         $cart = $this->cart($request)->load('items');
-        
+
         // Load relations for each itemable type
         foreach ($cart->items as $item) {
             if ($item->itemable_type === PartVariant::class) {

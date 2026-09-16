@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'payment/midtrans/notification',
+            'v1.0/qr/qr-mpm-notify',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

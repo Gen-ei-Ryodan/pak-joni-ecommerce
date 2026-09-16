@@ -14,6 +14,7 @@ use App\Http\Controllers\Buyer\PageController as BuyerPageController;
 use App\Http\Controllers\Buyer\PartController as BuyerPartController;
 use App\Http\Controllers\Buyer\WishlistController as BuyerWishlistController;
 use App\Http\Controllers\Payment\MidtransController;
+use App\Http\Controllers\Payment\OcbcController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RegionController;
 use App\Models\Order;
@@ -86,6 +87,9 @@ Route::get('/kegiatan-internal/{activity:slug}', [BuyerPageController::class, 'i
 Route::post('/payment/midtrans/notification', [MidtransController::class, 'notification'])
     ->name('payment.midtrans.notification')
     ->middleware('throttle:midtrans-webhook');
+Route::post('/v1.0/qr/qr-mpm-notify', [OcbcController::class, 'notify'])
+    ->name('payment.ocbc.notify')
+    ->middleware('throttle:midtrans-webhook');
 Route::get('/payment/midtrans/finish', [MidtransController::class, 'finish'])->name('payment.midtrans.finish');
 Route::get('/payment/midtrans/unfinish', [MidtransController::class, 'unfinish'])->name('payment.midtrans.unfinish');
 Route::get('/payment/midtrans/error', [MidtransController::class, 'error'])->name('payment.midtrans.error');
@@ -93,6 +97,8 @@ Route::get('/payment/midtrans/error', [MidtransController::class, 'error'])->nam
 Route::middleware(['auth', 'throttle:10,1'])->group(function () {
     Route::get('/payment/midtrans/status/{order}', [MidtransController::class, 'status'])->name('payment.midtrans.status');
     Route::get('/payment/midtrans/snap-token/{order}', [MidtransController::class, 'snapToken'])->name('payment.midtrans.snap-token');
+    Route::get('/payment/ocbc/qr/{order}', [OcbcController::class, 'qr'])->name('payment.ocbc.qr');
+    Route::get('/payment/ocbc/status/{order}', [OcbcController::class, 'status'])->name('payment.ocbc.status');
 });
 
 Route::middleware(['guest', 'throttle:auth'])->group(function () {

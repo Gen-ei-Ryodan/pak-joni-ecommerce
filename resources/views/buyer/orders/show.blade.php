@@ -7,10 +7,6 @@
 @endpush
 
 @section('dashboard-content')
-    @php
-        $clientKey = config('services.midtrans.client_key');
-    @endphp
-
     @if($order->status === 'unpaid' && $order->payment_status === 'pending')
         <div class="payment-banner" id="payment-banner">
             <div>
@@ -187,6 +183,10 @@
             <div class="sidebar-card" style="display:grid;gap:8px;">
                 @if($order->status === 'unpaid' && $order->payment_status === 'pending')
                     <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
+                    <div id="qris-payment" style="display:none;text-align:center;padding:12px;border:1px solid var(--line);border-radius:12px;">
+                        <div id="qris-code" style="background:#fff;padding:12px;width:264px;min-height:264px;margin:0 auto;display:flex;align-items:center;justify-content:center;"></div>
+                        <div id="payment-banner-text" class="muted" style="font-size:12px;margin-top:8px;">Scan QRIS untuk membayar.</div>
+                    </div>
                     <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Continue Shopping</a>
                 @elseif($order->status === 'shipped')
                     <form method="post" action="{{ route('buyer.orders.confirmReceived', $order) }}" onsubmit="return confirm('Konfirmasi barang sudah diterima?')">
@@ -211,24 +211,24 @@
 @endsection
 
 @push('head')
-    <script src="https://{{ config('services.midtrans.is_production') ? 'app.midtrans.com' : 'app.sandbox.midtrans.com' }}/snap/snap.js" data-client-key="{{ $clientKey }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 @endpush
 
 @push('scripts')
     <script>
-        var snapTokenUrl = '{{ route('payment.midtrans.snap-token', $order) }}';
-        var checkStatusUrl = '{{ route('payment.midtrans.status', $order) }}';
+        var qrUrl = '{{ route('payment.ocbc.qr', $order) }}';
+        var checkStatusUrl = '{{ route('payment.ocbc.status', $order) }}';
         var isPaying = false;
         var pollTimer = null;
 
-        function getSnapToken(callback) {
-            fetch(snapTokenUrl)
+        function getQr(callback) {
+            fetch(qrUrl)
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    if (data.success && data.snap_token) {
-                        callback(null, data.snap_token);
+                    if (data.success && data.qr_content) {
+                        callback(null, data.qr_content);
                     } else {
-                        callback(data.error || 'Gagal mendapatkan token pembayaran.');
+                        callback(data.error || 'Gagal membuat QR pembayaran.');
                     }
                 })
                 .catch(function(err) {
@@ -295,7 +295,7 @@
             });
         }
 
-        function payWithMidtrans(el) {
+        function payWithOcbc(el) {
             if (isPaying) return;
             isPaying = true;
 
@@ -305,34 +305,27 @@
                 b.textContent = 'Memproses...';
             });
 
-            getSnapToken(function(error, token) {
+            getQr(function(error, qrContent) {
                 if (error) {
                     resetPayButtons();
                     alert(error);
                     return;
                 }
 
-                snap.pay(token, {
-                    onSuccess: function(result) {
-                        startPolling(30);
-                    },
-                    onPending: function(result) {
-                        startPolling(30);
-                    },
-                    onError: function(result) {
-                        resetPayButtons();
-                        alert('Pembayaran gagal. Silakan coba lagi.');
-                    },
-                    onClose: function() {
-                        startPolling(10);
-                    }
-                });
+                var qrArea = document.getElementById('qris-payment');
+                var qrCode = document.getElementById('qris-code');
+                if (qrArea) qrArea.style.display = 'block';
+                if (qrCode) {
+                    qrCode.innerHTML = '';
+                    new QRCode(qrCode, { text: qrContent, width: 240, height: 240 });
+                }
+                startPolling(60);
             });
         }
 
         var payBtn = document.getElementById('pay-button');
         var payBtnSidebar = document.getElementById('pay-button-sidebar');
-        if (payBtn) payBtn.addEventListener('click', function() { payWithMidtrans(this); });
-        if (payBtnSidebar) payBtnSidebar.addEventListener('click', function() { payWithMidtrans(this); });
+        if (payBtn) payBtn.addEventListener('click', function() { payWithOcbc(this); });
+        if (payBtnSidebar) payBtnSidebar.addEventListener('click', function() { payWithOcbc(this); });
      </script>
  @endpush

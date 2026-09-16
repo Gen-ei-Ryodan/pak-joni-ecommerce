@@ -28,6 +28,13 @@ Project ini **bukan API-only**. Tidak ada `routes/api.php` / REST API untuk publ
 | GET | `/payment/midtrans/status/{order}` | Cek status via API Midtrans server-side (auth + ownership) |
 | GET | `/payment/midtrans/snap-token/{order}` | Generate Snap token (auth + ownership) |
 
+## Endpoint Pembayaran (OCBC/MTI QRIS)
+| Method | URL | Fungsi |
+|--------|-----|--------|
+| POST | `/v1.0/qr/qr-mpm-notify` | Callback notifikasi pembayaran dari MTI; signature wajib diverifikasi |
+| GET | `/payment/ocbc/qr/{order}` | Generate/retrieve QR pembayaran (auth + ownership) |
+| GET | `/payment/ocbc/status/{order}` | Inquiry status pembayaran (auth + ownership) |
+
 ## Auth & Area Customer
 - Registrasi/login, profil, address, cart, wishlist, checkout, order — semua via web session di `routes/web.php` (controllers `app/Http/Controllers/Buyer/`).
 - Endpoint auth (`/login`, `/register`, `/forgot-password`, `/reset-password`) dilindungi `throttle:auth` (10/menit/IP).
@@ -38,3 +45,4 @@ Project ini **bukan API-only**. Tidak ada `routes/api.php` / REST API untuk publ
 ## Catatan Integrasi
 - **Midtrans** — webhook notification memicu pembaruan status pembayaran; saat `paid`, OrderService memanggil StockService untuk auto-decrease stok varian. Endpoint `finish` hanya redirect dan tidak pernah menandai order `paid`.
 - **Biteship** — untuk perhitungan & pengiriman kurir; `shipping_cost` selalu divalidasi server-side.
+- **OCBC/MTI QRIS** — QR dibuat server-side, ditampilkan sebagai QRIS MPM, lalu status dibarui melalui callback atau inquiry dan diproses melalui `OrderService::markAsPaid`.

@@ -48,6 +48,23 @@ return [
         'is_3ds' => true,
     ],
 
+    'ocbc' => [
+        'base_url' => env('OCBC_BASE_URL', 'https://tst.yokke.co.id:7778'),
+        'client_key' => env('OCBC_CLIENT_KEY'),
+        'client_secret' => env('OCBC_CLIENT_SECRET'),
+        'merchant_id' => env('OCBC_MERCHANT_ID'),
+        'terminal_id' => env('OCBC_TERMINAL_ID'),
+        'partner_id' => env('OCBC_PARTNER_ID'),
+        'channel_id' => env('OCBC_CHANNEL_ID', '02'),
+        'private_key_path' => env('OCBC_PRIVATE_KEY_PATH'),
+        'notify_url' => env('OCBC_NOTIFY_URL', '/v1.0/qr/qr-mpm-notify'),
+        'member_bank' => env('OCBC_MEMBER_BANK', '999'),
+        'signature_encoding' => env('OCBC_SIGNATURE_ENCODING', 'base64'),
+        'notify_signature_mode' => env('OCBC_NOTIFY_SIGNATURE_MODE', 'hmac'),
+        'notify_public_key_path' => env('OCBC_NOTIFY_PUBLIC_KEY_PATH'),
+        'notify_signature_encoding' => env('OCBC_NOTIFY_SIGNATURE_ENCODING', 'base64'),
+    ],
+
     'biteship' => [
         'api_key' => env('BITESHIP_API_KEY'),
         'base_url' => 'https://api.biteship.com',

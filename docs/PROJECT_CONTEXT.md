@@ -17,7 +17,7 @@ Platform e-commerce untuk dealer motor/mobil/ATV dan sparepart (JOMOTO Center). 
 *   **Frontend:** Blade Templates + Livewire, Tailwind CSS, Vite
 *   **Database:** MySQL (cPanel shared hosting)
 *   **Auth:** Laravel (session based), Dusk untuk browser test
-*   **Payment:** Midtrans Snap.js
+*   **Payment:** OCBC/MTI QRIS MPM (menggantikan Midtrans Snap.js)
 *   **Shipping:** Biteship
 
 ## Modul Utama

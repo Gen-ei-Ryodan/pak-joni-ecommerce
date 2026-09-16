@@ -30,7 +30,8 @@ Laravel 13 (JOMOTO Center)
 |---------|--------|
 | `StockService` | Semua operasi stok varian + mutasi (adjust, set, get history, decrease on order) |
 | `OrderService` | Update status order, cancel, markAsPaid, auto-decrease stok saat paid |
-| `PaymentService` | Integrasi pembayaran (Midtrans) |
+| `PaymentService` | Pencatatan payment dan kompatibilitas Midtrans lama |
+| `OcbcPaymentService` | Access token, signature, QR generation, inquiry, dan callback QRIS MTI |
 | `BiteshipService` | Integrasi pengiriman |
 | `ImageService` | Pengolahan gambar |
 
