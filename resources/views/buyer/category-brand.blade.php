@@ -25,75 +25,35 @@
                 </p>
             </div>
 
-            {{-- Category Filter (sub-kategori dalam brand ini) --}}
-            @if($categories->isNotEmpty() && !$selectedCategory)
-                <div class="brand-filter" style="margin-bottom:24px;">
+            {{-- Category Filter --}}
+            @if($categories->isNotEmpty())
+                <div class="brand-filter" style="margin-bottom:24px;" id="categoryFilter">
                     <a href="{{ route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => $brandModel?->slug ?? 'all']) }}"
-                       class="filter-tag filter-tag-sm active">Semua Kategori</a>
+                       class="filter-tag filter-tag-sm {{ !$selectedCategory ? 'active' : '' }}"
+                       data-category="">Semua Kategori</a>
                     @foreach($categories as $cat)
-                        @php
-                            $catUrl = route('buyer.category-brand', [
-                                'categoryType' => $type->slug,
-                                'brand' => $brandModel?->slug ?? 'all',
-                                'category' => $cat->slug,
-                            ]);
-                        @endphp
-                        <a href="{{ $catUrl }}"
-                           class="filter-tag filter-tag-sm">{{ $cat->name }}</a>
+                        <a href="{{ route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => $brandModel?->slug ?? 'all', 'category' => $cat->slug]) }}"
+                           class="filter-tag filter-tag-sm {{ $selectedCategory === $cat->slug ? 'active' : '' }}"
+                           data-category="{{ $cat->slug }}">{{ $cat->name }}</a>
                     @endforeach
                 </div>
             @endif
 
-            {{-- ========== PRODUCT SECTION (all types incl. sparepart) ========== --}}
+            {{-- Product Grid --}}
             <div style="margin-bottom:32px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
                     <h3 style="font-size:20px;font-weight:700;">{{ $type->name }}</h3>
                 </div>
 
-                <div class="grid grid-3">
-                    @forelse ($items as $item)
-                        @php
-                            $totalStock = $item->colors->sum('stock');
-                        @endphp
-                        <div class="card motor-card">
-                            <a class="card-media-link" href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" style="display:block;text-decoration:none;">
-                                <div class="card-media" style="background-image:url('{{ $item->thumbnail_path ? image_url($item->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:220px;"></div>
-                            </a>
-                            <div class="card-body">
-                                @if($item->brand)
-                                    <div class="card-meta">{{ $item->brand->name }}</div>
-                                @endif
-                                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" style="text-decoration:none;color:inherit;">
-                                    <div class="card-title">{{ $item->name }}</div>
-                                </a>
-                                @if($item->price)
-                                    <div class="price">Rp {{ number_format($item->price, 0, ',', '.') }}</div>
-                                @endif
-                                @if($item->stock_status === 'indent')
-                                    <span class="stock-badge indent">Indent</span>
-                                @elseif($item->stock_status === 'ready')
-                                    <span class="stock-badge ready">Ready Stock</span>
-                                    @if($totalStock > 0)
-                                        <span class="stock-badge ready">({{ $totalStock }} unit)</span>
-                                    @else
-                                        <span class="stock-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">(Habis)</span>
-                                    @endif
-                                    <span class="stock-badge otr">OTR SURABAYA</span>
-                                @endif
-                            </div>
-                            <div class="card-actions">
-                                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" class="card-action-btn primary">Lihat {{ $type->name }}</a>
-                                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts']) }}" class="card-action-btn">Sparepart</a>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="empty-state">Belum ada {{ $type->name }} tersedia {{ $brandModel ? 'untuk brand ini' : '' }}.</div>
-                    @endforelse
-                    </div>
+                <div class="grid grid-3" id="productGrid">
+                    @include('buyer.partials.category-brand-products')
+                </div>
 
-                @if(method_exists($items, 'links'))
-                    <div style="margin-top:30px;">{{ $items->links('pagination.simple-dark') }}</div>
-                @endif
+                <div id="productPagination" style="margin-top:30px;">
+                    @if(method_exists($items, 'links'))
+                        {{ $items->links('pagination.simple-dark') }}
+                    @endif
+                </div>
             </div>
         </div>
     </section>
@@ -183,5 +143,94 @@
             background: rgba(217,180,111,0.08);
             color: var(--accent);
         }
+        #productGrid.is-loading {
+            opacity: 0.5;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
     </style>
+@endpush
+
+@push('scripts')
+<script>
+(function() {
+    const filter = document.getElementById('categoryFilter');
+    const grid = document.getElementById('productGrid');
+    const pagination = document.getElementById('productPagination');
+    if (!filter || !grid) return;
+
+    const baseUrl = '{{ route("buyer.category-brand", ["categoryType" => $type->slug, "brand" => $brandModel?->slug ?? "all"]) }}';
+
+    filter.addEventListener('click', function(e) {
+        const tag = e.target.closest('.filter-tag');
+        if (!tag) return;
+        e.preventDefault();
+
+        const category = tag.dataset.category;
+        const url = category ? baseUrl + '?category=' + encodeURIComponent(category) : baseUrl;
+
+        // Update active state
+        filter.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+        tag.classList.add('active');
+
+        // Show loading
+        grid.classList.add('is-loading');
+
+        // Fetch filtered products
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            grid.innerHTML = data.html;
+            grid.classList.remove('is-loading');
+
+            if (data.pagination) {
+                pagination.innerHTML = data.pagination;
+                pagination.style.marginTop = '30px';
+            } else {
+                pagination.innerHTML = '';
+            }
+
+            // Update URL without reload
+            history.pushState({ category: data.selectedCategory }, '', url);
+        })
+        .catch(() => {
+            grid.classList.remove('is-loading');
+        });
+    });
+
+    // Handle browser back/forward
+    window.addEventListener('popstate', function() {
+        const params = new URLSearchParams(window.location.search);
+        const category = params.get('category') || '';
+        const url = category ? baseUrl + '?category=' + encodeURIComponent(category) : baseUrl;
+
+        grid.classList.add('is-loading');
+
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            grid.innerHTML = data.html;
+            grid.classList.remove('is-loading');
+
+            if (data.pagination) {
+                pagination.innerHTML = data.pagination;
+            } else {
+                pagination.innerHTML = '';
+            }
+
+            // Update active state
+            filter.querySelectorAll('.filter-tag').forEach(t => {
+                t.classList.toggle('active', t.dataset.category === category);
+            });
+        })
+        .catch(() => {
+            grid.classList.remove('is-loading');
+        });
+    });
+})();
+</script>
 @endpush
