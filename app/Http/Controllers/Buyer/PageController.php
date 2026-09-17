@@ -318,6 +318,17 @@ class PageController extends Controller
             ->orderBy('sort_order')
             ->get();
 
+        // AJAX request: return only the product grid partial
+        if ($request->ajax()) {
+            $productsHtml = view('buyer.partials.category-brand-products', compact('items', 'type', 'brandModel'))->render();
+            $paginationHtml = $items->hasPages() ? $items->links('pagination.simple-dark')->render() : '';
+            return response()->json([
+                'html' => $productsHtml,
+                'pagination' => $paginationHtml,
+                'selectedCategory' => $selectedCategory,
+            ]);
+        }
+
         return view('buyer.category-brand', compact(
             'type', 'brandModel', 'allBrands',
             'categories', 'selectedCategory',
