@@ -183,7 +183,7 @@ class OcbcPaymentService
     private function request(string $method, string $path, array $body, string $serviceCode): Response
     {
         $token = $this->accessToken();
-        $timestamp = now()->toIso8601String();
+        $timestamp = $this->timestamp();
         $externalId = $this->externalId();
         $headers = [
             'Content-Type' => 'application/json',
@@ -205,7 +205,7 @@ class OcbcPaymentService
     private function accessToken(): string
     {
         return Cache::remember('ocbc.access_token', now()->addSeconds(840), function () {
-            $timestamp = now()->toIso8601String();
+            $timestamp = $this->timestamp();
             $clientKey = $this->required('client_key');
             $signature = $this->rsaSignature($clientKey.'|'.$timestamp);
 
@@ -234,6 +234,11 @@ class OcbcPaymentService
         $stringToSign = $method.':'.$path.':'.$token.':'.$bodyHash.':'.$timestamp;
 
         return base64_encode(hash_hmac('sha512', $stringToSign, $this->required('client_secret'), true));
+    }
+
+    private function timestamp(): string
+    {
+        return now('Asia/Jakarta')->toIso8601String();
     }
 
     private function verifyNotification(array $payload, array $headers): bool
