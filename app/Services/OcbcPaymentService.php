@@ -320,10 +320,13 @@ class OcbcPaymentService
     /**
      * OCBC/Yokke hanya menerima partnerReferenceNo numeric tepat 20 digit
      * (4004701 "Invalid Field Format" untuk order_no berhuruf).
+     * Format: ymd (6) + order_id (10, padded) + random (4) — unik per attempt.
      */
     private function partnerReference(Order $order): string
     {
-        return $order->created_at->format('ymd').str_pad((string) $order->id, 14, '0', STR_PAD_LEFT);
+        return $order->created_at->format('ymd')
+            .str_pad((string) $order->id, 10, '0', STR_PAD_LEFT)
+            .str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
     }
 
     private function externalId(): string
