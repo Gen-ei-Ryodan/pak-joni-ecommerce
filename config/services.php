@@ -58,7 +58,7 @@ return [
         'channel_id' => env('OCBC_CHANNEL_ID', '02'),
         'private_key_path' => env('OCBC_PRIVATE_KEY_PATH'),
         'notify_url' => env('OCBC_NOTIFY_URL', '/v1.0/qr/qr-mpm-notify'),
-        'member_bank' => env('OCBC_MEMBER_BANK', '999'),
+        'member_bank' => env('OCBC_MEMBER_BANK', '028'),
         'signature_encoding' => env('OCBC_SIGNATURE_ENCODING', 'base64'),
         'notify_signature_mode' => env('OCBC_NOTIFY_SIGNATURE_MODE', 'hmac'),
         'notify_public_key_path' => env('OCBC_NOTIFY_PUBLIC_KEY_PATH'),

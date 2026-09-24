@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\OcbcPaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -71,6 +72,31 @@ class OcbcPaymentTest extends TestCase
             ->assertUnauthorized();
     }
 
+    public function test_config_default_member_bank_is_028(): void
+    {
+        $this->assertSame('028', config('services.ocbc.member_bank'));
+
+        config(['services.ocbc.member_bank' => null]);
+        $service = app(OcbcPaymentService::class);
+        $memberBank = new \ReflectionMethod($service, 'memberBank');
+        $this->assertSame('028', $memberBank->invoke($service));
+
+        config(['services.ocbc.member_bank' => '999']);
+        $this->assertSame('999', $memberBank->invoke($service), 'env override tetap dihormati');
+    }
+
+    public function test_merchant_id_is_padded_to_15_digits(): void
+    {
+        $service = app(OcbcPaymentService::class);
+        $merchantId = new \ReflectionMethod($service, 'merchantId');
+
+        config(['services.ocbc.merchant_id' => '71007568773']);
+        $this->assertSame('000071007568773', $merchantId->invoke($service));
+
+        config(['services.ocbc.merchant_id' => '000071007568773']);
+        $this->assertSame('000071007568773', $merchantId->invoke($service), 'sudah 15 digit tidak double-pad');
+    }
+
     public function test_partner_reference_is_20_numeric_digits_and_traceable(): void
     {
         $user = User::factory()->create(['role' => 'buyer']);
@@ -85,7 +111,7 @@ class OcbcPaymentTest extends TestCase
             'address_snapshot' => [],
         ]);
 
-        $service = app(\App\Services\OcbcPaymentService::class);
+        $service = app(OcbcPaymentService::class);
         $method = new \ReflectionMethod($service, 'partnerReference');
 
         $ref = $method->invoke($service, $order);

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\Payment;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -34,7 +35,7 @@ class OcbcPaymentService
 
         $path = '/v2.0/qr/qr-mpm-generate';
         $body = [
-            'merchantId' => $this->required('merchant_id'),
+            'merchantId' => $this->merchantId(),
             'terminalId' => $this->required('terminal_id'),
             'partnerReferenceNo' => $this->partnerReference($order),
             'amount' => [
@@ -42,7 +43,7 @@ class OcbcPaymentService
                 'currency' => 'IDR',
             ],
             'additionalInfo' => [
-                'memberBank' => config('services.ocbc.member_bank', '999'),
+                'memberBank' => $this->memberBank(),
             ],
         ];
 
@@ -89,11 +90,11 @@ class OcbcPaymentService
             'originalReferenceNo' => $referenceNo,
             'originalExternalId' => $payload['external_id'] ?? $this->externalId(),
             'serviceCode' => '47',
-            'merchantId' => $this->required('merchant_id'),
+            'merchantId' => $this->merchantId(),
             'additionalInfo' => [
                 'originalTransactionDate' => $order->created_at->format('Ymd'),
                 'terminalId' => $payload['terminal_id'] ?? $this->required('terminal_id'),
-                'memberBank' => config('services.ocbc.member_bank', '999'),
+                'memberBank' => $this->memberBank(),
             ],
         ];
 
@@ -201,7 +202,7 @@ class OcbcPaymentService
         return Http::withHeaders($headers)
             ->acceptJson()
             ->timeout(20)
-            ->retry(2, 500, fn ($e) => $e instanceof \Illuminate\Http\Client\ConnectionException, throw: false)
+            ->retry(2, 500, fn ($e) => $e instanceof ConnectionException, throw: false)
             ->send($method, rtrim($this->required('base_url'), '/').$path, ['json' => $body]);
     }
 
@@ -341,6 +342,21 @@ class OcbcPaymentService
             '05', '06' => 'failed',
             default => 'pending',
         };
+    }
+
+    /**
+     * Yokke/OCBC merchantId harus 15 digit; credential 11 digit di-pad kiri.
+     */
+    private function merchantId(): string
+    {
+        return str_pad($this->required('merchant_id'), 15, '0', STR_PAD_LEFT);
+    }
+
+    private function memberBank(): string
+    {
+        $value = config('services.ocbc.member_bank');
+
+        return is_string($value) && trim($value) !== '' ? $value : '028';
     }
 
     private function required(string $key): string
