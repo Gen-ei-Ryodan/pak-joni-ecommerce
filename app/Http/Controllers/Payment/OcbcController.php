@@ -58,6 +58,7 @@ class OcbcController extends Controller
             Log::error('OCBC QR generation failed', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
+                'exception' => $e,
             ]);
 
             return response()->json([
@@ -83,6 +84,7 @@ class OcbcController extends Controller
             Log::error('OCBC payment status failed', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
+                'exception' => $e,
             ]);
 
             return response()->json([

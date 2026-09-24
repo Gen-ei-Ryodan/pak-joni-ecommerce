@@ -195,10 +195,13 @@ class OcbcPaymentService
             'CHANNEL-ID' => $this->required('channel_id'),
         ];
 
+        // Retry hanya untuk gangguan koneksi. Retry pada response error 4xx/5xx
+        // akan mengulang request dengan X-EXTERNAL-ID yang sama → ditolak OCBC 409
+        // ("Cannot use same X-EXTERNAL-ID in same day").
         return Http::withHeaders($headers)
             ->acceptJson()
             ->timeout(20)
-            ->retry(2, 500, throw: false)
+            ->retry(2, 500, fn ($e) => $e instanceof \Illuminate\Http\Client\ConnectionException, throw: false)
             ->send($method, rtrim($this->required('base_url'), '/').$path, ['json' => $body]);
     }
 
@@ -290,7 +293,20 @@ class OcbcPaymentService
     {
         $data = $response->json();
         if (! $response->successful() || ! is_array($data)) {
-            throw new RuntimeException('OCBC API error: '.$response->status());
+            $body = $response->body();
+            Log::error('OCBC API request failed', [
+                'status' => $response->status(),
+                'response_code' => $data['responseCode'] ?? null,
+                'response_message' => $data['responseMessage'] ?? null,
+                'body' => mb_substr($body, 0, 2000),
+            ]);
+
+            throw new RuntimeException(sprintf(
+                'OCBC API error HTTP %d [%s]: %s',
+                $response->status(),
+                $data['responseCode'] ?? '-',
+                $data['responseMessage'] ?? mb_substr($body, 0, 500),
+            ));
         }
 
         return $data;
@@ -301,9 +317,13 @@ class OcbcPaymentService
         return json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 
+    /**
+     * OCBC/Yokke hanya menerima partnerReferenceNo numeric tepat 20 digit
+     * (4004701 "Invalid Field Format" untuk order_no berhuruf).
+     */
     private function partnerReference(Order $order): string
     {
-        return substr($order->order_no, 0, 20);
+        return $order->created_at->format('ymd').str_pad((string) $order->id, 14, '0', STR_PAD_LEFT);
     }
 
     private function externalId(): string

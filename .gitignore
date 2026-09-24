@@ -39,3 +39,5 @@ public_html/hot
 midtrans.txt
 dummy.txt
 api.txt
+credential.txt
+storage/app/private/*.pem
