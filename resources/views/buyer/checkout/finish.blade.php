@@ -90,7 +90,12 @@
                     }
 
                     try {
-                        new QRCode(qrElement, { text: qrContent, width: 240, height: 240 });
+                        new QRCode(qrElement, {
+                            text: qrContent,
+                            width: 240,
+                            height: 240,
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
                     } catch (e) {
                         fail();
                         return;

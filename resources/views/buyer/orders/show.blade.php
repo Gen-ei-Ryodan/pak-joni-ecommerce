@@ -400,7 +400,12 @@
                     }
 
                     try {
-                        new QRCode(qrCode, { text: qrContent, width: 240, height: 240 });
+                        new QRCode(qrCode, {
+                            text: qrContent,
+                            width: 240,
+                            height: 240,
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
                     } catch (e) {
                         showQrError('QR gagal dimuat. Muat ulang halaman lalu coba lagi.', qrArea);
                         return;
