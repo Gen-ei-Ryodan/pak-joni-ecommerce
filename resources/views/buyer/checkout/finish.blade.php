@@ -40,32 +40,26 @@
 @endsection
 
 @if($qrContent)
-    @push('head')
-        <script src="{{ asset('assets/js/qrcode.min.js') }}"></script>
-    @endpush
-
     @push('scripts')
+        @include('partials.qrcode-loader')
+
         <script>
             (function () {
                 var qrContent = @json($qrContent);
-                var qrElement = document.getElementById('qris-code');
-                var hint = document.getElementById('payment-hint');
                 var statusUrl = @json(route('payment.ocbc.status', $order));
                 var orderUrl = @json(route('buyer.orders.show', $order));
                 var attempts = 0;
 
-                if (typeof QRCode === 'undefined' || !qrElement) {
+                function fail() {
+                    var qrElement = document.getElementById('qris-code');
+                    var hint = document.getElementById('payment-hint');
                     if (qrElement) qrElement.innerHTML = '';
                     if (hint) hint.textContent = 'QR gagal dimuat. Muat ulang halaman atau buka detail pesanan untuk mencoba lagi.';
-                    return;
                 }
 
-                try {
-                    new QRCode(qrElement, { text: qrContent, width: 240, height: 240 });
-                } catch (e) {
-                    qrElement.innerHTML = '';
-                    if (hint) hint.textContent = 'QR gagal dimuat. Muat ulang halaman atau buka detail pesanan untuk mencoba lagi.';
-                    return;
+                function setHint(text) {
+                    var hint = document.getElementById('payment-hint');
+                    if (hint) hint.textContent = text;
                 }
 
                 function checkStatus() {
@@ -74,21 +68,38 @@
                         .then(function (response) { return response.json(); })
                         .then(function (data) {
                             if (data.paid || data.status === 'paid') {
-                                hint.textContent = 'Pembayaran berhasil. Mengalihkan...';
+                                setHint('Pembayaran berhasil. Mengalihkan...');
                                 window.location.href = orderUrl;
                                 return;
                             }
                             if (data.status === 'failed' || data.status === 'expired') {
-                                hint.textContent = 'Pembayaran gagal atau kedaluwarsa.';
+                                setHint('Pembayaran gagal atau kedaluwarsa.');
                                 return;
                             }
-                            hint.textContent = 'Menunggu konfirmasi pembayaran... (' + attempts + ')';
+                            setHint('Menunggu konfirmasi pembayaran... (' + attempts + ')');
                             window.setTimeout(checkStatus, 5000);
                         })
                         .catch(function () { window.setTimeout(checkStatus, 8000); });
                 }
 
-                checkStatus();
+                function render() {
+                    var qrElement = document.getElementById('qris-code');
+                    if (!qrElement || typeof QRCode === 'undefined') {
+                        fail();
+                        return;
+                    }
+
+                    try {
+                        new QRCode(qrElement, { text: qrContent, width: 240, height: 240 });
+                    } catch (e) {
+                        fail();
+                        return;
+                    }
+
+                    checkStatus();
+                }
+
+                window.qrCodeReady(render);
             })();
         </script>
     @endpush

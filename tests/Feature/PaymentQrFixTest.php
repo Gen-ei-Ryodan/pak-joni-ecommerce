@@ -77,6 +77,8 @@ class PaymentQrFixTest extends TestCase
         $response->assertSee('assets/js/qrcode.min.js');
         $response->assertDontSee('cdnjs.cloudflare.com');
         $response->assertSee('QR gagal dimuat');
+        // QR dirender hanya setelah library siap (tanpa race window.QRCode).
+        $response->assertSee('qrCodeReady');
         $this->assertFileExists(public_path('assets/js/qrcode.min.js'));
     }
 
@@ -91,5 +93,13 @@ class PaymentQrFixTest extends TestCase
         $response->assertSee('assets/js/qrcode.min.js');
         $response->assertDontSee('cdnjs.cloudflare.com');
         $response->assertSee('Terlalu banyak permintaan');
+        // Tombol bayar mana pun wajib membuka + scroll ke kontainer QR.
+        $response->assertSee('qrCodeReady');
+        $response->assertSee('scrollIntoView');
+        $this->assertSame(
+            1,
+            substr_count($response->getContent(), 'id="payment-banner-text"'),
+            'id payment-banner-text tidak boleh duplikat (banner & sidebar)'
+        );
     }
 }

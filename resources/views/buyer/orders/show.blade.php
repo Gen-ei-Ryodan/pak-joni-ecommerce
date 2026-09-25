@@ -11,7 +11,7 @@
         <div class="payment-banner" id="payment-banner">
             <div>
                 <div style="font-weight:600;font-size:14px;">Menunggu Pembayaran</div>
-                <div class="muted" style="margin-top:4px;font-size:13px;" id="payment-banner-text">Selesaikan pembayaran Anda untuk memproses pesanan ini.</div>
+                <div class="muted js-pay-status" style="margin-top:4px;font-size:13px;" id="payment-banner-text">Selesaikan pembayaran Anda untuk memproses pesanan ini.</div>
             </div>
             <button id="pay-button" class="btn btn-primary" type="button" style="flex-shrink:0;">Bayar Sekarang</button>
         </div>
@@ -185,7 +185,7 @@
                     <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
                     <div id="qris-payment" style="display:none;text-align:center;padding:12px;border:1px solid var(--line);border-radius:12px;">
                         <div id="qris-code" style="background:#fff;padding:12px;width:264px;min-height:264px;margin:0 auto;display:flex;align-items:center;justify-content:center;"></div>
-                        <div id="payment-banner-text" class="muted" style="font-size:12px;margin-top:8px;">Scan QRIS untuk membayar.</div>
+                        <div id="qris-hint" class="muted js-pay-status" style="font-size:12px;margin-top:8px;">Scan QRIS untuk membayar.</div>
                     </div>
                     <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Continue Shopping</a>
                 @elseif($order->status === 'shipped')
@@ -210,16 +210,20 @@
     </div>
 @endsection
 
-@push('head')
-    <script src="{{ asset('assets/js/qrcode.min.js') }}"></script>
-@endpush
-
 @push('scripts')
+    @include('partials.qrcode-loader')
+
     <script>
         var qrUrl = '{{ route('payment.ocbc.qr', $order) }}';
         var checkStatusUrl = '{{ route('payment.ocbc.status', $order) }}';
         var isPaying = false;
         var pollTimer = null;
+
+        function setPayStatus(text) {
+            document.querySelectorAll('.js-pay-status').forEach(function (el) {
+                el.textContent = text;
+            });
+        }
 
         function getQr(callback) {
             fetch(qrUrl)
@@ -246,28 +250,25 @@
         function startPolling(maxAttempts) {
             maxAttempts = maxAttempts || 30;
             var attempts = 0;
-            var bannerText = document.getElementById('payment-banner-text');
 
             function poll() {
                 attempts++;
-                if (bannerText) {
-                    bannerText.textContent = 'Memeriksa status pembayaran... (' + attempts + '/' + maxAttempts + ')';
-                }
+                setPayStatus('Memeriksa status pembayaran... (' + attempts + '/' + maxAttempts + ')');
 
                 fetch(checkStatusUrl)
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         if (data.paid || data.status === 'paid') {
                             stopPolling();
-                            if (bannerText) bannerText.textContent = 'Pembayaran berhasil! Memuat halaman...';
+                            setPayStatus('Pembayaran berhasil! Memuat halaman...');
                             setTimeout(function() { window.location.reload(); }, 1000);
                         } else if (data.status === 'failed' || data.status === 'expired') {
                             stopPolling();
-                            if (bannerText) bannerText.textContent = 'Pembayaran ' + (data.status === 'expired' ? 'kadaluwarsa' : 'gagal') + '.';
+                            setPayStatus('Pembayaran ' + (data.status === 'expired' ? 'kadaluwarsa' : 'gagal') + '.');
                             setTimeout(function() { window.location.reload(); }, 2000);
                         } else if (attempts >= maxAttempts) {
                             stopPolling();
-                            if (bannerText) bannerText.textContent = 'Status pembayaran belum terkonfirmasi. Silakan refresh halaman secara manual.';
+                            setPayStatus('Status pembayaran belum terkonfirmasi. Silakan refresh halaman secara manual.');
                             resetPayButtons();
                         } else {
                             pollTimer = setTimeout(poll, 3000);
@@ -302,7 +303,14 @@
             });
         }
 
-        function payWithOcbc(el) {
+        function showQrError(message, qrArea) {
+            var qrCode = document.getElementById('qris-code');
+            if (qrCode) qrCode.innerHTML = '<span style="color:#ef4444;font-size:12px;">' + message + '</span>';
+            if (qrArea) qrArea.style.display = 'block';
+            resetPayButtons();
+        }
+
+        function payWithOcbc() {
             if (isPaying) return;
             isPaying = true;
 
@@ -312,32 +320,40 @@
                 b.textContent = 'Memproses...';
             });
 
+            var qrArea = document.getElementById('qris-payment');
+            var qrCode = document.getElementById('qris-code');
+            if (qrArea) qrArea.style.display = 'block';
+            if (qrCode) qrCode.innerHTML = '';
+            setPayStatus('Membuat QR pembayaran...');
+
             getQr(function(error, qrContent) {
                 if (error) {
+                    if (qrArea) qrArea.style.display = 'none';
+                    setPayStatus('Scan QRIS untuk membayar.');
                     resetPayButtons();
                     alert(error);
                     return;
                 }
 
-                var qrArea = document.getElementById('qris-payment');
-                var qrCode = document.getElementById('qris-code');
-                if (qrArea) qrArea.style.display = 'block';
-                if (qrCode) {
-                    qrCode.innerHTML = '';
-                    if (typeof QRCode === 'undefined') {
-                        qrCode.innerHTML = '<span style="color:#ef4444;font-size:12px;">QR gagal dimuat. Muat ulang halaman lalu coba lagi.</span>';
-                        resetPayButtons();
+                window.qrCodeReady(function() {
+                    if (!qrCode || typeof QRCode === 'undefined') {
+                        showQrError('QR gagal dimuat. Muat ulang halaman lalu coba lagi.', qrArea);
                         return;
                     }
+
                     try {
                         new QRCode(qrCode, { text: qrContent, width: 240, height: 240 });
                     } catch (e) {
-                        qrCode.innerHTML = '<span style="color:#ef4444;font-size:12px;">QR gagal dimuat. Muat ulang halaman lalu coba lagi.</span>';
-                        resetPayButtons();
+                        showQrError('QR gagal dimuat. Muat ulang halaman lalu coba lagi.', qrArea);
                         return;
                     }
-                }
-                startPolling(60);
+
+                    setPayStatus('Scan QRIS untuk membayar.');
+                    if (qrArea && qrArea.scrollIntoView) {
+                        qrArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    startPolling(60);
+                });
             });
         }
 
