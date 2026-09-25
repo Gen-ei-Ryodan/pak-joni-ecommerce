@@ -69,7 +69,7 @@ Laravel 13 (JOMOTO Center)
 ## Security Middleware
 *   `app/Http/Middleware/SecurityHeaders.php` — set baseline security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS) pada grup `web`.
 *   `app/Http/Middleware/RoleMiddleware.php` — alias `role` (unused saat ini; admin diatur via `User::canAccessPanel`).
-*   Rate limiters di `AppServiceProvider`: `auth` (10/menit/IP), `midtrans-webhook`, `payment-actions`.
+*   Rate limiters di `AppServiceProvider`: `auth` (10/menit/IP), `midtrans-webhook`, `payment-actions` (60/menit/user — dipakai route group `auth` pembayaran: QR OCBC, status OCBC, snap-token Midtrans; endpoint status di-poll tiap 3-5 detik sehingga limit 10/menit membuat request balik 429 HTML).
 *   Trusted proxies dikonfigurasi via env `TRUSTED_PROXIES` (comma-separated) — bukan `*`.
 
 ## Deployment

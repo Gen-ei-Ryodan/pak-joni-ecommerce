@@ -211,7 +211,7 @@
 @endsection
 
 @push('head')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="{{ asset('assets/js/qrcode.min.js') }}"></script>
 @endpush
 
 @push('scripts')
@@ -223,12 +223,19 @@
 
         function getQr(callback) {
             fetch(qrUrl)
-                .then(function(r) { return r.json(); })
+                .then(function(r) {
+                    if (r.status === 429) {
+                        return { error: 'Terlalu banyak permintaan. Tunggu sebentar lalu klik "Bayar Sekarang" lagi.' };
+                    }
+                    return r.json().catch(function() {
+                        return { error: 'Respons server tidak dikenali. Muat ulang halaman lalu coba lagi.' };
+                    });
+                })
                 .then(function(data) {
-                    if (data.success && data.qr_content) {
+                    if (data && data.success && data.qr_content) {
                         callback(null, data.qr_content);
                     } else {
-                        callback(data.error || 'Gagal membuat QR pembayaran.');
+                        callback((data && data.error) || 'Gagal membuat QR pembayaran.');
                     }
                 })
                 .catch(function(err) {
@@ -317,7 +324,18 @@
                 if (qrArea) qrArea.style.display = 'block';
                 if (qrCode) {
                     qrCode.innerHTML = '';
-                    new QRCode(qrCode, { text: qrContent, width: 240, height: 240 });
+                    if (typeof QRCode === 'undefined') {
+                        qrCode.innerHTML = '<span style="color:#ef4444;font-size:12px;">QR gagal dimuat. Muat ulang halaman lalu coba lagi.</span>';
+                        resetPayButtons();
+                        return;
+                    }
+                    try {
+                        new QRCode(qrCode, { text: qrContent, width: 240, height: 240 });
+                    } catch (e) {
+                        qrCode.innerHTML = '<span style="color:#ef4444;font-size:12px;">QR gagal dimuat. Muat ulang halaman lalu coba lagi.</span>';
+                        resetPayButtons();
+                        return;
+                    }
                 }
                 startPolling(60);
             });

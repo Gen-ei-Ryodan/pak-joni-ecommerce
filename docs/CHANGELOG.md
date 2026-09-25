@@ -2,6 +2,10 @@
 
 ## Catatan Perubahan Proyek
 
+### Unreleased — Fix QRIS Production (order PJ260925TXC4PC)
+*   **Alert "Gagal terhubung ke server" saat klik Bayar Sekarang** — root cause: route group pembayaran (`/payment/ocbc/qr`, `/payment/ocbc/status`, Midtrans status/snap-token) memakai `throttle:10,1`, sedangkan halaman finish meng-*poll* status tiap 5 detik (12/menit) dengan bucket yang sama. Request ke-11 balik **429 HTML**, `r.json()` di JS melempar, lalu jatuh ke pesan error generik. Fix: pakai named limiter `payment-actions` (60/menit/user) + JS menangani 429/non-JSON dengan pesan yang bisa ditindaklanjuti.
+*   **QRIS kosong di halaman "Pesanan Berhasil Dibuat!"** — library QR bergantung CDN `cdnjs.cloudflare.com`; bila CDN gagal/diblokir, `new QRCode` melempar `ReferenceError` sehingga kotak QR kosong dan polling tidak jalan. Fix: `qrcode.min.js` di-vendor lokal ke `public/assets/js/` dan render dibungkus guard + fallback pesan error.
+
 ### Unreleased — Visual Dropdown Produk
 *   Dropdown Produk pada navbar diubah menjadi panel visual dengan kartu Motor, ATV, dan Part menggunakan asset gambar lokal.
 *   Link brand tetap tersedia di bawah kartu kategori, sementara Daftar Harga dan Part Katalog ditampilkan sebagai kartu katalog yang lebih besar dan mudah diklik.

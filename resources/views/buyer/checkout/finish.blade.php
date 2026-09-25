@@ -41,7 +41,7 @@
 
 @if($qrContent)
     @push('head')
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        <script src="{{ asset('assets/js/qrcode.min.js') }}"></script>
     @endpush
 
     @push('scripts')
@@ -54,7 +54,19 @@
                 var orderUrl = @json(route('buyer.orders.show', $order));
                 var attempts = 0;
 
-                new QRCode(qrElement, { text: qrContent, width: 240, height: 240 });
+                if (typeof QRCode === 'undefined' || !qrElement) {
+                    if (qrElement) qrElement.innerHTML = '';
+                    if (hint) hint.textContent = 'QR gagal dimuat. Muat ulang halaman atau buka detail pesanan untuk mencoba lagi.';
+                    return;
+                }
+
+                try {
+                    new QRCode(qrElement, { text: qrContent, width: 240, height: 240 });
+                } catch (e) {
+                    qrElement.innerHTML = '';
+                    if (hint) hint.textContent = 'QR gagal dimuat. Muat ulang halaman atau buka detail pesanan untuk mencoba lagi.';
+                    return;
+                }
 
                 function checkStatus() {
                     attempts++;
