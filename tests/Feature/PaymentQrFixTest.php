@@ -93,13 +93,28 @@ class PaymentQrFixTest extends TestCase
         $response->assertSee('assets/js/qrcode.min.js');
         $response->assertDontSee('cdnjs.cloudflare.com');
         $response->assertSee('Terlalu banyak permintaan');
-        // Tombol bayar mana pun wajib membuka + scroll ke kontainer QR.
+        // Tombol bayar mana pun wajib membuka modal QRIS di tengah layar.
         $response->assertSee('qrCodeReady');
         $response->assertSee('scrollIntoView');
+        $response->assertSee('id="qris-modal"', false);
+        $response->assertSee('Download QR');
+        $response->assertSee('Pembayaran QRIS');
+        // Kontainer QR hanya boleh ada di modal (bukan di sidebar / banner).
+        $this->assertSame(
+            1,
+            substr_count($response->getContent(), 'id="qris-payment"'),
+            'id qris-payment hanya boleh ada satu (di modal)'
+        );
         $this->assertSame(
             1,
             substr_count($response->getContent(), 'id="payment-banner-text"'),
             'id payment-banner-text tidak boleh duplikat (banner & sidebar)'
+        );
+        // Banner atas tidak boleh lagi menampilkan progres QR (menyesatkan user).
+        $this->assertStringNotContainsString(
+            'js-pay-status',
+            $response->getContent(),
+            'teks banner tidak boleh diubah jadi status QR'
         );
     }
 }

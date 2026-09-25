@@ -11,12 +11,31 @@
         <div class="payment-banner" id="payment-banner">
             <div>
                 <div style="font-weight:600;font-size:14px;">Menunggu Pembayaran</div>
-                <div class="muted js-pay-status" style="margin-top:4px;font-size:13px;" id="payment-banner-text">Selesaikan pembayaran Anda untuk memproses pesanan ini.</div>
+                <div class="muted" style="margin-top:4px;font-size:13px;" id="payment-banner-text">Selesaikan pembayaran Anda untuk memproses pesanan ini.</div>
             </div>
             <button id="pay-button" class="btn btn-primary" type="button" style="flex-shrink:0;">Bayar Sekarang</button>
         </div>
         <div id="reopen-hint" style="display:none;background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:13px;color:#856404;text-align:center;">
             Pop-up pembayaran ditutup. Klik "Bayar Sekarang" untuk membukanya kembali.
+        </div>
+
+        <div id="qris-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:16px;">
+            <div class="panel" style="max-width:400px;width:100%;padding:22px 20px;text-align:center;position:relative;max-height:92vh;overflow:auto;">
+                <button id="qris-close-x" type="button" aria-label="Tutup" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:24px;line-height:1;color:var(--muted);cursor:pointer;padding:4px 8px;">&times;</button>
+                <div style="font-weight:700;font-size:16px;">Pembayaran QRIS</div>
+                <div class="muted" style="font-size:13px;margin-top:4px;">{{ $order->order_no }}</div>
+                <div style="color:var(--accent);font-weight:700;font-size:22px;margin-top:8px;">Rp {{ number_format((float) $order->total, 0, ',', '.') }}</div>
+
+                <div id="qris-payment" style="margin-top:16px;text-align:center;">
+                    <div id="qris-code" style="background:#fff;padding:12px;width:264px;min-height:264px;margin:0 auto;display:flex;align-items:center;justify-content:center;"></div>
+                    <div id="qris-hint" class="muted" style="font-size:12px;margin-top:10px;">Scan QRIS untuk membayar.</div>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:16px;">
+                    <button id="qris-download" class="btn" type="button" style="display:none;flex:1;">Download QR</button>
+                    <button id="qris-close-btn" class="btn btn-primary" type="button" style="flex:1;">Tutup</button>
+                </div>
+            </div>
         </div>
     @endif
 
@@ -183,10 +202,7 @@
             <div class="sidebar-card" style="display:grid;gap:8px;">
                 @if($order->status === 'unpaid' && $order->payment_status === 'pending')
                     <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
-                    <div id="qris-payment" style="display:none;text-align:center;padding:12px;border:1px solid var(--line);border-radius:12px;">
-                        <div id="qris-code" style="background:#fff;padding:12px;width:264px;min-height:264px;margin:0 auto;display:flex;align-items:center;justify-content:center;"></div>
-                        <div id="qris-hint" class="muted js-pay-status" style="font-size:12px;margin-top:8px;">Scan QRIS untuk membayar.</div>
-                    </div>
+                    <div class="muted" style="font-size:12px;text-align:center;">QRIS dibuka di pop-up pembayaran.</div>
                     <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Continue Shopping</a>
                 @elseif($order->status === 'shipped')
                     <form method="post" action="{{ route('buyer.orders.confirmReceived', $order) }}" onsubmit="return confirm('Konfirmasi barang sudah diterima?')">
@@ -220,9 +236,26 @@
         var pollTimer = null;
 
         function setPayStatus(text) {
-            document.querySelectorAll('.js-pay-status').forEach(function (el) {
-                el.textContent = text;
-            });
+            var hint = document.getElementById('qris-hint');
+            if (hint) hint.textContent = text;
+        }
+
+        function openQrModal() {
+            var modal = document.getElementById('qris-modal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            var hint = document.getElementById('reopen-hint');
+            if (hint) hint.style.display = 'none';
+        }
+
+        function closeQrModal() {
+            var modal = document.getElementById('qris-modal');
+            if (!modal) return;
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+            var hint = document.getElementById('reopen-hint');
+            if (hint) hint.style.display = 'block';
         }
 
         function getQr(callback) {
@@ -307,7 +340,28 @@
             var qrCode = document.getElementById('qris-code');
             if (qrCode) qrCode.innerHTML = '<span style="color:#ef4444;font-size:12px;">' + message + '</span>';
             if (qrArea) qrArea.style.display = 'block';
+            setPayStatus(message);
             resetPayButtons();
+        }
+
+        function downloadQr() {
+            var box = document.getElementById('qris-code');
+            if (!box) return;
+            var canvas = box.querySelector('canvas');
+            var img = box.querySelector('img');
+            var url = null;
+            if (canvas && canvas.toDataURL) {
+                url = canvas.toDataURL('image/png');
+            } else if (img && img.src) {
+                url = img.src;
+            }
+            if (!url) return;
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'qris-{{ $order->order_no }}.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         function payWithOcbc() {
@@ -320,18 +374,22 @@
                 b.textContent = 'Memproses...';
             });
 
+            openQrModal();
+
             var qrArea = document.getElementById('qris-payment');
             var qrCode = document.getElementById('qris-code');
+            var downloadBtn = document.getElementById('qris-download');
             if (qrArea) qrArea.style.display = 'block';
             if (qrCode) qrCode.innerHTML = '';
+            if (downloadBtn) downloadBtn.style.display = 'none';
             setPayStatus('Membuat QR pembayaran...');
 
             getQr(function(error, qrContent) {
                 if (error) {
                     if (qrArea) qrArea.style.display = 'none';
-                    setPayStatus('Scan QRIS untuk membayar.');
                     resetPayButtons();
                     alert(error);
+                    closeQrModal();
                     return;
                 }
 
@@ -348,10 +406,13 @@
                         return;
                     }
 
+                    if (downloadBtn) downloadBtn.style.display = '';
                     setPayStatus('Scan QRIS untuk membayar.');
-                    if (qrArea && qrArea.scrollIntoView) {
-                        qrArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    var modalPanel = document.querySelector('#qris-modal .panel');
+                    if (modalPanel && modalPanel.scrollIntoView) {
+                        modalPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
+                    resetPayButtons();
                     startPolling(60);
                 });
             });
@@ -359,7 +420,21 @@
 
         var payBtn = document.getElementById('pay-button');
         var payBtnSidebar = document.getElementById('pay-button-sidebar');
-        if (payBtn) payBtn.addEventListener('click', function() { payWithOcbc(this); });
-        if (payBtnSidebar) payBtnSidebar.addEventListener('click', function() { payWithOcbc(this); });
+        if (payBtn) payBtn.addEventListener('click', function() { payWithOcbc(); });
+        if (payBtnSidebar) payBtnSidebar.addEventListener('click', function() { payWithOcbc(); });
+
+        var closeX = document.getElementById('qris-close-x');
+        var closeBtn = document.getElementById('qris-close-btn');
+        if (closeX) closeX.addEventListener('click', closeQrModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeQrModal);
+        var qrModal = document.getElementById('qris-modal');
+        if (qrModal) qrModal.addEventListener('click', function(e) {
+            if (e.target === qrModal) closeQrModal();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && qrModal && qrModal.style.display === 'flex') closeQrModal();
+        });
+        var downloadQrBtn = document.getElementById('qris-download');
+        if (downloadQrBtn) downloadQrBtn.addEventListener('click', downloadQr);
      </script>
  @endpush
