@@ -107,7 +107,23 @@ OCBC_NOTIFY_URL=https://jomotocenter.com/v1.0/qr/qr-mpm-notify
 6. Status `latestTransactionStatus = "00"` diverifikasi dan diproses melalui `OrderService::markAsPaid()`.
 7. Status selain `00` tidak boleh menandai order sebagai paid.
 
-## Hal Yang Wajib Dikonfirmasi
+## X-EXTERNAL-ID
+
+`X-EXTERNAL-ID` hanya dikirim **client → Yokke**; Yokke tidak mengembalikannya di response header, jadi `generateQr()` membuat nilainya sendiri (format `YmdHis` + digit = 15 digit numeric) lalu menyimpannya ke `payments.payload.external_id`. Nilai itulah yang dikirim ulang sebagai `originalExternalId` pada `query()`.
+
+Bila `payload.external_id` kosong (pembayaran dibuat sebelum fix, atau format non-numeric), `query()` fallback ke external id baru berformat tanggal. Gejala lama: `4005101 Invalid Field Format` pada serviceCode `51`.
+
+## Webhook `qr-mpm-notify`
+
+`OcbcController::notify()` mencatat `request()->all()`, seluruh headers, dan raw body ke log (`OCBC notify received` / `OCBC notify raw body`) supaya payload persis dari MTI selalu bisa direview.
+
+`processNotification()` mencari payment bertingkat (berhenti di kecocokan pertama, semua tier wajib lolos cek jumlah `amount`):
+
+1. Exact: `originalReferenceNo` / `referenceNo` / `originalPartnerReferenceNo` / `partnerReferenceNo` / `additionalInfo.*` / header `X-EXTERNAL-ID` dicocokkan ke `provider_reference`, `payload.partner_reference_no`, dan `payload.external_id`. Nilai dinormalisasi bila terkirim sebagai JSON string/array.
+2. Fuzzy: referensi beda ≤ 2 digit (termasuk beda leading zero), dibatasi pembayaran 2 hari terakhir + amount cocok.
+3. Fallback terakhir: `additionalInfo.merchantId` + `terminalId` vs `payload.merchant_id` / `payload_terminal_id` (logged sebagai warning).
+
+Tier 2/3 hanya jalan kalau amount cocok, supaya notification tidak pernah mengkaitkan order yang salah.
 
 Dokumen MTI memiliki dua aturan signature yang berbeda:
 
