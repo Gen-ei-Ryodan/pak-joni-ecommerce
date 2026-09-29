@@ -190,8 +190,9 @@ class PageController extends Controller
         $catalogs = ItemPartCatalog::query()
             ->with('item')
             ->when($q !== '', fn($query) => $query->where('name', 'like', '%'.$q.'%'))
-            ->orderByDesc('id')
-            ->paginate(12)
+            // ->orderByDesc('id')
+            ->orderBy('id', 'asc')
+            // ->paginate(12)
             ->withQueryString();
 
         return view('buyer.spareparts.part-catalog', compact('catalogs', 'q'));
