@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\Payment;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -34,7 +35,7 @@ class OcbcPaymentService
 
         $path = '/v2.0/qr/qr-mpm-generate';
         $body = [
-            'merchantId' => $this->required('merchant_id'),
+            'merchantId' => $this->merchantId(),
             'terminalId' => $this->required('terminal_id'),
             'partnerReferenceNo' => $this->partnerReference($order),
             'amount' => [
@@ -42,11 +43,14 @@ class OcbcPaymentService
                 'currency' => 'IDR',
             ],
             'additionalInfo' => [
-                'memberBank' => config('services.ocbc.member_bank', '999'),
+                'memberBank' => $this->memberBank(),
             ],
         ];
 
-        $response = $this->request('POST', $path, $body, serviceCode: '47');
+        // Yokke tidak mengembalikan X-EXTERNAL-ID di response header (header itu
+        // dikirim client -> server). Generate sendiri lalu simpan ke payload.
+        $externalId = $this->externalId();
+        $response = $this->request('POST', $path, $body, serviceCode: '47', externalId: $externalId);
         $data = $this->successfulJson($response);
 
         if (($data['responseCode'] ?? '') !== '2004700' || empty($data['qrContent'])) {
@@ -60,7 +64,7 @@ class OcbcPaymentService
             'payload' => array_merge($payload, [
                 'qr_content' => $data['qrContent'],
                 'partner_reference_no' => (string) ($data['partnerReferenceNo'] ?? $body['partnerReferenceNo']),
-                'external_id' => $response->header('X-EXTERNAL-ID'),
+                'external_id' => $externalId,
                 'merchant_id' => $data['additionalInfo']['merchantId'] ?? $body['merchantId'],
                 'terminal_id' => $data['terminalId'] ?? $body['terminalId'],
                 'generated_response' => $data,
@@ -87,13 +91,13 @@ class OcbcPaymentService
         $path = '/v3.0/qr/qr-mpm-query';
         $body = [
             'originalReferenceNo' => $referenceNo,
-            'originalExternalId' => $payload['external_id'] ?? $this->externalId(),
+            'originalExternalId' => $this->originalExternalId($payload),
             'serviceCode' => '47',
-            'merchantId' => $this->required('merchant_id'),
+            'merchantId' => $this->merchantId(),
             'additionalInfo' => [
                 'originalTransactionDate' => $order->created_at->format('Ymd'),
                 'terminalId' => $payload['terminal_id'] ?? $this->required('terminal_id'),
-                'memberBank' => config('services.ocbc.member_bank', '999'),
+                'memberBank' => $this->memberBank(),
             ],
         ];
 
@@ -115,30 +119,21 @@ class OcbcPaymentService
             return ['success' => false, 'message' => 'Invalid signature'];
         }
 
-        $referenceNo = (string) ($payload['originalReferenceNo'] ?? '');
-        $partnerReferenceNo = (string) ($payload['originalPartnerReferenceNo'] ?? '');
-        $payment = Payment::query()
-            ->where('provider', 'ocbc')
-            ->where(function ($query) use ($referenceNo, $partnerReferenceNo) {
-                $query->where('provider_reference', $referenceNo);
-                if ($partnerReferenceNo !== '') {
-                    $query->orWhereJsonContains('payload->partner_reference_no', $partnerReferenceNo);
-                }
-            })
-            ->with('order')
-            ->first();
+        $payment = $this->findPayment($payload, $headers);
 
         if (! $payment?->order) {
             return ['success' => false, 'message' => 'Order not found'];
         }
 
         $order = $payment->order;
-        $amount = (float) data_get($payload, 'amount.value', 0);
-        if (abs($amount - (float) $order->total) > 0.001) {
+        $amount = $this->notificationAmount($payload);
+        if ($amount === null || abs($amount - (float) $order->total) > 0.001) {
             Log::warning('OCBC notification amount mismatch', [
                 'order_id' => $order->id,
+                'payment_id' => $payment->id,
                 'expected' => (float) $order->total,
                 'received' => $amount,
+                'payload' => $payload,
             ]);
 
             return ['success' => false, 'message' => 'Amount mismatch'];
@@ -150,13 +145,268 @@ class OcbcPaymentService
         return ['success' => true, 'message' => 'Notification processed'];
     }
 
+    /**
+     * Lookup payment fleksibel: Yokke/MTI tidak selalu mengirim referensi yang sama
+     * dengan yang tersimpan (format JSON, referensi beda digit, atau hanya
+     * merchant/terminal). X-EXTERNAL-ID di header adalah external_id generate QR.
+     */
+    private function findPayment(array $payload, array $headers): ?Payment
+    {
+        $candidates = $this->notificationReferences($payload, $headers);
+        $amount = $this->notificationAmount($payload);
+
+        $payment = $this->matchExactReference($candidates);
+        if ($payment) {
+            Log::info('OCBC notification matched by reference', [
+                'payment_id' => $payment->id,
+                'order_id' => $payment->order_id,
+                'candidates' => $candidates,
+            ]);
+
+            return $payment;
+        }
+
+        $payment = $this->matchFuzzyReference($candidates, $amount);
+        if ($payment) {
+            Log::info('OCBC notification matched by fuzzy reference', [
+                'payment_id' => $payment->id,
+                'order_id' => $payment->order_id,
+                'candidates' => $candidates,
+            ]);
+
+            return $payment;
+        }
+
+        $payment = $this->matchMerchantTerminal($payload, $amount);
+        if ($payment) {
+            Log::warning('OCBC notification matched by merchant/terminal fallback', [
+                'payment_id' => $payment->id,
+                'order_id' => $payment->order_id,
+                'candidates' => $candidates,
+            ]);
+
+            return $payment;
+        }
+
+        Log::warning('OCBC notification payment not found', [
+            'candidates' => $candidates,
+            'amount' => $amount,
+            'payload' => $payload,
+        ]);
+
+        return null;
+    }
+
+    /**
+     * Semua kandidat identifier dari body notify + header X-EXTERNAL-ID,
+     * dinormalisasi (bisa terkirim sebagai JSON string/array).
+     */
+    private function notificationReferences(array $payload, array $headers): array
+    {
+        $keys = [
+            'originalReferenceNo',
+            'referenceNo',
+            'originalPartnerReferenceNo',
+            'partnerReferenceNo',
+            'additionalInfo.originalReferenceNo',
+            'additionalInfo.partnerReferenceNo',
+            'additionalInfo.originalPartnerReferenceNo',
+        ];
+
+        $references = [];
+        foreach ($keys as $key) {
+            $value = $this->normalizeReference(data_get($payload, $key));
+            if ($value !== null) {
+                $references[$value] = $value;
+            }
+        }
+
+        foreach ([$headers['x-external-id'] ?? null, $payload['external_id'] ?? null] as $value) {
+            $value = $this->normalizeReference($value);
+            if ($value !== null) {
+                $references[$value] = $value;
+            }
+        }
+
+        return array_values($references);
+    }
+
+    private function matchExactReference(array $candidates): ?Payment
+    {
+        if ($candidates === []) {
+            return null;
+        }
+
+        return Payment::query()
+            ->where('provider', 'ocbc')
+            ->where(function ($query) use ($candidates) {
+                $first = true;
+                foreach ($candidates as $candidate) {
+                    foreach (['provider_reference', 'payload->partner_reference_no', 'payload->external_id'] as $column) {
+                        if ($first) {
+                            $query->where($column, $candidate);
+                            $first = false;
+                        } else {
+                            $query->orWhere($column, $candidate);
+                        }
+                    }
+                }
+
+                if ($first) {
+                    $query->whereRaw('1 = 0');
+                }
+            })
+            ->with('order')
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * originalReferenceNo kadang beda beberapa digit (leading zero / typo ampuh).
+     * Batasi ke pembayaran 2 hari terakhir + amount cocok supaya tidak salah kait.
+     */
+    private function matchFuzzyReference(array $candidates, ?float $amount): ?Payment
+    {
+        if ($candidates === [] || $amount === null) {
+            return null;
+        }
+
+        $payments = Payment::query()
+            ->where('provider', 'ocbc')
+            ->where('created_at', '>=', now()->subDays(2))
+            ->with('order')
+            ->latest()
+            ->limit(500)
+            ->get();
+
+        foreach ($payments as $payment) {
+            if (! $this->amountMatches($payment->order, $amount)) {
+                continue;
+            }
+
+            foreach (['provider_reference', 'payload.partner_reference_no', 'payload.external_id'] as $field) {
+                $stored = $this->normalizeReference(data_get($payment, $field));
+                if ($stored === null) {
+                    continue;
+                }
+
+                foreach ($candidates as $candidate) {
+                    if ($this->closeEnough($stored, $candidate)) {
+                        return $payment;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function matchMerchantTerminal(array $payload, ?float $amount): ?Payment
+    {
+        $merchantId = $this->normalizeReference(data_get($payload, 'additionalInfo.merchantId')
+            ?? data_get($payload, 'merchant_id')
+            ?? data_get($payload, 'merchantId'));
+        $terminalId = $this->normalizeReference(data_get($payload, 'additionalInfo.terminalId')
+            ?? data_get($payload, 'terminal_id')
+            ?? data_get($payload, 'terminalId'));
+
+        if ($merchantId === null || $terminalId === null) {
+            return null;
+        }
+
+        $merchantId = str_pad($merchantId, 15, '0', STR_PAD_LEFT);
+
+        return Payment::query()
+            ->where('provider', 'ocbc')
+            ->where('payload->terminal_id', $terminalId)
+            ->where('created_at', '>=', now()->subDays(2))
+            ->with('order')
+            ->latest()
+            ->limit(50)
+            ->get()
+            ->first(function (Payment $payment) use ($merchantId, $amount) {
+                $stored = str_pad((string) ($payment->payload['merchant_id'] ?? ''), 15, '0', STR_PAD_LEFT);
+
+                return $stored === $merchantId
+                    && ($amount === null || $this->amountMatches($payment->order, $amount));
+            });
+    }
+
+    private function closeEnough(string $stored, string $candidate): bool
+    {
+        $stored = ltrim($stored, '0');
+        $candidate = ltrim($candidate, '0');
+
+        if ($stored === '' || $candidate === '') {
+            return false;
+        }
+
+        return $stored === $candidate
+            || (strlen($stored) === strlen($candidate) && levenshtein($stored, $candidate) <= 2);
+    }
+
+    private function amountMatches(?Order $order, ?float $amount): bool
+    {
+        return $order !== null && $amount !== null && abs($amount - (float) $order->total) <= 0.001;
+    }
+
+    private function notificationAmount(array $payload): ?float
+    {
+        $value = data_get($payload, 'amount.value');
+        if ($value === null) {
+            // Dokumen Yokke memakai "amount " (spasi) pada beberapa contoh payload.
+            $value = data_get($payload, 'amount ', data_get($payload, 'amount'));
+        }
+
+        if (is_array($value)) {
+            $value = $value['value'] ?? null;
+        }
+
+        return is_numeric($value) ? (float) $value : null;
+    }
+
+    private function normalizeReference(mixed $value): ?string
+    {
+        if (is_array($value)) {
+            foreach ($value as $item) {
+                $normalized = $this->normalizeReference($item);
+                if ($normalized !== null) {
+                    return $normalized;
+                }
+            }
+
+            return null;
+        }
+
+        if (! is_scalar($value)) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (str_starts_with($value, '"') || str_starts_with($value, '[') || str_starts_with($value, '{')) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $this->normalizeReference($decoded);
+            }
+        }
+
+        return $value;
+    }
+
     private function applyStatus(Order $order, string $status, array $payload): void
     {
+        $providerReference = $this->normalizeReference($payload['originalReferenceNo'] ?? null)
+            ?? $order->payment?->provider_reference;
+
         if ($status === '00' && $order->payment_status !== 'paid') {
             $this->orderService->markAsPaid($order, [
                 'payment_method' => 'qris',
                 'payment_provider' => 'ocbc',
-                'payment_reference' => $payload['originalReferenceNo'] ?? $order->payment?->provider_reference,
+                'payment_reference' => $providerReference,
             ]);
         }
 
@@ -170,7 +420,7 @@ class OcbcPaymentService
             ['order_id' => $order->id],
             [
                 'provider' => 'ocbc',
-                'provider_reference' => $payload['originalReferenceNo'] ?? $order->payment?->provider_reference,
+                'provider_reference' => $providerReference,
                 'status' => $paymentStatus,
                 'payload' => array_merge($order->payment?->payload ?? [], [
                     'last_status' => $status,
@@ -180,11 +430,11 @@ class OcbcPaymentService
         );
     }
 
-    private function request(string $method, string $path, array $body, string $serviceCode): Response
+    private function request(string $method, string $path, array $body, string $serviceCode, ?string $externalId = null): Response
     {
         $token = $this->accessToken();
-        $timestamp = now()->toIso8601String();
-        $externalId = $this->externalId();
+        $timestamp = $this->timestamp();
+        $externalId ??= $this->externalId();
         $headers = [
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer '.$token,
@@ -195,17 +445,20 @@ class OcbcPaymentService
             'CHANNEL-ID' => $this->required('channel_id'),
         ];
 
+        // Retry hanya untuk gangguan koneksi. Retry pada response error 4xx/5xx
+        // akan mengulang request dengan X-EXTERNAL-ID yang sama → ditolak OCBC 409
+        // ("Cannot use same X-EXTERNAL-ID in same day").
         return Http::withHeaders($headers)
             ->acceptJson()
             ->timeout(20)
-            ->retry(2, 500, throw: false)
+            ->retry(2, 500, fn ($e) => $e instanceof ConnectionException, throw: false)
             ->send($method, rtrim($this->required('base_url'), '/').$path, ['json' => $body]);
     }
 
     private function accessToken(): string
     {
         return Cache::remember('ocbc.access_token', now()->addSeconds(840), function () {
-            $timestamp = now()->toIso8601String();
+            $timestamp = $this->timestamp();
             $clientKey = $this->required('client_key');
             $signature = $this->rsaSignature($clientKey.'|'.$timestamp);
 
@@ -234,6 +487,11 @@ class OcbcPaymentService
         $stringToSign = $method.':'.$path.':'.$token.':'.$bodyHash.':'.$timestamp;
 
         return base64_encode(hash_hmac('sha512', $stringToSign, $this->required('client_secret'), true));
+    }
+
+    private function timestamp(): string
+    {
+        return now('Asia/Jakarta')->toIso8601String();
     }
 
     private function verifyNotification(array $payload, array $headers): bool
@@ -285,7 +543,20 @@ class OcbcPaymentService
     {
         $data = $response->json();
         if (! $response->successful() || ! is_array($data)) {
-            throw new RuntimeException('OCBC API error: '.$response->status());
+            $body = $response->body();
+            Log::error('OCBC API request failed', [
+                'status' => $response->status(),
+                'response_code' => $data['responseCode'] ?? null,
+                'response_message' => $data['responseMessage'] ?? null,
+                'body' => mb_substr($body, 0, 2000),
+            ]);
+
+            throw new RuntimeException(sprintf(
+                'OCBC API error HTTP %d [%s]: %s',
+                $response->status(),
+                $data['responseCode'] ?? '-',
+                $data['responseMessage'] ?? mb_substr($body, 0, 500),
+            ));
         }
 
         return $data;
@@ -296,9 +567,31 @@ class OcbcPaymentService
         return json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 
+    /**
+     * OCBC/Yokke hanya menerima partnerReferenceNo numeric tepat 20 digit
+     * (4004701 "Invalid Field Format" untuk order_no berhuruf).
+     * Format: ymd (6) + order_id (10, padded) + random (4) — unik per attempt.
+     */
     private function partnerReference(Order $order): string
     {
-        return substr($order->order_no, 0, 20);
+        return $order->created_at->format('ymd')
+            .str_pad((string) $order->id, 10, '0', STR_PAD_LEFT)
+            .str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * originalExternalId wajib numeric (Yokke: 15 digit). Ambil external_id yang
+     * dikirim saat generate QR; kalau payload lama kosong/bukan numeric, fallback
+     * ke format tanggal YmdHis+digit agar request tetap diterima.
+     */
+    private function originalExternalId(array $payload): string
+    {
+        $externalId = trim((string) ($payload['external_id'] ?? ''));
+        if ($externalId === '' || ! ctype_digit($externalId) || strlen($externalId) > 15) {
+            return $this->externalId();
+        }
+
+        return $externalId;
     }
 
     private function externalId(): string
@@ -313,6 +606,21 @@ class OcbcPaymentService
             '05', '06' => 'failed',
             default => 'pending',
         };
+    }
+
+    /**
+     * Yokke/OCBC merchantId harus 15 digit; credential 11 digit di-pad kiri.
+     */
+    private function merchantId(): string
+    {
+        return str_pad($this->required('merchant_id'), 15, '0', STR_PAD_LEFT);
+    }
+
+    private function memberBank(): string
+    {
+        $value = config('services.ocbc.member_bank');
+
+        return is_string($value) && trim($value) !== '' ? $value : '028';
     }
 
     private function required(string $key): string

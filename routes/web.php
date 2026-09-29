@@ -94,7 +94,7 @@ Route::get('/payment/midtrans/finish', [MidtransController::class, 'finish'])->n
 Route::get('/payment/midtrans/unfinish', [MidtransController::class, 'unfinish'])->name('payment.midtrans.unfinish');
 Route::get('/payment/midtrans/error', [MidtransController::class, 'error'])->name('payment.midtrans.error');
 
-Route::middleware(['auth', 'throttle:10,1'])->group(function () {
+Route::middleware(['auth', 'throttle:payment-actions'])->group(function () {
     Route::get('/payment/midtrans/status/{order}', [MidtransController::class, 'status'])->name('payment.midtrans.status');
     Route::get('/payment/midtrans/snap-token/{order}', [MidtransController::class, 'snapToken'])->name('payment.midtrans.snap-token');
     Route::get('/payment/ocbc/qr/{order}', [OcbcController::class, 'qr'])->name('payment.ocbc.qr');

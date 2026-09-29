@@ -32,8 +32,12 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($job->ip());
         });
 
+        // Endpoint status pembayaran di-poll tiap 3-5 detik (12-20/menit) dan
+        // berbagi bucket dengan generate QR. Limit lama 10/menit membuat request
+        // ke-11 balik 429 HTML -> JS `r.json()` gagal -> alert "Gagal terhubung
+        // ke server" saat klik Bayar Sekarang.
         RateLimiter::for('payment-actions', function ($job) {
-            return Limit::perMinute(10)->by($job->user()?->id ?: $job->ip());
+            return Limit::perMinute(60)->by($job->user()?->id ?: $job->ip());
         });
     }
 }

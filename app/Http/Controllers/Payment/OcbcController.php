@@ -16,11 +16,24 @@ class OcbcController extends Controller
 
     public function notify(Request $request)
     {
+        Log::info('OCBC notify received', [
+            'external_id' => (string) $request->header('X-EXTERNAL-ID'),
+            'payload' => $request->all(),
+            'headers' => $request->headers->all(),
+            'method' => $request->method(),
+            'path' => $request->fullUrl(),
+        ]);
+        Log::debug('OCBC notify raw body', [
+            'raw' => $request->getContent(),
+            'content_type' => (string) $request->header('Content-Type'),
+        ]);
+
         $result = $this->paymentService->processNotification(
             $request->all(),
             [
                 'x-signature' => (string) $request->header('X-SIGNATURE'),
                 'x-timestamp' => (string) $request->header('X-TIMESTAMP'),
+                'x-external-id' => (string) $request->header('X-EXTERNAL-ID'),
             ],
         );
 
@@ -58,6 +71,7 @@ class OcbcController extends Controller
             Log::error('OCBC QR generation failed', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
+                'exception' => $e,
             ]);
 
             return response()->json([
@@ -83,6 +97,7 @@ class OcbcController extends Controller
             Log::error('OCBC payment status failed', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
+                'exception' => $e,
             ]);
 
             return response()->json([

@@ -441,9 +441,19 @@ class CheckoutController extends Controller
             return $order;
         });
 
-        // Send sales order email
-        Mail::to($result->user->email)
-            ->send(new SalesOrderMail($result));
+        // Send sales order email. Email gagal (mis. SMTP 550 recipient tidak ada)
+        // tidak boleh menghapus/me-return 500 — order sudah tersimpan.
+        try {
+            Mail::to($result->user->email)
+                ->send(new SalesOrderMail($result));
+        } catch (\Throwable $e) {
+            Log::error('Sales order email failed', [
+                'order_id' => $result->id,
+                'order_no' => $result->order_no,
+                'recipient' => $result->user->email,
+                'exception' => $e,
+            ]);
+        }
 
         return redirect('/checkout/finish/'.$result->id);
     }
@@ -473,6 +483,7 @@ class CheckoutController extends Controller
             Log::error('OCBC QR generation failed on checkout finish', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
+                'exception' => $e,
             ]);
             $qrError = 'QR pembayaran belum dapat dibuat. Silakan coba dari halaman detail pesanan.';
         }
