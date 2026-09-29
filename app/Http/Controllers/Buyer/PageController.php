@@ -177,9 +177,9 @@ class PageController extends Controller
         $priceLists = ItemPriceList::query()
             ->with('item')
             ->when($q !== '', fn($query) => $query->where('name', 'like', '%'.$q.'%'))
-            ->orderByDesc('id')
-            ->paginate(12)
-            ->withQueryString();
+            // ->orderByDesc('id')
+            ->orderBy('id', 'asc')
+            ->get();
 
         return view('buyer.spareparts.price-list', compact('priceLists', 'q'));
     }
