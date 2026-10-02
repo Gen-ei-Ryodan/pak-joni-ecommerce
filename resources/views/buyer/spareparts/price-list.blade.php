@@ -14,7 +14,9 @@
             <div class="grid grid-3">
                 @forelse($priceLists as $pl)
                     <div class="price-card">
-                        @if($pl->item && $pl->item->thumbnail_path)
+                        @if($pl->image_path)
+                            <div class="card-media" style="background-image:url('{{ image_url($pl->image_path) }}');background-size:cover;background-position:center;height:220px;"></div>
+                        @elseif($pl->item && $pl->item->thumbnail_path)
                             <div class="card-media" style="background-image:url('{{ image_url($pl->item->thumbnail_path) }}');background-size:cover;background-position:center;height:220px;"></div>
                         @else
                             <div class="card-media" style="background:var(--panel);height:220px;display:flex;align-items:center;justify-content:center;color:var(--muted);">No Image</div>

@@ -10,7 +10,7 @@ class ItemPartCatalog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['item_id', 'name', 'pdf_path', 'is_active', 'sort_order'];
+    protected $fillable = ['item_id', 'name', 'pdf_path', 'image_path', 'is_active', 'sort_order'];
 
     protected function casts(): array
     {

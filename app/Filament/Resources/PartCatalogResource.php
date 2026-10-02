@@ -30,6 +30,11 @@ class PartCatalogResource extends Resource
         return $table
             ->defaultSort('sort_order')
             ->columns([
+                Tables\Columns\ImageColumn::make('image_path')
+                    ->label('Gambar')
+                    ->square()
+                    ->size(40),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nama')
                     ->searchable()
@@ -82,6 +87,16 @@ class PartCatalogResource extends Resource
                     ->directory('items/part-catalogs')
                     ->maxSize(10240)
                     ->required(),
+
+                Forms\Components\FileUpload::make('image_path')
+                    ->label('Gambar')
+                    ->helperText('Gambar sampul kartu di halaman /part-katalog. JPG/PNG/WEBP, maks 5 MB.')
+                    ->image()
+                    ->imageEditor()
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    ->disk('public')
+                    ->directory('items/part-catalogs/images')
+                    ->maxSize(5120),
 
                 Forms\Components\Toggle::make('is_active')
                     ->label('Active')

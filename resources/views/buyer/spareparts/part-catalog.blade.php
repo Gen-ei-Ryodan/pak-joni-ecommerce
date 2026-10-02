@@ -14,7 +14,9 @@
             <div class="grid grid-3">
                 @forelse($catalogs as $cat)
                     <div class="price-card">
-                        @if($cat->item && $cat->item->thumbnail_path)
+                        @if($cat->image_path)
+                            <div class="card-media" style="background-image:url('{{ image_url($cat->image_path) }}');background-size:cover;background-position:center;height:220px;"></div>
+                        @elseif($cat->item && $cat->item->thumbnail_path)
                             <div class="card-media" style="background-image:url('{{ image_url($cat->item->thumbnail_path) }}');background-size:cover;background-position:center;height:220px;"></div>
                         @else
                             <div class="card-media" style="background:var(--panel);height:220px;display:flex;align-items:center;justify-content:center;color:var(--muted);">No Image</div>
