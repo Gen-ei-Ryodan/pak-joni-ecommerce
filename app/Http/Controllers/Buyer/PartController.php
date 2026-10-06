@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
+use App\Models\Item;
 use App\Models\Part;
 use App\Models\PartCategory;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class PartController extends Controller
                 $query->where(function ($q2) use ($q) {
                     $q2->where('name', 'like', '%'.$q.'%')
                         ->orWhere('sku', 'like', '%'.$q.'%')
+                        ->orWhere('part_number', 'like', '%'.$q.'%')
                         ->orWhere('short_description', 'like', '%'.$q.'%');
                 });
             })
@@ -55,6 +57,14 @@ class PartController extends Controller
 
         $allCompatibles = $part->allCompatibles();
 
+        // Katalog part (PDF) dari motor yang kompatibel dengan part ini.
+        $motorCatalogs = $part->items()
+            ->with(['partCatalogs' => fn ($query) => $query->where('is_active', true)])
+            ->get()
+            ->flatMap(fn (Item $item) => $item->partCatalogs)
+            ->unique('id')
+            ->values();
+
         $relatedParts = Part::query()
             ->with(['category', 'defaultVariant'])
             ->where('status', 'active')
@@ -63,7 +73,7 @@ class PartController extends Controller
             ->take(4)
             ->get();
 
-        return view('buyer.parts.show', compact('part', 'specGroups', 'relatedParts', 'allCompatibles'));
+        return view('buyer.parts.show', compact('part', 'specGroups', 'relatedParts', 'allCompatibles', 'motorCatalogs'));
     }
 }
 

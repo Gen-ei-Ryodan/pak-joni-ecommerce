@@ -277,7 +277,7 @@ class PageController extends Controller
                 ->where('is_active', true)
             ))
             ->withCount(['items' => fn($q) => $q
-                ->where('brand_id', $brandModel->id)
+                ->when($brandModel, fn($qq) => $qq->where('brand_id', $brandModel->id))
                 ->where('status', 'active')
                 ->where('is_active', true)
             ])

@@ -16,8 +16,8 @@ class Item extends Model
     protected $fillable = [
         'category_type_id', 'brand_id', 'category_id',
         'name', 'slug', 'year', 'description', 'short_description',
-        'price', 'thumbnail_path', 'document_path', 'stock', 'stock_status',
-        'stock_updated_at', 'status', 'is_active', 'sort_order',
+        'price', 'thumbnail_path', 'document_path', 'part_number', 'catalog_pdf_path',
+        'stock', 'stock_status', 'stock_updated_at', 'status', 'is_active', 'sort_order',
     ];
 
     protected function casts(): array
@@ -47,6 +47,22 @@ class Item extends Model
     public function parts(): BelongsToMany
     {
         return $this->belongsToMany(Part::class)->withTimestamps();
+    }
+
+    /**
+     * Motor yang cocok/kompatibel dengan sparepart ini (untuk item bertipe sparepart).
+     */
+    public function compatibleMotors(): BelongsToMany
+    {
+        return $this->belongsToMany(Item::class, 'item_motor_compatibility', 'item_id', 'motor_id')->withTimestamps();
+    }
+
+    /**
+     * Sparepart yang kompatibel dengan motor ini.
+     */
+    public function compatibleSpareparts(): BelongsToMany
+    {
+        return $this->belongsToMany(Item::class, 'item_motor_compatibility', 'motor_id', 'item_id')->withTimestamps();
     }
 
     public function images(): HasMany

@@ -14,10 +14,12 @@ use Illuminate\Support\Collection;
 #[Fillable([
     'category_type_id',
     'sku',
+    'part_number',
     'name',
     'slug',
     'part_category_id',
     'thumbnail_path',
+    'catalog_pdf_path',
     'short_description',
     'description',
     'specification',
@@ -28,7 +30,7 @@ class Part extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['category_type_id', 'sku', 'name', 'slug', 'part_category_id', 'thumbnail_path', 'short_description', 'description', 'specification', 'base_price', 'status', 'stock_status', 'stock_updated_at'];
+    protected $fillable = ['category_type_id', 'sku', 'part_number', 'name', 'slug', 'part_category_id', 'thumbnail_path', 'catalog_pdf_path', 'short_description', 'description', 'specification', 'base_price', 'status', 'stock_status', 'stock_updated_at'];
 
     protected function casts(): array
     {

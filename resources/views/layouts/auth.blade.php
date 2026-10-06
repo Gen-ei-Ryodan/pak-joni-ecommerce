@@ -50,7 +50,7 @@
                                         ['slug' => 'motor', 'label' => 'Motor', 'eyebrow' => 'Kendaraan harian', 'image' => 'MOTOR.jpeg'],
                                         ['slug' => 'mobil', 'label' => 'Mobil', 'eyebrow' => 'Kenyamanan berkendara', 'image' => 'MOBIL.jpeg'],
                                         ['slug' => 'atv', 'label' => 'ATV', 'eyebrow' => 'Petualangan tanpa batas', 'image' => 'ATV.jpeg'],
-                                        ['slug' => 'sparepart', 'label' => 'Part', 'eyebrow' => 'Suku cadang pilihan', 'image' => 'PARTS.jpeg'],
+                                        ['slug' => 'sparepart', 'label' => 'Part Mechanic Support', 'eyebrow' => 'Suku cadang pilihan', 'image' => 'PARTS.jpeg'],
                                     ];
                                 @endphp
 
@@ -80,21 +80,6 @@
                                             </div>
                                         @endif
                                     @endforeach
-                                </div>
-
-                                <div class="nav-product-divider"></div>
-                                <div class="nav-catalog-heading">Katalog produk</div>
-                                <div class="nav-catalog-links">
-                                    <a class="nav-catalog-card" href="{{ route('buyer.price-list') }}">
-                                        <span class="nav-catalog-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 12h6M9 16h6"/></svg></span>
-                                        <span><strong>Katalog Harga Motor</strong><small>Lihat daftar harga terbaru</small></span>
-                                        <span class="nav-product-arrow" aria-hidden="true">&#8594;</span>
-                                    </a>
-                                    <a class="nav-catalog-card" href="{{ route('buyer.part-catalog') }}">
-                                        <span class="nav-catalog-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m14.7 6.3 3-3 3 3-3 3M3 21l8.8-8.8M12.5 4.5l7 7M5 5h4v4H5zM15 15h4v4h-4z"/></svg></span>
-                                        <span><strong>Katalog Harga Part Motor</strong><small>Temukan part yang Anda butuhkan</small></span>
-                                        <span class="nav-product-arrow" aria-hidden="true">&#8594;</span>
-                                    </a>
                                 </div>
 
                                 @foreach($navCategoryTypes as $ct)

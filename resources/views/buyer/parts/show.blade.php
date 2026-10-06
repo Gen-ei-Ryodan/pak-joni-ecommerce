@@ -50,6 +50,9 @@
 
                     <h1 class="part-name">{{ $part->name }}</h1>
                     <div class="part-sku">SKU: {{ $part->sku }}</div>
+                    @if($part->part_number)
+                        <div class="part-sku">Part Number: {{ $part->part_number }}</div>
+                    @endif
 
                     @php $defaultVariant = $part->defaultVariant ?? $part->variants->first(); @endphp
                     @if($defaultVariant)
@@ -277,6 +280,48 @@
                             </div>
                         </div>
                     @endforeach
+                </div>
+            @endif
+
+            {{-- Part Katalog (PDF) --}}
+            @php
+                $partCatalogPdf = $part->catalog_pdf_path ? image_url($part->catalog_pdf_path) : null;
+                $motorCatalogs = $motorCatalogs ?? collect();
+            @endphp
+            @if($partCatalogPdf || $motorCatalogs->count())
+                <div class="part-catalog-section">
+                    <div class="section-header">
+                        <h2 class="section-title-text">Katalog Part (PDF)</h2>
+                        <div class="section-line"></div>
+                    </div>
+
+                    <div class="part-catalog-list">
+                        @if($partCatalogPdf)
+                            <a class="part-catalog-card" href="{{ $partCatalogPdf }}" target="_blank" rel="noopener">
+                                <span class="part-catalog-icon" aria-hidden="true">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6M9 18h4"/></svg>
+                                </span>
+                                <span class="part-catalog-copy">
+                                    <strong>Katalog Part {{ $part->part_number ?: $part->name }}</strong>
+                                    <small>Part number, nama, dan harga part — buka atau unduh PDF</small>
+                                </span>
+                                <span class="part-catalog-cta">Buka PDF &rarr;</span>
+                            </a>
+                        @endif
+
+                        @foreach($motorCatalogs as $mc)
+                            <a class="part-catalog-card" href="{{ image_url($mc->pdf_path) }}" target="_blank" rel="noopener">
+                                <span class="part-catalog-icon" aria-hidden="true">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6M9 18h4"/></svg>
+                                </span>
+                                <span class="part-catalog-copy">
+                                    <strong>{{ $mc->name }}</strong>
+                                    <small>Katalog part untuk {{ $mc->item?->name }}</small>
+                                </span>
+                                <span class="part-catalog-cta">Buka PDF &rarr;</span>
+                            </a>
+                        @endforeach
+                    </div>
                 </div>
             @endif
 
@@ -581,6 +626,60 @@ function handleAddToCart() {
             font-size: 10px;
             letter-spacing: 1px;
             text-transform: uppercase;
+        }
+
+        .part-catalog-section {
+            margin-top: 40px;
+            background: var(--panel);
+            border: 2px solid var(--line);
+            border-radius: 16px;
+            padding: 30px;
+        }
+        .part-catalog-list {
+            display: grid;
+            gap: 12px;
+        }
+        .part-catalog-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 18px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--bg);
+            text-decoration: none;
+            color: var(--text);
+            transition: all .2s;
+        }
+        .part-catalog-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        .part-catalog-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            flex: 0 0 44px;
+            border-radius: 10px;
+            background: rgba(217,180,111,0.12);
+            color: var(--accent);
+        }
+        .part-catalog-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+        .part-catalog-copy strong { font-size: 14px; }
+        .part-catalog-copy small { font-size: 12px; color: var(--muted); }
+        .part-catalog-cta {
+            margin-left: auto;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            white-space: nowrap;
         }
 
         .part-360-section { margin-top: 40px; text-align: center; }

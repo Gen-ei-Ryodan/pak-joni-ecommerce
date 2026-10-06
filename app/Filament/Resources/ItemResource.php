@@ -67,6 +67,7 @@ class ItemResource extends Resource
                 Tables\Columns\ImageColumn::make('thumbnail_path')->label('Gambar')->square()->size(40)
                     ->getStateUsing(fn ($r) => $r?->thumbnail_path ? Storage::disk('public')->url($r->thumbnail_path) : null),
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('part_number')->label('Part Number')->searchable()->sortable()->placeholder('-'),
                 Tables\Columns\TextColumn::make('brand.name')->label('Brand')->sortable(),
                 Tables\Columns\TextColumn::make('category.name')->label('Kategori')->sortable(),
                 Tables\Columns\TextColumn::make('year')->label('Tahun')->numeric()->sortable()->toggleable(),
@@ -158,6 +159,31 @@ class ItemResource extends Resource
                     ->columnSpanFull()
                     ->visible(fn ($get) => $get('category_type_id') == \App\Models\CategoryType::where('slug', 'motor')->first()?->id),
             ])->columns(2),
+
+            Section::make('Data Sparepart')
+                ->description('Khusus untuk item bertipe sparepart: nomor part, katalog PDF, dan motor yang kompatibel.')
+                ->visible(fn ($get) => $get('category_type_id') == \App\Models\CategoryType::where('slug', 'sparepart')->first()?->id)
+                ->schema([
+                    Forms\Components\TextInput::make('part_number')
+                        ->label('Part Number')
+                        ->helperText('Nomor part sesuai katalog pabrikan.')
+                        ->maxLength(64),
+                    Forms\Components\FileUpload::make('catalog_pdf_path')
+                        ->label('Katalog Part (PDF)')
+                        ->helperText('PDF katalog part, maks 10 MB. Ditampilkan pada halaman detail sparepart.')
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->disk('public')
+                        ->directory('items/catalogs')
+                        ->maxSize(10240),
+                    Forms\Components\Select::make('compatibleMotors')
+                        ->label('Motor Kompatibel')
+                        ->helperText('Pilih motor yang cocok dengan sparepart ini.')
+                        ->relationship('compatibleMotors', 'name')
+                        ->searchable()
+                        ->preload()
+                        ->multiple()
+                        ->columnSpanFull(),
+                ])->columns(2),
 
             Section::make('Harga')->schema([
                 Forms\Components\TextInput::make('price')->label('Harga')

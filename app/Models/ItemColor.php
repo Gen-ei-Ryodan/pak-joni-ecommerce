@@ -11,13 +11,14 @@ class ItemColor extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['item_id', 'name', 'color_code', 'image_path', 'weight', 'sort_order', 'stock', 'stock_updated_at'];
+    protected $fillable = ['item_id', 'name', 'color_code', 'image_path', 'weight', 'sort_order', 'stock', 'stock_updated_at', 'is_active'];
 
     protected function casts(): array
     {
         return [
             'stock' => 'integer',
             'stock_updated_at' => 'datetime',
+            'is_active' => 'boolean',
         ];
     }
 

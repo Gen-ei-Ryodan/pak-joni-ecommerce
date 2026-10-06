@@ -81,6 +81,12 @@ class PartResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('part_number')
+                    ->label('Part Number')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('-'),
+
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
@@ -228,6 +234,12 @@ class PartResource extends Resource
                             ->maxLength(64)
                             ->unique(ignoreRecord: true),
 
+                        Forms\Components\TextInput::make('part_number')
+                            ->label('Part Number')
+                            ->helperText('Nomor part sesuai katalog pabrikan.')
+                            ->maxLength(64)
+                            ->unique(ignoreRecord: true),
+
                         Forms\Components\TextInput::make('name')
                             ->required()
                             ->maxLength(255),
@@ -282,6 +294,18 @@ class PartResource extends Resource
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp']),
                     ]),
 
+                Section::make('Katalog Part (PDF)')
+                    ->description('Upload katalog part (PDF) yang berisi part number, nama, dan harga part. PDF ini ditampilkan pada halaman detail sparepart dan dicocokkan dengan motor yang dipilih.')
+                    ->schema([
+                        Forms\Components\FileUpload::make('catalog_pdf_path')
+                            ->label('File PDF Katalog Part')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->disk('public')
+                            ->directory('parts/catalogs')
+                            ->maxSize(10240)
+                            ->helperText('Format PDF, maks 10 MB.'),
+                    ]),
+
                 Section::make('Gallery Images')
                     ->schema([
                         Forms\Components\FileUpload::make('gallery')
@@ -296,7 +320,8 @@ class PartResource extends Resource
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp']),
                     ]),
 
-                Section::make('Compatible Products')
+                Section::make('Motor & Kendaraan Terkait')
+                    ->description('Pilih motor/kendaraan yang kompatibel dengan part ini. Data ini dipakai untuk mencocokkan part dengan motor pada halaman detail sparepart.')
                     ->schema(function (?Part $record) {
                         $fields = [];
 

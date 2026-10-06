@@ -55,7 +55,20 @@ class MotorController
             ]);
         }
 
-        $tab = $request->tab === 'parts' ? 'parts' : 'detail';
+        if ($item->type->slug === 'sparepart') {
+            $item->load(['compatibleMotors.brand', 'compatibleMotors.type']);
+        }
+
+        // Sparepart bertipe item yang compatible dengan kendaraan ini (untuk tab sparepart).
+        $compatibleSpareparts = $item->type->slug === 'sparepart'
+            ? collect()
+            : $item->compatibleSpareparts()
+                ->where('status', 'active')
+                ->where('is_active', true)
+                ->with(['brand', 'category', 'colors'])
+                ->get();
+
+        $tab = $request->tab === 'parts' && $item->type->slug !== 'sparepart' ? 'parts' : 'detail';
 
         // Filter parts by group
         $partGroup = $request->part_group;
@@ -92,6 +105,6 @@ class MotorController
         $selectedPartGroup = $partGroup;
         $partGroups = $groups->keys();
 
-        return view('buyer.motors.show', compact('item', 'tab', 'parts', 'partsGrouped', 'selectedPartGroup', 'partGroups', 'relatedItems', 'specsGrouped'));
+        return view('buyer.motors.show', compact('item', 'tab', 'parts', 'partsGrouped', 'selectedPartGroup', 'partGroups', 'relatedItems', 'specsGrouped', 'compatibleSpareparts'));
     }
 }

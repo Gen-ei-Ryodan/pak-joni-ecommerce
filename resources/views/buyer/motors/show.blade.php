@@ -18,14 +18,16 @@
 
             {{-- Tab Navigation --}}
             <div class="motor-tabs">
-                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}" 
+                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]) }}"
                    class="motor-tab {{ $tab === 'detail' ? 'active' : '' }}">
                     Detail {{ $item->type->name }}
                 </a>
-                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts']) }}" 
-                   class="motor-tab {{ $tab === 'parts' ? 'active' : '' }}">
-                    Sparepart {{ $item->type->name }}
-                </a>
+                @if($item->type->slug !== 'sparepart')
+                    <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts']) }}"
+                       class="motor-tab {{ $tab === 'parts' ? 'active' : '' }}">
+                        Sparepart {{ $item->type->name }}
+                    </a>
+                @endif
             </div>
 
             {{-- ============ TAB: DETAIL ============ --}}
@@ -180,6 +182,41 @@
                     </div>
                 @endif
 
+                @if($item->type->slug === 'sparepart')
+                    <div class="motor-desc-section">
+                        @if($item->part_number)
+                            <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+                                <strong>Part Number:</strong> {{ $item->part_number }}
+                            </div>
+                        @endif
+
+                        @if($item->catalog_pdf_path)
+                            <h2 class="section-title-text" style="margin-bottom:16px;">Katalog Part (PDF)</h2>
+                            <a href="{{ image_url($item->catalog_pdf_path) }}" target="_blank" rel="noopener"
+                               class="btn btn-primary" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6M9 18h4"/></svg>
+                                Buka Katalog Part (PDF)
+                            </a>
+                        @endif
+
+                        @php $motors = $item->compatibleMotors ?? collect(); @endphp
+                        @if($motors->count())
+                            <div style="margin-top:20px;">
+                                <h2 class="section-title-text" style="margin-bottom:12px;font-size:18px;">Kompatibel Dengan</h2>
+                                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                                    @foreach($motors as $motor)
+                                        <a href="{{ route('buyer.motors.show', ['categoryType' => $motor->type->slug ?? 'motor', 'slug' => $motor->slug]) }}"
+                                           style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--line);border-radius:20px;font-size:12px;color:var(--accent);text-decoration:none;">
+                                            @if($motor->brand)<strong>{{ $motor->brand->name }}</strong>@endif
+                                            {{ $motor->name }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 @if(!empty($relatedItems) && $relatedItems->count())
                     <div class="related-section">
                         <div class="section-header">
@@ -207,61 +244,30 @@
                 <div class="parts-tab-section">
                     <p style="color:var(--muted);margin-bottom:20px;text-align:center;">Sparepart yang kompatibel dengan <strong>{{ $item->name }}</strong></p>
 
-                    {{-- Golongan Filter --}}
-                    <div class="parts-filter">
-                        <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts']) }}"
-                           class="parts-filter-tag {{ !$selectedPartGroup ? 'active' : '' }}">
-                            Semua Sparepart
-                            <span class="parts-filter-count">{{ $partsGrouped->flatten()->count() }}</span>
-                        </a>
-                        @foreach($partGroups as $group)
-                            @php $count = $partsGrouped->get($group, 0); @endphp
-                            @if($count > 0)
-                                <a href="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts', 'part_group' => $group]) }}"
-                                   class="parts-filter-tag {{ $selectedPartGroup === $group ? 'active' : '' }}">
-                                    {{ $group }}
-                                    <span class="parts-filter-count">{{ $count }}</span>
-                                </a>
-                            @endif
-                        @endforeach
-                    </div>
-
-                    {{-- Parts Grid --}}
+                    {{-- Sparepart compatible (satu sumber: Item, tabel items) --}}
                     <div class="grid grid-3">
-                        @forelse ($parts as $part)
-                            <a class="card" href="{{ route('buyer.parts.show', $part->slug) }}">
-                                <div class="card-media" style="background-image:url('{{ $part->thumbnail_path ? image_url($part->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
+                        @forelse ($compatibleSpareparts ?? [] as $sp)
+                            @php $spTotalStock = $sp->colors->sum('stock'); @endphp
+                            <a class="card" href="{{ route('buyer.motors.show', ['categoryType' => 'sparepart', 'slug' => $sp->slug]) }}">
+                                <div class="card-media" style="background-image:url('{{ $sp->thumbnail_path ? image_url($sp->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                                 <div class="card-body">
-                                    @if($part->category)
-                                        <div class="card-meta">{{ $part->category->group }} &rsaquo; {{ $part->category->name }}</div>
+                                    @if($sp->brand || $sp->category)
+                                        <div class="card-meta">{{ $sp->brand?->name }}{{ $sp->brand && $sp->category ? ' › ' : '' }}{{ $sp->category?->name }}</div>
                                     @endif
-                                    <div class="card-title">{{ $part->name }}</div>
-                                    @if($part->defaultVariant)
-                                        <div class="price">Rp {{ number_format($part->defaultVariant->price, 0, ',', '.') }}</div>
-                                    @elseif($part->base_price)
-                                        <div class="price">Rp {{ number_format($part->base_price, 0, ',', '.') }}</div>
+                                    <div class="card-title">{{ $sp->name }}</div>
+                                    @if($sp->part_number)
+                                        <div class="card-meta">PN: {{ $sp->part_number }}</div>
                                     @endif
-                                    @if($part->stock_status === 'ready')
-                                        <span class="stock-tag ready">Ready Stock</span>
-                                    @elseif($part->stock_status === 'indent')
-                                        <span class="stock-tag indent">Indent</span>
+                                    @if($sp->price)
+                                        <div class="price">Rp {{ number_format($sp->price, 0, ',', '.') }}</div>
                                     @endif
+                                    <span class="stock-tag {{ $spTotalStock > 0 ? 'ready' : 'indent' }}">{{ $spTotalStock > 0 ? 'Ready Stock' : 'Habis' }}</span>
                                 </div>
                             </a>
                         @empty
-                            <div class="empty-state">
-                                @if($selectedPartGroup)
-                                    Tidak ada sparepart kategori <strong>{{ $selectedPartGroup }}</strong> untuk motor ini.
-                                @else
-                                    Belum ada sparepart tersedia untuk motor ini.
-                                @endif
-                            </div>
+                            <div class="empty-state">Belum ada sparepart tersedia untuk motor ini.</div>
                         @endforelse
                     </div>
-
-                    @if(method_exists($parts, 'links'))
-                        <div style="margin-top:30px;">{{ $parts->links('pagination.simple-dark') }}</div>
-                    @endif
                 </div>
             @endif
         </div>

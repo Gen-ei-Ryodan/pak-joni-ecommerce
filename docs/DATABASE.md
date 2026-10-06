@@ -12,6 +12,21 @@ Database relasional **MySQL** di shared hosting (cPanel). Skema dikelola via Elo
 |-------|------|------------|
 | `shipping_type` | string (default: 'courier') | Jenis pengiriman: `courier` (dikirim via kurir) atau `dealer_pickup` (ambil di dealer) |
 
+### Perubahan `parts` (migration `2026_10_06_000001`)
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| `part_number` | string(64), nullable, index | Nomor part sesuai katalog pabrikan. Uniqueness divalidasi di form Filament (bukan DB unique, agar data lama tidak bermasalah). |
+| `catalog_pdf_path` | string, nullable | Path PDF katalog part di disk `public` (`storage/app/public/parts/catalogs/`). Ditampilkan pada halaman detail sparepart. |
+
+### Perubahan `items` (migration `2026_10_06_000002` + `2026_10_06_000003`)
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| `part_number` | string(64), nullable, index | Nomor part sesuai katalog pabrikan (sekarang identik dengan Part-side). |
+| `catalog_pdf_path` | string, nullable | Path PDF katalog part di disk `public` (`storage/app/public/items/catalogs/`) untuk item sparepart. |
+| `item_motor_compatibility` | tabel pivot | `item_id` (sparepart) + `motor_id` (kendaraan kompatibel). Dipakai untuk kompatibilitas sparepart item. |
+
+Migrasi `2026_10_06_000003` menyalin data sparepart dari tabel `parts`/`part_variants`/`item_part` ke `items`/`item_colors`/`item_motor_compatibility` sehingga katalog sparepart hanya dipelihara di satu model (`Item` sparepart). Tabel `parts` tidak dihapus (fallback).
+
 ## Tabel Stok (terbaru)
 
 ### `stock_mutations` (migration `2026_08_06_071659`)
