@@ -1,5 +1,2 @@
 *
 !.gitignore
-!items/
-!items/catalogs/
-!items/catalogs/**
