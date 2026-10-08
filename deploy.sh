@@ -33,7 +33,14 @@ ssh -n -p "$SSH_PORT" "$SSH_HOST" "
   cp -r public '$PUBLIC_DIR/'
   cp -r resources '$PUBLIC_DIR/'
   cp -r routes '$PUBLIC_DIR/'
-  
+
+  # Copy uploaded catalog PDFs that are tracked in git (storage/app/public)
+  mkdir -p '$PUBLIC_DIR/storage/app/public'
+  cp -r storage/app/public/. '$PUBLIC_DIR/storage/app/public/'
+
+  # Ensure the public/storage symlink points to this app's storage
+  ln -sfn ../storage/app/public '$PUBLIC_DIR/public/storage'
+
   # Copy individual files
   cp artisan '$PUBLIC_DIR/'
   cp composer.json '$PUBLIC_DIR/'

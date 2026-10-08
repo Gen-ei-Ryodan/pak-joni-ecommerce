@@ -13,11 +13,11 @@ use Illuminate\Support\Str;
 class PartsCatalogZeeho368GImport extends Seeder
 {
     /**
-     * Import data parts catalog 368 G (items/catalogs/parts-catalog-368-g.pdf).
+     * Import data parts catalog 368 G (items/catalogs/parts-catalog-368g.pdf).
      *
      * Setiap baris part menjadi Item sparepart dengan:
      *  - part_number = kode parts number dari PDF
-     *  - catalog_pdf_path = 'items/catalogs/parts-catalog-368-g.pdf'
+     *  - catalog_pdf_path = 'items/catalogs/parts-catalog-368g.pdf'
      *  - brand ikut motor 368 G
      *  - kategori dibuat dari grup (F/E group)
      *  - kompatibel motor 368-g
@@ -89,7 +89,7 @@ class PartsCatalogZeeho368GImport extends Seeder
                     'is_active' => true,
                     'stock_status' => 'ready',
                     'part_number' => $code,
-                    'catalog_pdf_path' => 'items/catalogs/parts-catalog-368-g.pdf',
+                    'catalog_pdf_path' => 'items/catalogs/parts-catalog-368g.pdf',
                 ]
             );
 

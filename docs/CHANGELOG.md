@@ -2,6 +2,12 @@
 
 ## Catatan Perubahan Proyek
 
+### Unreleased — Fix Katalog Part PDF 404 & PDF di-track Git
+*   **Fix 404/400 "Katalog Part (PDF)"** — symlink `public/storage` sebelumnya mengarah ke path project lain (`pak-joni-ecommerce`); dibuat ulang dengan `php artisan storage:link` sehingga URL `/storage/items/catalogs/*.pdf` berfungsi (HTTP 200).
+*   **Perbaikan path katalog** — `items.catalog_pdf_path` untuk 368G dan Letbe Island disamakan dengan nama file fisik (`parts-catalog-368g.pdf`, `parts-catalog-letbe-island.pdf`) di DB dan seeder terkait.
+*   **PDF katalog masuk git** — `storage/app/public/.gitignore` diubah agar `items/catalogs/**` ikut di-track; seluruh PDF katalog sparepart kini ter-commit.
+*   **deploy.sh** — sync `storage/app/public` ke `PUBLIC_DIR/storage/app/public` dan rebuild symlink `public/storage` di server.
+
 ### Unreleased — Sparepart: Part Number, Katalog PDF & Navigasi Produk
 *   **Form sparepart di admin** (`PartResource`) menambah field **Part Number** (`parts.part_number`, bisa dicari/diurutkan di tabel, divalidasi unique di form) dan upload **Katalog Part (PDF)** (`parts.catalog_pdf_path`, disk `public`, folder `parts/catalogs`, maks 10 MB, hanya `application/pdf`).
 *   **Pilihan motor di form sparepart** — section "Compatible Products" diganti judul menjadi **"Motor & Kendaraan Terkait"** (multi-select per tipe kategori, tersimpan di pivot `item_part` lewat `Part::items()`), sehingga jelas bahwa part dipetakan ke motor/kendaraan yang sesuai.

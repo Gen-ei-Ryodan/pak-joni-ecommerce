@@ -13,11 +13,11 @@ use Illuminate\Support\Str;
 class PartsCatalogLetbeIslandImport extends Seeder
 {
     /**
-     * Import data parts catalog LETBE SERIES ISLAND (items/catalogs/parts-catalog-letbe-series-island.pdf).
+     * Import data parts catalog LETBE SERIES ISLAND (items/catalogs/parts-catalog-letbe-island.pdf).
      *
      * Setiap baris part menjadi Item sparepart dengan:
      *  - part_number = kode parts number dari PDF
-     *  - catalog_pdf_path = 'items/catalogs/parts-catalog-letbe-series-island.pdf'
+     *  - catalog_pdf_path = 'items/catalogs/parts-catalog-letbe-island.pdf'
      *  - brand ikut motor LETBE SERIES ISLAND
      *  - kategori dibuat dari grup (F/E group)
      *  - kompatibel motor letbe-series-island
@@ -89,7 +89,7 @@ class PartsCatalogLetbeIslandImport extends Seeder
                     'is_active' => true,
                     'stock_status' => 'ready',
                     'part_number' => $code,
-                    'catalog_pdf_path' => 'items/catalogs/parts-catalog-letbe-series-island.pdf',
+                    'catalog_pdf_path' => 'items/catalogs/parts-catalog-letbe-island.pdf',
                 ]
             );
 
