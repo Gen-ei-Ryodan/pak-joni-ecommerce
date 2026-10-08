@@ -2,6 +2,12 @@
 
 ## Catatan Perubahan Proyek
 
+### Unreleased — Harga Sparepart dari Master Price List (satu seeder)
+*   **Harga sparepart kini terisi** — 6.941 sparepart (dari 15 motor yang punya master price list resmi) mendapat `items.price` (HET) hasil ekstraksi 22 file `master-price-list-*.pdf` (per Oktober 2026).
+*   **Satu seeder untuk production**: `database/seeders/SparepartPriceSeeder.php` — berisi seluruh data harga di dalam file (tidak butuh PDF/JSON eksternal), idempotent (aman dijalankan berulang). Jalankan di cPanel dengan `php artisan db:seed --class=SparepartPriceSeeder`.
+*   Pemetaan harga per motor: `porter-125→porter`, `gy-150-aries`, `v16-plus`, `papio-x0-1/2`, `cfmoto-250-sr-lite→250-sr`, `cfmoto-250-clc`, `cfmoto-450-mt`, `morbius`, `greta`, `letbe-series-neon→letbe-neon`, `velora-150→velora`, `zeeho-ae6`, `zeeho-ae8`, `e-classic`.
+*   Motor yang belum punya master price list (368-E/K/G, Swiftbee, Island, City Sport, AE4 ABS, 800 MTX/Explore, 500 SR Voom, Papio Racer, Dual Lite) tetap `price = 0` — belum ada sumber harga resmi.
+
 ### Unreleased — Fix Katalog Part PDF 404 & PDF di-track Git
 *   **Fix 404/400 "Katalog Part (PDF)"** — symlink `public/storage` sebelumnya mengarah ke path project lain (`pak-joni-ecommerce`); dibuat ulang dengan `php artisan storage:link` sehingga URL `/storage/items/catalogs/*.pdf` berfungsi (HTTP 200).
 *   **Perbaikan path katalog** — `items.catalog_pdf_path` untuk 368G dan Letbe Island disamakan dengan nama file fisik (`parts-catalog-368g.pdf`, `parts-catalog-letbe-island.pdf`) di DB dan seeder terkait.
