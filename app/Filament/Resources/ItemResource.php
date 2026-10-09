@@ -208,9 +208,10 @@ class ItemResource extends Resource
 
                 Forms\Components\TextInput::make('discount_price')
                     ->label('Harga Akhir')
-                    ->decimal(12, 2)
+                    ->numeric()
+                    ->step(0.01)
                     ->readOnly()
-                    ->getStateUsing(fn ($state, $record) => $record?->discount_price ?? $record?->price ?? 0)
+                    ->default(fn ($record) => $record?->discount_price ?? $record?->price ?? 0)
                     ->visible(fn ($get) => $get('category_type_id') == \App\Models\CategoryType::where('slug', 'sparepart')->first()?->id),
 
                 Forms\Components\Toggle::make('is_active')->label('Active')->default(true),

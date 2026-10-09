@@ -87,7 +87,7 @@
             @else
                 <div style="display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start;">
                     <div class="panel" style="padding:10px;">
-<div style="display:flex;align-items:center;gap:12px;padding:6px 10px;border-bottom:1px solid var(--line);">
+                        <div style="display:flex;align-items:center;gap:12px;padding:6px 10px;border-bottom:1px solid var(--line);">
                             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                                 <input type="checkbox" id="select-all" checked>
                                 <span style="font-size:13px;font-weight:500;">Select All</span>
@@ -112,22 +112,23 @@
                                         @php
                                             $itemType = class_basename($it->itemable_type);
                                             $isMotor = $itemType === 'ItemColor';
+                                            $stockLabel = $isMotor
+                                                ? ($it->itemable?->item?->stock_status === 'indent' ? 'Indent' : 'Ready')
+                                                : 'Stock: '.($it->itemable?->stock ?? 0);
                                             $hasDiscount = false;
                                             $discountDisplay = '';
                                             if (!$isMotor && $it->itemable?->item) {
                                                 $hasDiscount = $it->itemable->item->discount_type !== null;
                                                 if ($hasDiscount) {
-                                                    $discountDisplay = '- Diskon: <span style=\"color:#f59e0b;font-weight:500;\">' . strtoupper($it->itemable->item->discount_type) . ' ' . $it->itemable->item->discount_type === 'percent' ? number_format($it->itemable->item->discount_value, 1, ',', '.') . '%' : 'Rp ' . number_format($it->itemable->item->discount_value, 0, ',', '.') . '</span>';
+                                                    $discountDisplay = '- Diskon: <span style="color:#f59e0b;font-weight:500;">' . strtoupper($it->itemable->item->discount_type) . ' ' . ($it->itemable->item->discount_type === 'percent' ? number_format($it->itemable->item->discount_value, 1, ',', '.') . '%' : 'Rp ' . number_format($it->itemable->item->discount_value, 0, ',', '.')) . '</span>';
                                                 }
                                             }
+                                            $readyQty = max(0, $it->quantity - ($it->indent_quantity ?? 0));
+                                            $indentQty = $it->indent_quantity ?? 0;
                                         @endphp
                                         <div style="margin-top:2px;font-size:11px;{{ $stockLabel === 'Ready' ? '' : 'color:#ca8a04;' }}">
-                                            {{ $isMotor ? $stockLabel : $stockLabel }}
-                                            @if((int)($it->indent_quantity ?? 0) > 0)
-                                                @php
-                                                    $readyQty = max(0, $it->quantity - $it->indent_quantity);
-                                                    $indentQty = $it->indent_quantity;
-                                                @endphp
+                                            {{ $stockLabel }}
+                                            @if($indentQty > 0)
                                                 <span style="color:#ca8a04;margin-left:4px;">
                                                     @if($readyQty > 0)
                                                         ({{ $readyQty }} ready + {{ $indentQty }} indent)
