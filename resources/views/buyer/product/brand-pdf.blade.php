@@ -1,6 +1,6 @@
 @extends('layouts.buyer')
 
-@section('title', 'Katalog PDF - ' . strtoupper($brand->name))
+@section('title', 'Katalog PDF - ' . strtoupper($selectedBrand->name ?? $brand))
 
 @section('content')
     <section class="section">
