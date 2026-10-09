@@ -33,11 +33,11 @@ class Item extends Model
         ];
     }
 
-    public function getFinalPriceAttribute(): decimal
+    public function getFinalPriceAttribute(): float
     {
         $discountType = $this->discount_type;
-        $discountValue = $this->discount_value;
-        $price = $this->price;
+        $discountValue = (float) $this->discount_value;
+        $price = (float) $this->price;
 
         if (!$discountType || !$discountValue || $price <= 0) {
             return $price;
