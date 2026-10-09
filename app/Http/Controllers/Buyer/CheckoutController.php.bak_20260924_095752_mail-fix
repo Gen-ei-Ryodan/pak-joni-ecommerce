@@ -248,44 +248,11 @@ class CheckoutController extends Controller
 
         $isDealerPickup = $request->session()->get('checkout.dealer_pickup');
 
-        // Handle voucher code from form submission
-        $voucherCode = $request->input('voucher_code');
-        $voucherDiscount = 0;
-        $itemDiscount = 0;
-        $finalPriceAfterItemDiscount = null;
-        $finalPriceAfterVoucher = null;
-
-        if ($voucherCode) {
-            // Simple voucher validation - check against known codes or look up
-            // For now, apply fixed discounts for common voucher codes
-            $vouchers = [
-                'SELAMAT10' => 0.10,
-                'DISKON500' => 50000,
-                'BESAR15' => 0.15,
-            ];
-
-            if (array_key_exists($voucherCode, $vouchers)) {
-                $discountPercent = $vouchers[$voucherCode];
-                if ($discountPercent < 1) {
-                    // Percentage discount
-                    $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
-                    $itemDiscount = (float) ($subtotal * $discountPercent);
-                } else {
-                    // Fixed amount discount
-                    $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
-                    $itemDiscount = min($discountPercent, (float) $subtotal);
-                }
-                $voucherDiscount = $itemDiscount;
-            } else {
-                session()->put('voucher_error', 'Kode voucher tidak valid.');
-            }
-        }
-
         if ($isDealerPickup) {
             // Dealer pickup: no shipping, no address needed
             $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
             $shippingCost = 0;
-            $total = $subtotal - $voucherDiscount;
+            $total = $subtotal;
 
             $hasIndent = $this->hasIndentItems($cart);
             $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
@@ -295,25 +262,10 @@ class CheckoutController extends Controller
             $shipping = null;
             $address = null;
 
-            $data = [
-                'cart' => $cart,
-                'address' => $address,
-                'shipping' => $shipping,
-                'subtotal' => $subtotal,
-                'shippingCost' => $shippingCost,
-                'total' => $total,
-                'hasIndent' => $hasIndent,
-                'dpAmount' => $dpAmount,
-                'remainingAmount' => $remainingAmount,
-                'isDealerPickup' => $isDealerPickup,
-                'voucherCode' => $voucherCode,
-                'voucherDiscount' => $voucherDiscount,
-                'itemDiscount' => $itemDiscount,
-                'finalPriceAfterItemDiscount' => $subtotal - $itemDiscount,
-                'finalPriceAfterVoucher' => $total,
-            ];
-
-            return view('buyer.checkout.payment', $data);
+            return view('buyer.checkout.payment', compact(
+                'cart', 'address', 'shipping', 'subtotal', 'shippingCost', 'total',
+                'hasIndent', 'dpAmount', 'remainingAmount', 'isDealerPickup'
+            ));
         }
 
         $addressId = (int) ($request->session()->get('checkout.address_id') ?? 0);
@@ -331,7 +283,7 @@ class CheckoutController extends Controller
 
         $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
         $shippingCost = (float) ($shipping['shipping_cost'] ?? 0);
-        $total = $subtotal + $shippingCost - $voucherDiscount;
+        $total = $subtotal + $shippingCost;
 
         // Check if any item is indent
         $hasIndent = $this->hasIndentItems($cart);
@@ -339,25 +291,10 @@ class CheckoutController extends Controller
         $dpAmount = $indentCalc['dp'];
         $remainingAmount = $indentCalc['remaining'];
 
-        $data = [
-            'cart' => $cart,
-            'address' => $address,
-            'shipping' => $shipping,
-            'subtotal' => $subtotal,
-            'shippingCost' => $shippingCost,
-            'total' => $total,
-            'hasIndent' => $hasIndent,
-            'dpAmount' => $dpAmount,
-            'remainingAmount' => $remainingAmount,
-            'isDealerPickup' => $isDealerPickup,
-            'voucherCode' => $voucherCode,
-            'voucherDiscount' => $voucherDiscount,
-            'itemDiscount' => $itemDiscount,
-            'finalPriceAfterItemDiscount' => $subtotal - $itemDiscount,
-            'finalPriceAfterVoucher' => $total,
-        ];
-
-        return view('buyer.checkout.payment', $data);
+        return view('buyer.checkout.payment', compact(
+            'cart', 'address', 'shipping', 'subtotal', 'shippingCost', 'total',
+            'hasIndent', 'dpAmount', 'remainingAmount', 'isDealerPickup'
+        ));
     }
 
     public function placeOrder(Request $request)
@@ -389,7 +326,7 @@ class CheckoutController extends Controller
             $address = Address::query()->where('user_id', $request->user()->id)->findOrFail($addressId);
         }
 
-$result = DB::transaction(function () use ($request, $cart, $address, $shipping, $isDealerPickup) {
+        $result = DB::transaction(function () use ($request, $cart, $address, $shipping, $isDealerPickup) {
             // Validate stock for part variants only (exclude indent quantity)
             foreach ($cart->items as $it) {
                 if ($it->itemable_type === PartVariant::class) {
@@ -405,28 +342,6 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
             }
 
             $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
-
-            // Get voucher code from request
-            $voucherCode = $request->input('voucher_code');
-            $voucherDiscount = 0;
-
-            // Apply voucher discount
-            $vouchers = [
-                'SELAMAT10' => 0.10,
-                'DISKON500' => 50000,
-                'BESAR15' => 0.15,
-            ];
-
-            if ($voucherCode && array_key_exists($voucherCode, $vouchers)) {
-                $discountPercent = $vouchers[$voucherCode];
-                if ($discountPercent < 1) {
-                    $subtotalForDiscount = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
-                    $voucherDiscount = (float) ($subtotalForDiscount * $discountPercent);
-                } else {
-                    $subtotalForDiscount = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
-                    $voucherDiscount = min($discountPercent, (float) $subtotalForDiscount);
-                }
-            }
 
             if ($isDealerPickup) {
                 $shippingCost = 0;
@@ -463,9 +378,10 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
             $remainingAmount = $indentCalc['remaining'];
             $isIndent = $hasIndent;
 
-            // Total = full subtotal (minus remaining) + shipping - voucher discount
-            // Buyer pays: ready items full + indent DP + shipping - voucher
-            $total = $subtotal - $remainingAmount + $shippingCost - $voucherDiscount;
+            // Total = full subtotal (minus remaining) + shipping
+            // Buyer pays: ready items full + indent DP + shipping
+            // Remaining is paid later when stock arrives
+            $total = $subtotal - $remainingAmount + $shippingCost;
 
             $indentStatus = $hasIndent ? 'waiting_stock' : null;
 
@@ -484,9 +400,6 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
                 'indent_status' => $indentStatus,
                 'address_snapshot' => $addressSnapshot,
                 'shipping_snapshot' => $shippingSnapshot,
-                'voucher_id' => $request->session()->get('checkout.voucher_id') ?? null,
-                'voucher_code' => $voucherCode ?? null,
-                'discount_amount' => $voucherDiscount,
             ]);
 
             $this->paymentService->createPayment($order, 'qris', 'ocbc');
@@ -528,19 +441,9 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
             return $order;
         });
 
-        // Send sales order email. Email gagal (mis. SMTP 550 recipient tidak ada)
-        // tidak boleh menghapus/me-return 500 — order sudah tersimpan.
-        try {
-            Mail::to($result->user->email)
-                ->send(new SalesOrderMail($result));
-        } catch (\Throwable $e) {
-            Log::error('Sales order email failed', [
-                'order_id' => $result->id,
-                'order_no' => $result->order_no,
-                'recipient' => $result->user->email,
-                'exception' => $e,
-            ]);
-        }
+        // Send sales order email
+        Mail::to($result->user->email)
+            ->send(new SalesOrderMail($result));
 
         return redirect('/checkout/finish/'.$result->id);
     }
@@ -570,7 +473,6 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
             Log::error('OCBC QR generation failed on checkout finish', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
-                'exception' => $e,
             ]);
             $qrError = 'QR pembayaran belum dapat dibuat. Silakan coba dari halaman detail pesanan.';
         }

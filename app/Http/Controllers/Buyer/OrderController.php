@@ -60,6 +60,17 @@ class OrderController extends Controller
         return view('buyer.orders.show', compact('order', 'timeline'));
     }
 
+    public function invoice(Request $request, Order $order)
+    {
+        if ($order->user_id != $request->user()->id) {
+            abort(403);
+        }
+
+        $order->load(['items', 'shipment', 'payment', 'user']);
+
+        return view('buyer.orders.invoice', compact('order'));
+    }
+
     public function confirmReceived(Request $request, Order $order)
     {
         if ($order->user_id != $request->user()->id) {

@@ -91,8 +91,13 @@
 
             <div class="product-brand-grid">
                 @forelse ($brands as $brand)
+                    @php
+                        $brandUrl = $type->slug === 'sparepart'
+                            ? route('buyer.product.brand-pdf', ['categoryType' => $type->slug, 'brand' => $brand->slug])
+                            : route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => $brand->slug]);
+                    @endphp
                     <a class="product-brand-card"
-                       href="{{ route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => $brand->slug]) }}">
+                       href="{{ $brandUrl }}">
                         <span class="product-brand-logo">
                             @if($brand->logo_path)
                                 <img src="{{ image_url($brand->logo_path) }}" alt="{{ $brand->name }}">

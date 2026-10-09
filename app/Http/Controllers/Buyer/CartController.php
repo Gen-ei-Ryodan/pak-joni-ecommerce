@@ -159,23 +159,45 @@ class CartController extends Controller
                 ->where('itemable_id', $color->id)
                 ->first();
 
+            $stock = (int) ($color->stock ?? 0);
+
             if ($cartItem) {
-                $cartItem->quantity = $cartItem->quantity + $qty;
+                $newQty = $cartItem->quantity + $qty;
+                $cartItem->quantity = $newQty;
+                // Auto-indent bila stok habis atau qty melebihi stok
+                if ($stock <= 0) {
+                    $cartItem->indent_quantity = $newQty;
+                } elseif ($newQty > $stock) {
+                    $cartItem->indent_quantity = $newQty - $stock;
+                } else {
+                    $cartItem->indent_quantity = 0;
+                }
                 $cartItem->save();
+                $msg = $this->indentStatusMessage($cartItem, $stock);
             } else {
-                CartItem::create([
+                if ($stock <= 0) {
+                    $indentQty = $qty;
+                } elseif ($qty > $stock) {
+                    $indentQty = $qty - $stock;
+                } else {
+                    $indentQty = 0;
+                }
+
+                $cartItem = CartItem::create([
                     'cart_id' => $cart->id,
                     'itemable_type' => ItemColor::class,
                     'itemable_id' => $color->id,
                     'quantity' => $qty,
+                    'indent_quantity' => $indentQty,
                     'price_snapshot' => $item->price ?? 0,
                     'product_name' => $item->name,
                     'variant_name' => $color->name,
                     'image_path' => $color->image_path ?: $item->thumbnail_path,
                 ]);
+                $msg = $this->indentStatusMessage($cartItem, $stock);
             }
             $cartCount = $cart->items()->count();
-            return ['success' => true, 'message' => 'Produk added to cart.', 'cartCount' => $cartCount];
+            return ['success' => true, 'message' => $msg, 'cartCount' => $cartCount];
         });
 
         if ($request->expectsJson()) {

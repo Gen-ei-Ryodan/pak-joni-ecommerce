@@ -72,6 +72,14 @@ class ItemResource extends Resource
                 Tables\Columns\TextColumn::make('category.name')->label('Kategori')->sortable(),
                 Tables\Columns\TextColumn::make('year')->label('Tahun')->numeric()->sortable()->toggleable(),
                 Tables\Columns\TextColumn::make('price')->money('IDR')->sortable(),
+                Tables\Columns\TextColumn::make('discount_type')->label('Diskon')->sortable()
+                    ->formatStateUsing(fn ($v) => match ($v) { 'fixed' => 'Fixed', 'percent' => 'Persen', default => '-' }),
+                Tables\Columns\TextColumn::make('discount_value')->label('Nilai')->sortable()
+                    ->money('IDR')
+                    ->formatStateUsing(fn ($v) => $v ? 'Rp '.number_format($v, 0, ',', '.') : '-'),
+                Tables\Columns\TextColumn::make('discount_price')->label('Harga Akhir')->sortable()
+                    ->money('IDR')
+                    ->formatStateUsing(fn ($v) => $v ? 'Rp '.number_format($v, 0, ',', '.') : '-'),
                 Tables\Columns\TextColumn::make('total_stock')
                     ->label('Total Stok')
                     ->numeric()
@@ -186,8 +194,25 @@ class ItemResource extends Resource
                 ])->columns(2),
 
             Section::make('Harga')->schema([
-                Forms\Components\TextInput::make('price')->label('Harga')
-                    ->numeric()->prefix('Rp'),
+                Forms\Components\Select::make('discount_type')
+                    ->label('Tipe Diskon')
+                    ->options(['fixed' => 'Fixed (Rp)', 'percent' => 'Persentase (%)'])
+                    ->native(false)
+                    ->visible(fn ($get) => $get('category_type_id') == \App\Models\CategoryType::where('slug', 'sparepart')->first()?->id),
+
+                Forms\Components\TextInput::make('discount_value')->label('Nilai Diskon')
+                    ->numeric()->prefix('Rp')
+                    ->nullable()
+                    ->rule('required_if:discount_type,fixed')
+                    ->visible(fn ($get) => $get('category_type_id') == \App\Models\CategoryType::where('slug', 'sparepart')->first()?->id),
+
+                Forms\Components\TextInput::make('discount_price')
+                    ->label('Harga Akhir')
+                    ->decimal(12, 2)
+                    ->readOnly()
+                    ->getStateUsing(fn ($state, $record) => $record?->discount_price ?? $record?->price ?? 0)
+                    ->visible(fn ($get) => $get('category_type_id') == \App\Models\CategoryType::where('slug', 'sparepart')->first()?->id),
+
                 Forms\Components\Toggle::make('is_active')->label('Active')->default(true),
                 Forms\Components\TextInput::make('sort_order')->numeric()->default(0),
             ])->columns(2),

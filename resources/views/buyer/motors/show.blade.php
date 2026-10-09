@@ -62,24 +62,34 @@
                         $totalStock = $item->colors->sum('stock');
                     @endphp
                     <div style="text-align:center;margin-bottom:16px;">
-                        @if($item->stock_status === 'ready')
-                            <span id="stockBadge" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:rgba(34,197,94,0.1);color:#22c55e;">
-                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>
-                                Ready Stock
-                                @if($totalStock > 0)
-                                    - {{ $totalStock }} unit tersedia
-                                @else
-                                    - Habis
-                                @endif
-                            </span>
-                            <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:#0055DA;color:#fff;margin-left:8px;">OTR SURABAYA</span>
-                        @elseif($item->stock_status === 'indent')
-                            <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:#fef3c7;color:#92400e;">
-                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span>
-                                Indent - DP 50%
-                            </span>
+                    @php
+                        $totalStock = $item->colors->sum('stock');
+                        $finalPrice = $item->final_price ?? $item->price;
+                    @endphp
+                    @if($item->stock_status === 'ready')
+                        <span id="stockBadge" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:rgba(34,197,94,0.1);color:#22c55e;">
+                            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>
+                            Ready Stock
+                            @if($totalStock > 0)
+                                - {{ $totalStock }} unit tersedia
+                            @else
+                                - Habis
+                            @endif
+                        </span>
+                        @if($item->discount_type)
+                            - Diskon: <span style="color:#f59e0b;font-weight:500;">{{ strtoupper($item->discount_type) }} {{ $item->discount_type === 'percent' ? number_format($item->discount_value, 1, ',', '.') . '%' : 'Rp '.number_format($item->discount_value, 0, ',', '.') }}</span>
                         @endif
-                    </div>
+                        <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:#0055DA;color:#fff;margin-left:8px;">OTR SURABAYA</span>
+                    @elseif($item->stock_status === 'indent')
+                        <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:#fef3c7;color:#92400e;">
+                            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span>
+                            Indent - DP 50%
+                        </span>
+                        @if($item->discount_type)
+                            - Diskon: <span style="color:#f59e0b;font-weight:500;">{{ strtoupper($item->discount_type) }} {{ $item->discount_type === 'percent' ? number_format($item->discount_value, 1, ',', '.') . '%' : 'Rp '.number_format($item->discount_value, 0, ',', '.') }}</span>
+                        @endif
+                    @endif
+                </div>
 
                     @if($item->colors->count())
                         <div class="motor-colors">
@@ -244,30 +254,54 @@
                 <div class="parts-tab-section">
                     <p style="color:var(--muted);margin-bottom:20px;text-align:center;">Sparepart yang kompatibel dengan <strong>{{ $item->name }}</strong></p>
 
-                    {{-- Sparepart compatible (satu sumber: Item, tabel items) --}}
-                    <div class="grid grid-3">
-                        @forelse ($compatibleSpareparts ?? [] as $sp)
-                            @php $spTotalStock = $sp->colors->sum('stock'); @endphp
-                            <a class="card" href="{{ route('buyer.motors.show', ['categoryType' => 'sparepart', 'slug' => $sp->slug]) }}">
-                                <div class="card-media" style="background-image:url('{{ $sp->thumbnail_path ? image_url($sp->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
-                                <div class="card-body">
-                                    @if($sp->brand || $sp->category)
-                                        <div class="card-meta">{{ $sp->brand?->name }}{{ $sp->brand && $sp->category ? ' › ' : '' }}{{ $sp->category?->name }}</div>
-                                    @endif
-                                    <div class="card-title">{{ $sp->name }}</div>
-                                    @if($sp->part_number)
-                                        <div class="card-meta">PN: {{ $sp->part_number }}</div>
-                                    @endif
-                                    @if($sp->price)
-                                        <div class="price">Rp {{ number_format($sp->price, 0, ',', '.') }}</div>
-                                    @endif
-                                    <span class="stock-tag {{ $spTotalStock > 0 ? 'ready' : 'indent' }}">{{ $spTotalStock > 0 ? 'Ready Stock' : 'Habis' }}</span>
-                                </div>
-                            </a>
-                        @empty
-                            <div class="empty-state">Belum ada sparepart tersedia untuk motor ini.</div>
-                        @endforelse
-                    </div>
+                    <table class="part-table">
+                        <thead>
+                            <tr>
+                                <th class="part-table-no">No</th>
+                                <th class="part-table-name">Part Number</th>
+                                <th class="part-table-name">Nama Sparepart</th>
+                                <th class="part-table-price">SRP (Harga Rp)</th>
+                                <th class="part-table-stock">Status Stok</th>
+                                <th class="part-table-action">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($compatibleSpareparts ?? [] as $index => $sp)
+                                @php $spTotalStock = $sp->colors->sum('stock'); @endphp
+                                <tr>
+                                    <td class="part-table-no">{{ $index + 1 }}</td>
+                                    <td class="part-table-name">{{ $sp->part_number ?? '-' }}</td>
+                                    <td class="part-table-name">{{ $sp->name }}</td>
+                                    <td class="part-table-price">Rp {{ number_format($sp->price ?? 0, 0, ',', '.') }}</td>
+                                    <td class="part-table-stock">
+                                        <span class="stock-tag {{ $spTotalStock > 0 ? 'ready' : 'indent' }}">{{ $spTotalStock > 0 ? 'Ready Stock' : 'Habis' }}</span>
+                                    </td>
+                                    <td class="part-table-action">
+                                        @php
+                                            $firstColor = $sp->colors->first();
+                                        @endphp
+                                        @if($firstColor)
+                                            <form method="post" action="{{ route('buyer.cart.store') }}" style="display:inline;">
+                                                @csrf
+                                                <input type="hidden" name="itemable_type" value="item_color">
+                                                <input type="hidden" name="itemable_id" value="{{ $firstColor->id }}">
+                                                <input type="hidden" name="quantity" value="1">
+                                                <button type="submit" class="btn btn-sm btn-primary" style="padding:6px 14px;font-size:12px;">
+                                                    + Keranjang
+                                                </button>
+                                            </form>
+                                        @else
+                                            <span style="color:var(--muted);font-size:12px;">-</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td class="part-table-no" colspan="6">Belum ada sparepart tersedia untuk motor ini.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             @endif
         </div>
@@ -556,6 +590,59 @@
             grid-column: 1/-1;
             padding: 60px 0;
             color: var(--muted);
+        }
+
+        /* Parts Table */
+        .part-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        .part-table thead {
+            background: var(--panel);
+            border-bottom: 2px solid var(--accent);
+        }
+        .part-table th,
+        .part-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+        }
+        .part-table th {
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+        .part-table-tr {
+            transition: background 0.2s;
+        }
+        .part-table-tr:hover {
+            background: rgba(217, 180, 111, 0.04);
+        }
+        .part-table-no {
+            width: 40px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+        .part-table-name {
+            flex: 1;
+        }
+        .part-table-price {
+            text-align: right;
+            color: var(--accent);
+            font-weight: 500;
+        }
+        .part-table-stock {
+            text-align: center;
+        }
+        .part-table-action {
+            text-align: center;
+        }
+        .part-table-action .btn {
+            padding: 6px 10px;
+            font-size: 12px;
         }
 
         @media (max-width: 720px) {

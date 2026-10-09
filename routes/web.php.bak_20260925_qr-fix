@@ -25,7 +25,6 @@ Route::get('/about', [BuyerPageController::class, 'about'])->name('buyer.about')
 Route::get('/kategori/{categoryType}/{brand}', [BuyerPageController::class, 'categoryBrand'])->name('buyer.category-brand');
 Route::get('/pilih/{categoryType}', [BuyerPageController::class, 'productChoose'])->name('buyer.product.choose');
 Route::get('/pilih/{categoryType}/{brand}/kategori', [BuyerPageController::class, 'productCategories'])->name('buyer.product.categories');
-Route::get('/pilih/{categoryType}/brand-pdf/{brand}', [BuyerPageController::class, 'brandPdfCatalog'])->name('buyer.product.brand-pdf');
 Route::get('/cari', [BuyerPageController::class, 'search'])->name('buyer.search');
 
 Route::get('/regions/provinces', [RegionController::class, 'provinces']);
@@ -95,7 +94,7 @@ Route::get('/payment/midtrans/finish', [MidtransController::class, 'finish'])->n
 Route::get('/payment/midtrans/unfinish', [MidtransController::class, 'unfinish'])->name('payment.midtrans.unfinish');
 Route::get('/payment/midtrans/error', [MidtransController::class, 'error'])->name('payment.midtrans.error');
 
-Route::middleware(['auth', 'throttle:payment-actions'])->group(function () {
+Route::middleware(['auth', 'throttle:10,1'])->group(function () {
     Route::get('/payment/midtrans/status/{order}', [MidtransController::class, 'status'])->name('payment.midtrans.status');
     Route::get('/payment/midtrans/snap-token/{order}', [MidtransController::class, 'snapToken'])->name('payment.midtrans.snap-token');
     Route::get('/payment/ocbc/qr/{order}', [OcbcController::class, 'qr'])->name('payment.ocbc.qr');
@@ -150,7 +149,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/my/orders', [BuyerOrderController::class, 'index'])->name('buyer.orders.index');
     Route::get('/my/orders/{order:order_no}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
-    Route::get('/my/orders/{order:order_no}/invoice', [BuyerOrderController::class, 'invoice'])->name('buyer.orders.invoice');
     Route::post('/my/orders/{order:order_no}/confirm-received', [BuyerOrderController::class, 'confirmReceived'])->name('buyer.orders.confirmReceived');
     Route::post('/my/orders/{order:order_no}/pay-remaining', [BuyerOrderController::class, 'payRemaining'])->name('buyer.orders.payRemaining');
 

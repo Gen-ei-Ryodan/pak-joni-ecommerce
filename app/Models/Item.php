@@ -16,7 +16,8 @@ class Item extends Model
     protected $fillable = [
         'category_type_id', 'brand_id', 'category_id',
         'name', 'slug', 'year', 'description', 'short_description',
-        'price', 'thumbnail_path', 'document_path', 'part_number', 'catalog_pdf_path',
+        'price', 'discount_type', 'discount_value', 'discount_price',
+        'thumbnail_path', 'document_path', 'part_number', 'catalog_pdf_path',
         'stock', 'stock_status', 'stock_updated_at', 'status', 'is_active', 'sort_order',
     ];
 
@@ -24,9 +25,33 @@ class Item extends Model
     {
         return [
             'price' => 'decimal:2',
+            'discount_type' => 'string',
+            'discount_value' => 'decimal:2',
+            'discount_price' => 'decimal:2',
             'is_active' => 'boolean',
             'stock_updated_at' => 'datetime',
         ];
+    }
+
+    public function getFinalPriceAttribute(): decimal
+    {
+        $discountType = $this->discount_type;
+        $discountValue = $this->discount_value;
+        $price = $this->price;
+
+        if (!$discountType || !$discountValue || $price <= 0) {
+            return $price;
+        }
+
+        $finalPrice = $price;
+
+        if ($discountType === 'percent') {
+            $finalPrice = $price - ($price * $discountValue / 100);
+        } elseif ($discountType === 'fixed') {
+            $finalPrice = max(0, $price - $discountValue);
+        }
+
+        return $finalPrice;
     }
 
     public function type(): BelongsTo

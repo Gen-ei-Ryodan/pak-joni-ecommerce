@@ -74,6 +74,38 @@
                                 <div>Sisa (saat barang ready): <span style="font-family:var(--mono);">{{ number_format($remainingAmount, 2, '.', ',') }}</span></div>
                             </div>
                         @endif
+                        @if(isset($itemDiscount) && $itemDiscount > 0)
+                            <div style="margin-top:6px;padding:8px;background:#e0f7fa;border-radius:8px;font-size:12px;color:#01579b;">
+                                <div style="font-weight:600;margin-bottom:4px;">Diskon Item</div>
+                                <div>Diskon: <span style="color:#0277bd;">Rp {{ number_format($itemDiscount, 0, ',', '.') }}</div>
+                                <div>Harga Akhir: <span style="color:#0277bd;font-weight:500;">Rp {{ number_format($finalPriceAfterItemDiscount, 2, '.', ',') }}</div>
+                            </div>
+                        @endif
+                        @if(isset($voucherDiscount) && $voucherDiscount > 0)
+                            <div style="margin-top:6px;padding:8px;background:#f3e5f5;border-radius:8px;font-size:12px;color:#4a148c;">
+                                <div style="font-weight:600;margin-bottom:4px;">Voucher</div>
+                                <div>Voucher: <span style="color:#4a148c;">{{ $voucherCode }}</div>
+                                <div>Diskon Voucher: <span style="color:#4a148c;">Rp {{ number_format($voucherDiscount, 2, '.', ',') }}</div>
+                                <div>Total: <span style="color:#4a148c;font-weight:500;">Rp {{ number_format($finalPriceAfterVoucher, 2, '.', ',') }}</div>
+                            </div>
+                        @endif
+
+                        {{-- Voucher Input Form --}}
+                        @if(! $isDealerPickup)
+                        <div style="margin-top:20px;padding:12px;border:1px solid var(--line);border-radius:8px;">
+                            <div style="font-weight:600;margin-bottom:8px;">Masukkan Voucher</div>
+                            <form method="post" action="{{ route('buyer.checkout.place') }}" style="margin-top:12px;">
+                                @csrf
+                                <div style="display:grid;gap:8px;">
+                                    <input type="text" name="voucher_code" placeholder="Kode voucher" class="form-input" style="padding:8px 12px;border:1px solid var(--line);border-radius:4px;">
+                                    <button type="submit" class="btn btn-primary" style="width:100%;padding:8px;">Apply Voucher</button>
+                                </div>
+                            </form>
+                            @if(session('voucher_error'))
+                                <div style="margin-top:6px;color:#dc2626;font-size:12px;">{{ session('voucher_error') }}</div>
+                            @endif
+                        </div>
+                        @endif
                         <div>Total: <span style="font-family:var(--mono);">{{ number_format((float) $total, 2, '.', ',') }}</span></div>
                     </div>
 

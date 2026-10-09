@@ -190,8 +190,10 @@ class PageController extends Controller
         $catalogs = ItemPartCatalog::query()
             ->with('item')
             ->when($q !== '', fn($query) => $query->where('name', 'like', '%'.$q.'%'))
+            // ->orderByDesc('id')
             ->orderBy('id', 'asc')
-            ->get();
+            // ->paginate(12)
+            ->withQueryString();
 
         return view('buyer.spareparts.part-catalog', compact('catalogs', 'q'));
     }
@@ -243,46 +245,6 @@ class PageController extends Controller
         return view('buyer.product.categories', compact('type', 'brandModel', 'categories'));
     }
 
-    public function brandPdfCatalog(string $categoryType, string $brand)
-    {
-        $type = CategoryType::where('slug', $categoryType)->where('is_active', true)->firstOrFail();
-        $selectedBrand = Brand::where('slug', $brand)->where('is_active', true)->firstOrFail();
-
-        // 1. Ambil katalog dari relasi item_part_catalogs motor pada brand ini
-        $catalogsFromMotor = $selectedBrand->items()
-            ->with(['partCatalogs' => fn($q) => $q->where('is_active', true)])
-            ->get()
-            ->flatMap(fn($item) => $item->partCatalogs->map(fn($c) => [
-                'name' => $c->name,
-                'path' => $c->pdf_path,
-                'type' => 'Part Catalog',
-            ]))
-            ->values();
-
-        // 2. Ambil katalog PDF unik dari sparepart items pada brand ini
-        $catalogsFromSpareparts = \App\Models\Item::query()
-            ->where('brand_id', $selectedBrand->id)
-            ->whereNotNull('catalog_pdf_path')
-            ->select('catalog_pdf_path')
-            ->distinct()
-            ->get()
-            ->map(function ($item) {
-                $filename = basename($item->catalog_pdf_path);
-                $title = ucwords(str_replace(['parts-catalog-', '-', '.pdf'], ['', ' ', ''], $filename));
-                return [
-                    'name' => 'Parts Catalog ' . $title,
-                    'path' => $item->catalog_pdf_path,
-                    'type' => 'Part Catalog (PDF)',
-                ];
-            });
-
-        $pdfCatalogs = $catalogsFromMotor->concat($catalogsFromSpareparts)
-            ->unique('path')
-            ->values();
-
-        return view('buyer.product.brand-pdf', compact('type', 'brand', 'selectedBrand', 'pdfCatalogs'));
-    }
-
     public function categoryBrand($categoryType, $brand, Request $request)
     {
         $type = CategoryType::where('slug', $categoryType)->where('is_active', true)->firstOrFail();
@@ -317,7 +279,7 @@ class PageController extends Controller
                 ->where('is_active', true)
             ))
             ->withCount(['items' => fn($q) => $q
-                ->when($brandModel, fn($qq) => $qq->where('brand_id', $brandModel->id))
+                ->where('brand_id', $brandModel->id)
                 ->where('status', 'active')
                 ->where('is_active', true)
             ])
@@ -432,8 +394,6 @@ class PageController extends Controller
 
         $motorType = CategoryType::where('slug', 'motor')->where('is_active', true)->first();
 
-        $sparepartType = CategoryType::where('slug', 'sparepart')->where('is_active', true)->first();
-
         $items = collect();
         $parts = collect();
 
@@ -443,7 +403,6 @@ class PageController extends Controller
                 ->where('status', 'active')
                 ->where('is_active', true)
                 ->when($motorType && $type === 'motor', fn($q) => $q->where('category_type_id', $motorType->id))
-                ->when($type === null && $motorType, fn($q) => $q->where('category_type_id', '!=', $sparepartType?->id))
                 ->when($q !== '', fn($query) => $query->where(function($q2) use ($q) {
                     $q2->where('name', 'like', '%'.$q.'%')
                        ->orWhere('short_description', 'like', '%'.$q.'%');
@@ -455,37 +414,19 @@ class PageController extends Controller
         }
 
         if ($type === null || $type === 'sparepart') {
-            if ($sparepartType && Item::where('category_type_id', $sparepartType->id)->exists()) {
-                // Arsitektur baru: spareparts berada di tabel items
-                $parts = Item::query()
-                    ->with(['brand', 'category', 'type', 'colors'])
-                    ->where('category_type_id', $sparepartType->id)
-                    ->where('status', 'active')
-                    ->where('is_active', true)
-                    ->when($q !== '', fn($query) => $query->where(function($q2) use ($q) {
-                        $q2->where('name', 'like', '%'.$q.'%')
-                           ->orWhere('part_number', 'like', '%'.$q.'%');
-                    }))
-                    ->when($brand, fn($query) => $query->whereHas('brand', fn($b) => $b->where('slug', $brand)))
-                    ->orderByDesc('id')
-                    ->paginate(12, ['*'], 'part_page')
-                    ->withQueryString();
-            } else {
-                // Fallback tabel parts lama
-                $parts = Part::query()
-                    ->with(['category', 'defaultVariant'])
-                    ->where('status', 'active')
-                    ->when($q !== '', fn($query) => $query->where(function($q2) use ($q) {
-                        $q2->where('name', 'like', '%'.$q.'%')
-                           ->orWhere('sku', 'like', '%'.$q.'%')
-                           ->orWhere('short_description', 'like', '%'.$q.'%');
-                    }))
-                    ->when($brand, fn($query) => $query->whereHas('items.brand', fn($b) => $b->where('slug', $brand)))
-                    ->when($partGroup, fn($query) => $query->whereHas('category', fn($c) => $c->where('group', $partGroup)))
-                    ->orderByDesc('id')
-                    ->paginate(12, ['*'], 'part_page')
-                    ->withQueryString();
-            }
+            $parts = Part::query()
+                ->with(['category', 'defaultVariant'])
+                ->where('status', 'active')
+                ->when($q !== '', fn($query) => $query->where(function($q2) use ($q) {
+                    $q2->where('name', 'like', '%'.$q.'%')
+                       ->orWhere('sku', 'like', '%'.$q.'%')
+                       ->orWhere('short_description', 'like', '%'.$q.'%');
+                }))
+                ->when($brand, fn($query) => $query->whereHas('items.brand', fn($b) => $b->where('slug', $brand)))
+                ->when($partGroup, fn($query) => $query->whereHas('category', fn($c) => $c->where('group', $partGroup)))
+                ->orderByDesc('id')
+                ->paginate(12, ['*'], 'part_page')
+                ->withQueryString();
         }
 
         $totalResults = 0;

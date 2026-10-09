@@ -183,36 +183,25 @@
 
                 <div class="grid grid-3">
                     @forelse($parts as $p)
-                        @php
-                            $isItemModel = $p instanceof \App\Models\Item;
-                            $cardUrl = $isItemModel 
-                                ? route('buyer.motors.show', ['categoryType' => 'sparepart', 'slug' => $p->slug])
-                                : route('buyer.parts.show', $p->slug);
-                            $pBrand = $isItemModel ? $p->brand : $p->items()->first()?->brand;
-                            $displayPrice = $isItemModel 
-                                ? $p->price 
-                                : ($p->defaultVariant?->price ?? $p->base_price ?? 0);
-                            $partCode = $isItemModel ? ($p->part_number ?: $p->sku) : ($p->part_number ?: $p->sku);
-                            $totalStock = $isItemModel ? $p->colors->sum('stock') : ($p->defaultVariant?->stock ?? 0);
-                        @endphp
-                        <a class="card" href="{{ $cardUrl }}">
+                        <a class="card" href="{{ route('buyer.parts.show', $p->slug) }}">
                             <div class="card-media" style="background-image:url('{{ $p->thumbnail_path ? image_url($p->thumbnail_path) : '' }}');background-size:cover;background-position:center;height:200px;"></div>
                             <div class="card-body">
+                                @php $pBrand = $p->items()->first()?->brand; @endphp
                                 @if($pBrand)
                                     <div class="card-meta">{{ $pBrand->name }}</div>
                                 @endif
-                                @if(!$isItemModel && $p->category)
+                                @if($p->category)
                                     <div class="card-meta" style="font-size:10px;text-transform:none;letter-spacing:0;">{{ $p->category->group }} &rsaquo; {{ $p->category->name }}</div>
                                 @endif
                                 <div class="card-title">{{ $p->name }}</div>
-                                @if($displayPrice > 0)
-                                    <div class="price">Rp {{ number_format($displayPrice, 0, ',', '.') }}</div>
+                                @if($p->defaultVariant)
+                                    <div class="price">Rp {{ number_format($p->defaultVariant->price, 0, ',', '.') }}</div>
+                                @elseif($p->base_price)
+                                    <div class="price">Rp {{ number_format($p->base_price, 0, ',', '.') }}</div>
                                 @endif
-                                @if($partCode)
-                                    <div class="card-sku">Part No / SKU: {{ $partCode }}</div>
-                                @endif
+                                <div class="card-sku">SKU: {{ $p->sku }}</div>
                                 @if($p->stock_status === 'ready')
-                                    <span class="stock-tag ready">Ready Stock @if($totalStock > 0)({{ $totalStock }})@endif</span>
+                                    <span class="stock-tag ready">Ready Stock</span>
                                 @elseif($p->stock_status === 'indent')
                                     <span class="stock-tag indent">Indent</span>
                                 @endif
