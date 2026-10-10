@@ -186,15 +186,15 @@
                 @foreach($order->items as $it)
                     <tr>
                         <td>
-                            <strong>{{ $it->product_name }}</strong>
+                            <strong>{{ $it->name }}</strong>
                             @if($it->isIndent())
                                 <span style="display:inline-block;margin-left:6px;font-size:10px;padding:2px 6px;border-radius:10px;background:#fef3c7;color:#92400e;">Indent</span>
                             @endif
                         </td>
                         <td class="text-center">{{ $it->variant_name ?: '-' }}</td>
-                        <td class="text-right">Rp {{ number_format((float) $it->price_snapshot, 0, ',', '.') }}</td>
+                        <td class="text-right">Rp {{ number_format((float) $it->price, 0, ',', '.') }}</td>
                         <td class="text-center">{{ $it->quantity }}</td>
-                        <td class="text-right">Rp {{ number_format((float) $it->price_snapshot * $it->quantity, 0, ',', '.') }}</td>
+                        <td class="text-right">Rp {{ number_format((float) $it->price * $it->quantity, 0, ',', '.') }}</td>
                     </tr>
                 @endforeach
             </tbody>

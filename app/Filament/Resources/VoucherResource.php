@@ -132,7 +132,7 @@ class VoucherResource extends Resource
 
                 Tables\Columns\TextColumn::make('is_active')
                     ->label('Aktif')
-                    ->boolean(),
+                    ->formatStateUsing(fn ($state) => $state ? 'Aktif' : 'Tidak Aktif'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat')

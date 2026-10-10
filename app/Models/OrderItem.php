@@ -51,4 +51,9 @@ class OrderItem extends Model
     {
         return $this->morphTo();
     }
+
+    public function isIndent(): bool
+    {
+        return (int) ($this->indent_quantity ?? 0) > 0;
+    }
 }
