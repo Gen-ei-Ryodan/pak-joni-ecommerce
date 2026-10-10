@@ -43,13 +43,14 @@ class VoucherResource extends Resource
                     ->label('Tipe Diskon')
                     ->options(['fixed' => 'Fixed (Rp)', 'percent' => 'Persentase (%)'])
                     ->native(false)
+                    ->live()
                     ->required(),
 
                 TextInput::make('discount_value')
-                    ->label('Nilai Diskon')
+                    ->label(fn ($get) => $get('discount_type') === 'percent' ? 'Nilai Persentase Diskon' : 'Nilai Diskon')
                     ->numeric()
-                    ->prefix('Rp')
-                    ->rule('required_if:discount_type,fixed')
+                    ->prefix(fn ($get) => $get('discount_type') === 'percent' ? null : 'Rp')
+                    ->suffix(fn ($get) => $get('discount_type') === 'percent' ? '%' : null)
                     ->required(),
 
                 TextInput::make('min_spend')
