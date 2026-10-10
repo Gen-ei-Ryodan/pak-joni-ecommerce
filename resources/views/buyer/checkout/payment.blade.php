@@ -94,15 +94,31 @@
                         @if(! $isDealerPickup)
                         <div style="margin-top:20px;padding:12px;border:1px solid var(--line);border-radius:8px;">
                             <div style="font-weight:600;margin-bottom:8px;">Masukkan Voucher</div>
-                            <form method="post" action="{{ route('buyer.checkout.place') }}" style="margin-top:12px;">
-                                @csrf
-                                <div style="display:grid;gap:8px;">
-                                    <input type="text" name="voucher_code" placeholder="Kode voucher" class="form-input" style="padding:8px 12px;border:1px solid var(--line);border-radius:4px;">
-                                    <button type="submit" class="btn btn-primary" style="width:100%;padding:8px;">Apply Voucher</button>
+                            @if(isset($voucherCode) && $voucherCode)
+                                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;margin-bottom:8px;">
+                                    <div>
+                                        <span style="font-weight:700;color:#166534;">{{ $voucherCode }}</span>
+                                        <div style="font-size:11px;color:#15803d;">Potongan: Rp {{ number_format($voucherDiscount, 0, ',', '.') }}</div>
+                                    </div>
+                                    <form method="post" action="{{ route('buyer.checkout.removeVoucher') }}" style="margin:0;">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline" style="padding:4px 8px;font-size:11px;color:#dc2626;border-color:#fca5a5;">Hapus</button>
+                                    </form>
                                 </div>
-                            </form>
+                            @else
+                                <form method="post" action="{{ route('buyer.checkout.applyVoucher') }}" style="margin-top:12px;">
+                                    @csrf
+                                    <div style="display:grid;gap:8px;">
+                                        <input type="text" name="voucher_code" value="{{ old('voucher_code') }}" placeholder="Kode voucher" class="form-input" style="padding:8px 12px;border:1px solid var(--line);border-radius:4px;text-transform:uppercase;">
+                                        <button type="submit" class="btn btn-primary" style="width:100%;padding:8px;">Apply Voucher</button>
+                                    </div>
+                                </form>
+                            @endif
                             @if(session('voucher_error'))
                                 <div style="margin-top:6px;color:#dc2626;font-size:12px;">{{ session('voucher_error') }}</div>
+                            @endif
+                            @if(session('voucher_success'))
+                                <div style="margin-top:6px;color:#16a34a;font-size:12px;">{{ session('voucher_success') }}</div>
                             @endif
                         </div>
                         @endif

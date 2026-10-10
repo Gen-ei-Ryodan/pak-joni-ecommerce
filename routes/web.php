@@ -145,6 +145,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/shipping/rates', [BuyerCheckoutController::class, 'rates'])->name('buyer.checkout.rates');
     Route::post('/checkout/shipping', [BuyerCheckoutController::class, 'setShipping'])->name('buyer.checkout.setShipping');
     Route::get('/checkout/payment', [BuyerCheckoutController::class, 'payment'])->name('buyer.checkout.payment');
+    Route::post('/checkout/voucher', [BuyerCheckoutController::class, 'applyVoucher'])->name('buyer.checkout.applyVoucher');
+    Route::post('/checkout/voucher/remove', [BuyerCheckoutController::class, 'removeVoucher'])->name('buyer.checkout.removeVoucher');
     Route::post('/checkout/place', [BuyerCheckoutController::class, 'placeOrder'])->name('buyer.checkout.place');
     Route::get('/checkout/finish/{order}', [BuyerCheckoutController::class, 'finish'])->name('buyer.checkout.finish');
 

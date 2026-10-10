@@ -76,11 +76,6 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function getRouteKeyName(): string
-    {
-        return 'order_no';
-    }
-
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);

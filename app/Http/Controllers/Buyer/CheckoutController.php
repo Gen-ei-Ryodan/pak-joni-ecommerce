@@ -10,6 +10,7 @@ use App\Models\ItemColor;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PartVariant;
+use App\Models\Voucher;
 use App\Services\BiteshipService;
 use App\Services\OcbcPaymentService;
 use App\Services\PaymentService;
@@ -248,36 +249,23 @@ class CheckoutController extends Controller
 
         $isDealerPickup = $request->session()->get('checkout.dealer_pickup');
 
-        // Handle voucher code from form submission
-        $voucherCode = $request->input('voucher_code');
+        $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
+
+        // Get applied voucher from session
+        $voucherSession = $request->session()->get('checkout.voucher');
+        $voucherCode = null;
         $voucherDiscount = 0;
         $itemDiscount = 0;
         $finalPriceAfterItemDiscount = null;
         $finalPriceAfterVoucher = null;
 
-        if ($voucherCode) {
-            // Simple voucher validation - check against known codes or look up
-            // For now, apply fixed discounts for common voucher codes
-            $vouchers = [
-                'SELAMAT10' => 0.10,
-                'DISKON500' => 50000,
-                'BESAR15' => 0.15,
-            ];
-
-            if (array_key_exists($voucherCode, $vouchers)) {
-                $discountPercent = $vouchers[$voucherCode];
-                if ($discountPercent < 1) {
-                    // Percentage discount
-                    $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
-                    $itemDiscount = (float) ($subtotal * $discountPercent);
-                } else {
-                    // Fixed amount discount
-                    $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
-                    $itemDiscount = min($discountPercent, (float) $subtotal);
-                }
-                $voucherDiscount = $itemDiscount;
+        if ($voucherSession && ! empty($voucherSession['code'])) {
+            $voucher = Voucher::where('code', $voucherSession['code'])->where('is_active', true)->first();
+            if ($voucher && $voucher->isValidForOrder($subtotal)) {
+                $voucherCode = $voucher->code;
+                $voucherDiscount = $voucher->calculateDiscount($subtotal);
             } else {
-                session()->put('voucher_error', 'Kode voucher tidak valid.');
+                $request->session()->forget('checkout.voucher');
             }
         }
 
@@ -360,6 +348,53 @@ class CheckoutController extends Controller
         return view('buyer.checkout.payment', $data);
     }
 
+    public function applyVoucher(Request $request)
+    {
+        $cart = $this->loadSelectedCart($request);
+        if ($cart->items->isEmpty()) {
+            return redirect('/cart')->with('status', 'Cart masih kosong.');
+        }
+
+        $code = trim((string) $request->input('voucher_code'));
+        if (empty($code)) {
+            $request->session()->forget('checkout.voucher');
+            return redirect()->route('buyer.checkout.payment')->with('voucher_error', 'Silakan masukkan kode voucher.');
+        }
+
+        $voucher = Voucher::where('code', $code)->first();
+        if (! $voucher || ! $voucher->is_active) {
+            $request->session()->forget('checkout.voucher');
+            return redirect()->route('buyer.checkout.payment')->with('voucher_error', 'Kode voucher tidak valid atau sudah tidak aktif.');
+        }
+
+        $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
+        if (! $voucher->isValidForOrder($subtotal)) {
+            $request->session()->forget('checkout.voucher');
+            if ($voucher->min_spend > 0 && $subtotal < $voucher->min_spend) {
+                return redirect()->route('buyer.checkout.payment')->with('voucher_error', 'Minimal belanja untuk voucher ini adalah Rp ' . number_format($voucher->min_spend, 0, ',', '.'));
+            }
+            if ($voucher->quota > 0 && $voucher->used_count >= $voucher->quota) {
+                return redirect()->route('buyer.checkout.payment')->with('voucher_error', 'Kuota voucher ini sudah habis.');
+            }
+            return redirect()->route('buyer.checkout.payment')->with('voucher_error', 'Voucher tidak memenuhi syarat untuk pesanan ini.');
+        }
+
+        $discount = $voucher->calculateDiscount($subtotal);
+        $request->session()->put('checkout.voucher', [
+            'id' => $voucher->id,
+            'code' => $voucher->code,
+            'discount' => $discount,
+        ]);
+
+        return redirect()->route('buyer.checkout.payment')->with('voucher_success', 'Voucher berhasil digunakan! Hemat Rp ' . number_format($discount, 0, ',', '.'));
+    }
+
+    public function removeVoucher(Request $request)
+    {
+        $request->session()->forget('checkout.voucher');
+        return redirect()->route('buyer.checkout.payment')->with('voucher_success', 'Voucher berhasil dihapus.');
+    }
+
     public function placeOrder(Request $request)
     {
         Log::info('[CHECKOUT] placeOrder', [
@@ -406,25 +441,19 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
 
             $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
 
-            // Get voucher code from request
-            $voucherCode = $request->input('voucher_code');
+            // Get voucher from session or request
+            $voucherSession = $request->session()->get('checkout.voucher');
+            $voucherCode = $request->input('voucher_code') ?: ($voucherSession['code'] ?? null);
             $voucherDiscount = 0;
+            $voucherId = $voucherSession['id'] ?? null;
 
-            // Apply voucher discount
-            $vouchers = [
-                'SELAMAT10' => 0.10,
-                'DISKON500' => 50000,
-                'BESAR15' => 0.15,
-            ];
-
-            if ($voucherCode && array_key_exists($voucherCode, $vouchers)) {
-                $discountPercent = $vouchers[$voucherCode];
-                if ($discountPercent < 1) {
-                    $subtotalForDiscount = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
-                    $voucherDiscount = (float) ($subtotalForDiscount * $discountPercent);
-                } else {
-                    $subtotalForDiscount = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
-                    $voucherDiscount = min($discountPercent, (float) $subtotalForDiscount);
+            if ($voucherCode) {
+                $voucher = Voucher::where('code', $voucherCode)->where('is_active', true)->first();
+                if ($voucher && $voucher->isValidForOrder($subtotal)) {
+                    $voucherId = $voucher->id;
+                    $voucherCode = $voucher->code;
+                    $voucherDiscount = $voucher->calculateDiscount($subtotal);
+                    $voucher->increment('used_count');
                 }
             }
 
@@ -484,7 +513,7 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
                 'indent_status' => $indentStatus,
                 'address_snapshot' => $addressSnapshot,
                 'shipping_snapshot' => $shippingSnapshot,
-                'voucher_id' => $request->session()->get('checkout.voucher_id') ?? null,
+                'voucher_id' => $voucherId,
                 'voucher_code' => $voucherCode ?? null,
                 'discount_amount' => $voucherDiscount,
             ]);
