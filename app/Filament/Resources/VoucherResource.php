@@ -142,8 +142,7 @@ class VoucherResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('is_active')
                     ->label('Status')
-                    ->options(['active' => 'Aktif', 'inactive' => 'Tidak Aktif'])
-                    ->applyStateUsing(fn (?bool $state) => $state !== false),
+                    ->options(['active' => 'Aktif', 'inactive' => 'Tidak Aktif']),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

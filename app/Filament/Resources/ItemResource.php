@@ -159,7 +159,7 @@ class ItemResource extends Resource
                     ->visible(fn ($get) => $get('category_type_id') != \App\Models\CategoryType::where('slug', 'motor')->first()?->id),
 
                 Forms\Components\FileUpload::make('document_path')
-                    ->label('Unduh Dokumen')
+                    ->label('Upload Brosur')
                     ->disk('public')
                     ->directory('items/documents')
                     ->maxSize(10240)
