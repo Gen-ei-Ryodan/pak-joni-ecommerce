@@ -10,7 +10,7 @@
             </a>
 
             @if($event->thumbnail_path)
-                <div style="width:100%;height:350px;border-radius:var(--radius);background:url('{{ image_url($event->thumbnail_path) }}') center/cover no-repeat;margin-bottom:24px;"></div>
+                <div style="width:100%;height:350px;border-radius:var(--radius);background-color:#ffffff;background:url('{{ image_url($event->thumbnail_path) }}') center/contain no-repeat;margin-bottom:24px;"></div>
             @endif
 
             <div class="article-meta" style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-bottom:16px;">
@@ -39,7 +39,7 @@
                                     <iframe src="{{ $gallery->path }}" allowfullscreen style="width:100%;height:220px;border-radius:8px;border:none;"></iframe>
                                 </div>
                             @else
-                                <div class="event-gallery-item" style="background-image:url('{{ image_url($gallery->path) }}');background-size:cover;background-position:center;height:220px;border-radius:8px;"></div>
+                                <div class="event-gallery-item" style="background-color:#ffffff;background-image:url('{{ image_url($gallery->path) }}');background-size:contain;background-position:center;background-repeat:no-repeat;height:220px;border-radius:8px;"></div>
                             @endif
                         @endforeach
                     </div>
