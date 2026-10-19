@@ -35,9 +35,19 @@ class PartCatalogResource extends Resource
                     ->square()
                     ->size(40),
 
+                Tables\Columns\TextColumn::make('brand.name')
+                    ->label('Merk')
+                    ->searchable()
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nama')
                     ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('images_count')
+                    ->label('Gambar')
+                    ->counts('images')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('item.name')
@@ -75,13 +85,25 @@ class PartCatalogResource extends Resource
     {
         return $schema
             ->schema([
+                Forms\Components\Select::make('brand_id')
+                    ->label('Merk')
+                    ->relationship('brand', 'name')
+                    ->searchable()
+                    ->preload(),
+
                 Forms\Components\TextInput::make('name')
                     ->label('Nama')
                     ->required()
                     ->maxLength(255),
 
+                Forms\Components\TextInput::make('slug')
+                    ->label('Slug URL')
+                    ->maxLength(255)
+                    ->helperText('Dipakai di URL galeri. Contoh: neon, 250-clc, papio-xo-1.'),
+
                 Forms\Components\FileUpload::make('pdf_path')
                     ->label('File PDF')
+                    ->helperText('Upload PDF katalog (maks 10 MB).')
                     ->acceptedFileTypes(['application/pdf'])
                     ->disk('public')
                     ->directory('items/part-catalogs')
@@ -89,11 +111,9 @@ class PartCatalogResource extends Resource
                     ->required(),
 
                 Forms\Components\FileUpload::make('image_path')
-                    ->label('Gambar')
-                    ->helperText('Gambar sampul kartu di halaman /part-katalog. JPG/PNG/WEBP, maks 5 MB.')
+                    ->label('Gambar Sampul')
+                    ->helperText('Gambar sampul kartu. JPG/PNG/WEBP, maks 5 MB.')
                     ->image()
-                    ->imageEditor()
-                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                     ->disk('public')
                     ->directory('items/part-catalogs/images')
                     ->maxSize(5120),

@@ -34,24 +34,31 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        if (app()->environment('local', 'development')) {
+        // Data dummy lengkap HANYA untuk environment lokal/development/testing.
+        // Di production, `php artisan db:seed` hanya mengisi katalog part (galeri gambar
+        // untuk halaman /pilih/sparepart) sehingga aman dijalankan tanpa menyentuh data nyata.
+        if (app()->environment('local', 'development', 'testing')) {
             $this->truncateAll();
+
+            $this->call(DummyItemSeeder::class);
+
+            $this->createAdmin();
+            $this->createPartCategories();
+            $this->createParts();
+            // Banners dikosongkan — dikelola manual via Filament
+            $this->createWhyChooseUs();
+            $this->createNews();
+            $this->createEvents();
+            $this->createCsr();
+            $this->createDealers();
+            $this->createCareers();
+            $this->createInternalActivities();
+            $this->createCompanyProfile();
         }
 
-        $this->call(DummyItemSeeder::class);
-
-        $this->createAdmin();
-        $this->createPartCategories();
-        $this->createParts();
-        // Banners dikosongkan — dikelola manual via Filament
-        $this->createWhyChooseUs();
-        $this->createNews();
-        $this->createEvents();
-        $this->createCsr();
-        $this->createDealers();
-        $this->createCareers();
-        $this->createInternalActivities();
-        $this->createCompanyProfile();
+        // Katalog part + gambar (halaman /pilih/sparepart). Idempotent: kosongkan dulu
+        // katalog milik merk terkait, lalu insert ulang — jadi tidak ada data dobel.
+        $this->call(PartCatalogGallerySeeder::class);
     }
 
     private function truncateAll(): void
@@ -61,7 +68,9 @@ class DatabaseSeeder extends Seeder
             'banners', 'careers', 'company_profiles', 'csr_articles', 'dealers',
             'events', 'event_galleries', 'internal_activities', 'internal_activity_galleries',
             'item_360_images', 'item_colors', 'item_images', 'item_part',
-            'item_part_catalogs', 'item_price_lists', 'item_specifications', 'items',
+            // item_part_catalog_images lebih dulu dari item_part_catalogs (FK).
+            'item_part_catalog_images', 'item_part_catalogs', 'item_price_lists',
+            'item_specifications', 'items',
             'news', 'part_360_images', 'part_categories', 'part_images',
             'part_specifications', 'part_variants', 'parts', 'users', 'why_choose_us',
         ] as $t) {

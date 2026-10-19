@@ -23,11 +23,12 @@ Alur dalam skrip:
 2. Set PATH php84.
 3. `cd repository` → `git fetch origin main` → `git reset --hard origin/main`.
 4. Copy via `cp -r`: `app bootstrap config database public resources routes` → public dir.
-5. `cp` file: `artisan composer.json composer.lock package.json vite.config.js`.
-6. `chmod -R 755 storage bootstrap/cache`.
-7. `rm -f bootstrap/cache/packages.php services.php`.
-8. `composer install --no-dev --optimize-autoloader --no-interaction`.
-9. `php artisan optimize:clear`, `config:cache`, `route:cache`, `view:cache`, `event:cache`, `migrate --force`.
+5. Copy `storage/app/public/.` → `PUBLIC_DIR/storage/app/public/` (PDF + gambar katalog yang di-track git), lalu rebuild symlink `public/storage`.
+6. `cp` file: `artisan composer.json composer.lock package.json vite.config.js`.
+7. `chmod -R 755 storage bootstrap/cache`.
+8. `rm -f bootstrap/cache/packages.php services.php`.
+9. `composer install --no-dev --optimize-autoloader --no-interaction`.
+10. `php artisan optimize:clear`, `config:cache`, `route:cache`, `view:cache`, `event:cache`, `migrate --force` (belum termasuk `db:seed` — jalankan `php artisan db:seed --force` setelahnya untuk katalog part).
 
 ## Alur Deploy Lengkap (Lokal → Produksi)
 ```
@@ -43,6 +44,19 @@ SERVER (otomatis oleh deploy.sh):
   php artisan optimize + migrate --force
 ```
 
+## Deploy Katalog Part (Galeri Gambar `/pilih/sparepart`)
+Gambar halaman katalog (~520 MB, 1.339 JPG) sudah **di-track git**, jadi ikut `git pull` — tidak perlu upload manual.
+Setelah kode + gambar ter-pull ke docroot, cukup 3 langkah:
+```
+php artisan migrate --force
+php artisan db:seed --force
+```
+Catatan:
+- `php artisan db:seed` di production **hanya** menjalankan `PartCatalogGallerySeeder` (data dummy hanya jalan di `local/development/testing`), jadi aman — tidak menyentuh item/order/data nyata lain.
+- Seeder bersifat *kosongkan dulu → insert ulang* per merk (idempotent, tidak dobel) dan **tidak menghapus** data kalau gambar tidak ditemukan.
+- Kalau memakai `./deploy.sh` (sudah menjalankan `git fetch/reset` + `migrate --force`), tinggal tambahkan `php artisan db:seed --force` setelahnya.
+- Gambar dibaca dari `storage/app/public/items/part-catalogs/pages/{slug}/` di docroot.
+
 ## Migrate manual (jika perlu)
 ```
 ssh -p 31988 alurelab "cd /home/alurelab/jomotocenter.com && php artisan migrate:status"
@@ -57,6 +71,7 @@ ssh -p 31988 alurelab "cd /home/alurelab/jomotocenter.com && php artisan migrate
 
 ## Checklist (terakhir diverifikasi)
 - [x] deploy.sh memakai `cp -r` (bukan rsync).
+- [x] Gambar katalog part (`storage/app/public/items/part-catalogs/pages/**`) di-track git; `db:seed` di production hanya mengisi katalog part.
 - [x] composer.json PHP `^8.3`, tanpa platform override.
 - [x] Migration `stock_mutations` (batch 7) & `add_stock_to_item_colors` (batch 8) running di prod.
 - [x] File ItemResource/StockService/OrderService/modal terdeploy sesuai commit terkini.

@@ -23,4 +23,9 @@ class Brand extends Model
     {
         return $this->hasMany(Item::class)->orderBy('name');
     }
+
+    public function partCatalogs(): HasMany
+    {
+        return $this->hasMany(ItemPartCatalog::class)->orderBy('sort_order');
+    }
 }

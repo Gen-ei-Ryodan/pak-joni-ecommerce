@@ -18,6 +18,13 @@ Database relasional **MySQL** di shared hosting (cPanel). Skema dikelola via Elo
 | `part_number` | string(64), nullable, index | Nomor part sesuai katalog pabrikan. Uniqueness divalidasi di form Filament (bukan DB unique, agar data lama tidak bermasalah). |
 | `catalog_pdf_path` | string, nullable | Path PDF katalog part di disk `public` (`storage/app/public/parts/catalogs/`). Ditampilkan pada halaman detail sparepart. |
 
+### Katalog Part — Galeri Gambar (migration `2026_10_19_000001`)
+| Kolom/Tabel | Tipe | Keterangan |
+|-------------|------|------------|
+| `item_part_catalogs.brand_id` | FK `brands`, nullable | Merk pemilik katalog. Memungkinkan katalog tampil di alur `/pilih/sparepart` walau belum ada item sparepart. |
+| `item_part_catalogs.slug` | string, nullable, index | Slug model untuk URL galeri (`/pilih/{categoryType}/brand-pdf/{brand}/{slug}`). |
+| `item_part_catalog_images` | tabel baru | `item_part_catalog_id` (FK cascade), `path`, `sort_order` — halaman gambar hasil split PDF katalog. |
+
 ### Perubahan `items` (migration `2026_10_06_000002` + `2026_10_06_000003`)
 | Kolom | Tipe | Keterangan |
 |-------|------|------------|

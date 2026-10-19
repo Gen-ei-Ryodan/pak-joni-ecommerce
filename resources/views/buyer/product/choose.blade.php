@@ -95,6 +95,11 @@
                         $brandUrl = $type->slug === 'sparepart'
                             ? route('buyer.product.brand-pdf', ['categoryType' => $type->slug, 'brand' => $brand->slug])
                             : route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => $brand->slug]);
+
+                        $isSparepart = $type->slug === 'sparepart';
+                        $catalogCount = $brand->part_catalogs_count ?? 0;
+                        $brandCount = $isSparepart && $catalogCount > 0 ? $catalogCount : ($brand->items_count ?? 0);
+                        $brandCountLabel = $isSparepart && $catalogCount > 0 ? 'katalog' : strtolower($type->name);
                     @endphp
                     <a class="product-brand-card"
                        href="{{ $brandUrl }}">
@@ -106,7 +111,7 @@
                             @endif
                         </span>
                         <strong>{{ $brand->name }}</strong>
-                        <span class="product-brand-count">{{ $brand->items_count ?? $brand->parts_count ?? 0 }} {{ strtolower($type->name) }}</span>
+                        <span class="product-brand-count">{{ $brandCount }} {{ $brandCountLabel }}</span>
                     </a>
                 @empty
                     <p style="color:var(--muted);">Belum ada merk tersedia.</p>

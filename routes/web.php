@@ -26,6 +26,7 @@ Route::get('/kategori/{categoryType}/{brand}', [BuyerPageController::class, 'cat
 Route::get('/pilih/{categoryType}', [BuyerPageController::class, 'productChoose'])->name('buyer.product.choose');
 Route::get('/pilih/{categoryType}/{brand}/kategori', [BuyerPageController::class, 'productCategories'])->name('buyer.product.categories');
 Route::get('/pilih/{categoryType}/brand-pdf/{brand}', [BuyerPageController::class, 'brandPdfCatalog'])->name('buyer.product.brand-pdf');
+Route::get('/pilih/{categoryType}/brand-pdf/{brand}/{catalog}', [BuyerPageController::class, 'brandPdfCatalogGallery'])->name('buyer.product.brand-pdf.gallery');
 Route::get('/cari', [BuyerPageController::class, 'search'])->name('buyer.search');
 
 Route::get('/regions/provinces', [RegionController::class, 'provinces']);

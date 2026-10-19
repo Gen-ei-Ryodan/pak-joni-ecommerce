@@ -188,9 +188,12 @@ class PageController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         $catalogs = ItemPartCatalog::query()
-            ->with('item')
+            ->with(['item', 'brand'])
+            ->withCount('images')
             ->when($q !== '', fn($query) => $query->where('name', 'like', '%'.$q.'%'))
-            ->orderBy('id', 'asc')
+            ->orderBy('brand_id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->get();
 
         return view('buyer.spareparts.part-catalog', compact('catalogs', 'q'));
@@ -200,17 +203,28 @@ class PageController extends Controller
     {
         $type = CategoryType::where('slug', $categoryType)->where('is_active', true)->firstOrFail();
 
+        $isSparepart = $type->slug === 'sparepart';
+
         $brands = Brand::query()
             ->where('is_active', true)
-            ->whereHas('items', fn($q) => $q
-                ->where('category_type_id', $type->id)
-                ->where('status', 'active')
-                ->where('is_active', true)
-            )
-            ->withCount(['items' => fn($q) => $q
-                ->where('category_type_id', $type->id)
-                ->where('status', 'active')
-                ->where('is_active', true)
+            ->where(function ($query) use ($type, $isSparepart) {
+                $query->whereHas('items', fn($q) => $q
+                    ->where('category_type_id', $type->id)
+                    ->where('status', 'active')
+                    ->where('is_active', true)
+                );
+
+                // Merk dengan katalog part (gambar) juga tampil walau belum punya item sparepart.
+                if ($isSparepart) {
+                    $query->orWhereHas('partCatalogs', fn($q) => $q->where('is_active', true));
+                }
+            })
+            ->withCount([
+                'items' => fn($q) => $q
+                    ->where('category_type_id', $type->id)
+                    ->where('status', 'active')
+                    ->where('is_active', true),
+                'partCatalogs' => fn($q) => $q->where('is_active', true),
             ])
             ->orderBy('sort_order')
             ->get();
@@ -248,39 +262,83 @@ class PageController extends Controller
         $type = CategoryType::where('slug', $categoryType)->where('is_active', true)->firstOrFail();
         $selectedBrand = Brand::where('slug', $brand)->where('is_active', true)->firstOrFail();
 
-        // 1. Ambil katalog dari relasi item_part_catalogs motor pada brand ini
-        $catalogsFromMotor = $selectedBrand->items()
-            ->with(['partCatalogs' => fn($q) => $q->where('is_active', true)])
+        // Katalog per model milik brand ini (memakai brand_id, dengan fallback relasi item lama).
+        $catalogs = ItemPartCatalog::query()
+            ->where('is_active', true)
+            ->where(function ($query) use ($selectedBrand) {
+                $query->where('brand_id', $selectedBrand->id)
+                    ->orWhereHas('item', fn($q) => $q->where('brand_id', $selectedBrand->id));
+            })
+            ->with('images')
+            ->withCount('images')
+            ->orderBy('sort_order')
+            ->orderBy('name')
             ->get()
-            ->flatMap(fn($item) => $item->partCatalogs->map(fn($c) => [
-                'name' => $c->name,
-                'path' => $c->pdf_path,
-                'type' => 'Part Catalog',
-            ]))
-            ->values();
+            ->map(fn (ItemPartCatalog $catalog) => [
+                'name' => $catalog->name,
+                'type' => $catalog->images_count > 0 ? 'Galeri Gambar' : 'Part Catalog (PDF)',
+                'pdf_path' => $catalog->pdf_path,
+                'cover' => $catalog->image_path ?: optional($catalog->images->first())->path,
+                'images_count' => $catalog->images_count,
+                'gallery_url' => $catalog->images_count > 0
+                    ? route('buyer.product.brand-pdf.gallery', [
+                        'categoryType' => $type->slug,
+                        'brand' => $selectedBrand->slug,
+                        'catalog' => $catalog->slug,
+                    ])
+                    : null,
+            ]);
 
-        // 2. Ambil katalog PDF unik dari sparepart items pada brand ini
-        $catalogsFromSpareparts = \App\Models\Item::query()
+        // Fallback: PDF katalog lama yang belum punya record katalog/gambar.
+        $legacy = Item::query()
             ->where('brand_id', $selectedBrand->id)
             ->whereNotNull('catalog_pdf_path')
-            ->select('catalog_pdf_path')
-            ->distinct()
-            ->get()
-            ->map(function ($item) {
-                $filename = basename($item->catalog_pdf_path);
+            ->pluck('catalog_pdf_path')
+            ->unique()
+            ->reject(fn ($path) => $catalogs->contains(fn ($c) => $c['pdf_path'] === $path))
+            ->map(function ($path) {
+                $filename = basename($path);
                 $title = ucwords(str_replace(['parts-catalog-', '-', '.pdf'], ['', ' ', ''], $filename));
+
                 return [
-                    'name' => 'Parts Catalog ' . $title,
-                    'path' => $item->catalog_pdf_path,
+                    'name' => 'Parts Catalog '.$title,
                     'type' => 'Part Catalog (PDF)',
+                    'pdf_path' => $path,
+                    'cover' => null,
+                    'images_count' => 0,
+                    'gallery_url' => null,
                 ];
             });
 
-        $pdfCatalogs = $catalogsFromMotor->concat($catalogsFromSpareparts)
-            ->unique('path')
+        $catalogs = $catalogs->concat($legacy)
+            ->unique(fn ($catalog) => $catalog['pdf_path'] ?? $catalog['name'])
             ->values();
 
-        return view('buyer.product.brand-pdf', compact('type', 'brand', 'selectedBrand', 'pdfCatalogs'));
+        return view('buyer.product.brand-pdf', compact('type', 'brand', 'selectedBrand', 'catalogs'));
+    }
+
+    public function brandPdfCatalogGallery(string $categoryType, string $brand, string $catalog)
+    {
+        $type = CategoryType::where('slug', $categoryType)->where('is_active', true)->firstOrFail();
+        $selectedBrand = Brand::where('slug', $brand)->where('is_active', true)->firstOrFail();
+
+        $catalogModel = ItemPartCatalog::query()
+            ->where('is_active', true)
+            ->where('slug', $catalog)
+            ->where(function ($query) use ($selectedBrand) {
+                $query->where('brand_id', $selectedBrand->id)
+                    ->orWhereHas('item', fn($q) => $q->where('brand_id', $selectedBrand->id));
+            })
+            ->with('images')
+            ->firstOrFail();
+
+        return view('buyer.product.brand-pdf-gallery', [
+            'type' => $type,
+            'brand' => $brand,
+            'selectedBrand' => $selectedBrand,
+            'catalog' => $catalogModel,
+            'images' => $catalogModel->images,
+        ]);
     }
 
     public function categoryBrand($categoryType, $brand, Request $request)

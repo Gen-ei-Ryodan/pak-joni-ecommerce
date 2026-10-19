@@ -1,2 +1,6 @@
 *
 !.gitignore
+!items/
+!items/part-catalogs/
+!items/part-catalogs/pages/
+!items/part-catalogs/pages/**
