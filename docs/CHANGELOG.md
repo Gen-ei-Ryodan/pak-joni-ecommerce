@@ -3,7 +3,7 @@
 ## Catatan Perubahan Proyek
 
 ### Unreleased — Part Katalog: Galeri Gambar per Model
-*   **Alur baru part catalog**: `/pilih/sparepart` → pilih merk (WMOTO, SM SPORT, CF MOTO, ZONTES, ZEEHO) → `/pilih/sparepart/brand-pdf/{brand}` menampilkan kartu model → `/pilih/sparepart/brand-pdf/{brand}/{catalog}` menampilkan seluruh halaman katalog sebagai gambar (full-width, lazy-load) plus tombol download PDF asli.
+*   **Alur baru part catalog**: `/pilih/sparepart` → pilih merk (WMOTO, SM SPORT, CF MOTO, ZONTES, ZEEHO) → `/pilih/sparepart/brand-pdf/{brand}` menampilkan **daftar model (list/tabel)** dengan tombol Lihat Gambar & Buka PDF → `/pilih/sparepart/brand-pdf/{brand}/{catalog}` menampilkan seluruh halaman katalog sebagai **grid kotak-kotak kecil** (klik untuk memperbesar lewat **lightbox**: navigasi prev/next, tombol Esc/panah) plus tombol download PDF asli.
 *   **PDF dipecah menjadi gambar**: 1.339 halaman JPG (27 model, 5 merk) disimpan di `storage/app/public/items/part-catalogs/pages/{slug}/`. Sumber: folder `PART CATALOG` hasil split PDF katalog.
 *   **Data**: tabel `item_part_catalogs` mendapat kolom `brand_id` + `slug`; tabel baru `item_part_catalog_images` menyimpan urutan halaman. Seeder `PartCatalogGallerySeeder` mengimpor 27 katalog + 1.339 gambar dengan pola **kosongkan dulu → insert ulang** (per merk, `brand_id` terkait saja) sehingga aman dijalankan berulang tanpa data dobel. Jika sebuah merk tidak punya gambar, data lama merk itu dibiarkan (tidak dihapus).
 *   **Halaman `/part-katalog`** kini menampilkan tombol **Lihat Gambar (n)** di samping tombol download PDF.

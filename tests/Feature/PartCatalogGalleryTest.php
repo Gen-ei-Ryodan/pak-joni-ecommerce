@@ -96,8 +96,11 @@ class PartCatalogGalleryTest extends TestCase
         ]))
             ->assertOk()
             ->assertSee('Katalog Neon')
-            ->assertSee('Halaman 1 / 2')
-            ->assertSee('Halaman 2 / 2')
+            ->assertSee('2 halaman')
+            // Galeri berupa grid kotak kecil + lightbox untuk memperbesar.
+            ->assertSee('catalog-grid')
+            ->assertSee('catalog-thumb', false)
+            ->assertSee('catalogLightbox')
             ->assertSee('parts-catalog-neon_page-0001.jpg')
             ->assertSee('parts-catalog-neon_page-0002.jpg');
     }

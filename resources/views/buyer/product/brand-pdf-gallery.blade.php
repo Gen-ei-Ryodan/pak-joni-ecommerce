@@ -16,6 +16,7 @@
                 <div class="section-line center-line"></div>
                 <p style="color:var(--muted);max-width:640px;margin:12px auto 0;">
                     {{ $images->count() }} halaman katalog part {{ strtoupper($selectedBrand->name) }} {{ $catalog->name }}.
+                    Klik gambar untuk memperbesar.
                 </p>
                 @if($catalog->pdf_path)
                     <p style="margin-top:16px;">
@@ -28,14 +29,17 @@
             </div>
 
             @if($images->isNotEmpty())
-                <div class="catalog-gallery">
+                <div class="catalog-grid">
                     @foreach ($images as $image)
-                        <figure class="catalog-page">
+                        <button type="button" class="catalog-thumb"
+                                data-full="{{ image_url($image->path) }}"
+                                data-index="{{ $loop->index }}"
+                                aria-label="Perbesar halaman {{ $loop->iteration }}">
                             <img src="{{ image_url($image->path) }}"
                                  alt="Halaman {{ $loop->iteration }} - Katalog {{ $catalog->name }}"
                                  loading="lazy">
-                            <figcaption>Halaman {{ $loop->iteration }} / {{ $images->count() }}</figcaption>
-                        </figure>
+                            <span class="catalog-thumb-no">{{ $loop->iteration }}</span>
+                        </button>
                     @endforeach
                 </div>
 
@@ -49,41 +53,230 @@
             @endif
         </div>
     </section>
+
+    {{-- Lightbox --}}
+    <div class="catalog-lightbox" id="catalogLightbox" aria-hidden="true" role="dialog" aria-modal="true">
+        <button type="button" class="clb-close" aria-label="Tutup">&times;</button>
+        <button type="button" class="clb-nav clb-prev" aria-label="Halaman sebelumnya">&#10094;</button>
+        <figure class="clb-figure">
+            <img src="" alt="" id="clbImage">
+            <figcaption id="clbCaption"></figcaption>
+        </figure>
+        <button type="button" class="clb-nav clb-next" aria-label="Halaman berikutnya">&#10095;</button>
+    </div>
 @endsection
 
 @push('head')
     <style>
-        .catalog-gallery {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 18px;
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 14px;
             margin-top: 32px;
         }
 
-        .catalog-page {
-            width: 100%;
-            max-width: 900px;
-            margin: 0;
-            background: #fff;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, .05);
-        }
-
-        .catalog-page img {
+        .catalog-thumb {
+            position: relative;
             display: block;
             width: 100%;
-            height: auto;
+            padding: 0;
+            margin: 0;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fff;
+            cursor: zoom-in;
+            aspect-ratio: 3 / 4;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .05);
+            transition: box-shadow .25s ease, transform .25s ease;
         }
 
-        .catalog-page figcaption {
-            padding: 8px 12px;
-            font-size: 12px;
-            color: var(--muted);
-            text-align: center;
-            border-top: 1px solid var(--line);
+        .catalog-thumb:hover,
+        .catalog-thumb:focus-visible {
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .12);
+            transform: translateY(-2px);
+            outline: none;
+        }
+
+        .catalog-thumb img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .3s ease;
+        }
+
+        .catalog-thumb:hover img {
+            transform: scale(1.05);
+        }
+
+        .catalog-thumb-no {
+            position: absolute;
+            right: 6px;
+            bottom: 6px;
+            padding: 2px 8px;
+            font-size: 11px;
+            line-height: 1.6;
+            color: #fff;
+            background: rgba(0, 0, 0, .66);
+            border-radius: 999px;
+        }
+
+        /* Lightbox */
+        .catalog-lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 44px 16px;
+            background: rgba(0, 0, 0, .88);
+        }
+
+        .catalog-lightbox.open {
+            display: flex;
+        }
+
+        .clb-figure {
+            margin: 0;
+            max-width: 100%;
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #clbImage {
+            display: block;
+            max-width: 100%;
+            max-height: 82vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+            background: #fff;
+        }
+
+        #clbCaption {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #fff;
+            letter-spacing: .3px;
+        }
+
+        .clb-close {
+            position: absolute;
+            top: 14px;
+            right: 18px;
+            width: 42px;
+            height: 42px;
+            font-size: 28px;
+            line-height: 1;
+            color: #fff;
+            background: rgba(255, 255, 255, .12);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background .2s ease;
+        }
+
+        .clb-close:hover {
+            background: rgba(255, 255, 255, .25);
+        }
+
+        .clb-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+            color: #fff;
+            background: rgba(255, 255, 255, .12);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background .2s ease;
+        }
+
+        .clb-nav:hover {
+            background: rgba(255, 255, 255, .25);
+        }
+
+        .clb-prev { left: 14px; }
+        .clb-next { right: 14px; }
+
+        @media (max-width: 600px) {
+            .catalog-grid {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 10px;
+            }
+
+            .clb-nav {
+                width: 40px;
+                height: 40px;
+            }
         }
     </style>
+@endpush
+
+@push('scripts')
+    <script>
+        (function () {
+            var lb = document.getElementById('catalogLightbox');
+            if (!lb) return;
+
+            var thumbs = Array.prototype.slice.call(document.querySelectorAll('.catalog-thumb'));
+            if (!thumbs.length) return;
+
+            var imgEl = document.getElementById('clbImage');
+            var capEl = document.getElementById('clbCaption');
+            var total = thumbs.length;
+            var current = 0;
+
+            function show(i) {
+                current = (i + total) % total;
+                var thumb = thumbs[current];
+                imgEl.src = thumb.getAttribute('data-full');
+                imgEl.alt = (thumb.querySelector('img') || {}).alt || '';
+                capEl.textContent = 'Halaman ' + (current + 1) + ' / ' + total;
+                lb.classList.add('open');
+                lb.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function hide() {
+                lb.classList.remove('open');
+                lb.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+                imgEl.removeAttribute('src');
+            }
+
+            thumbs.forEach(function (thumb, i) {
+                thumb.addEventListener('click', function () { show(i); });
+            });
+
+            lb.querySelector('.clb-close').addEventListener('click', hide);
+            lb.querySelector('.clb-prev').addEventListener('click', function (e) {
+                e.stopPropagation();
+                show(current - 1);
+            });
+            lb.querySelector('.clb-next').addEventListener('click', function (e) {
+                e.stopPropagation();
+                show(current + 1);
+            });
+
+            // Klik area gelap (di luar gambar) untuk menutup
+            lb.addEventListener('click', function (e) {
+                if (e.target === lb) hide();
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (!lb.classList.contains('open')) return;
+                if (e.key === 'Escape') hide();
+                else if (e.key === 'ArrowLeft') show(current - 1);
+                else if (e.key === 'ArrowRight') show(current + 1);
+            });
+        })();
+    </script>
 @endpush
