@@ -79,6 +79,31 @@ class AdminItemSparepartFormTest extends TestCase
         $this->assertTrue($item->compatibleMotors()->where('motor_id', $motorItem->id)->exists());
     }
 
+    public function test_admin_item_edit_form_can_edit_price(): void
+    {
+        [$motor, $sparepart] = $this->seedTypes();
+
+        $item = Item::create([
+            'category_type_id' => $motor->id,
+            'name' => 'PORTER 125',
+            'slug' => 'porter-125',
+            'price' => 15000000,
+            'status' => 'active',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->admin())
+            ->get('/admin/items/' . $item->id . '/edit')
+            ->assertOk()
+            ->assertSee('Harga')
+            ->assertSee('Harga dasar produk');
+
+        Livewire::test(\App\Filament\Resources\ItemResource\Pages\EditItem::class, ['record' => $item->id])
+            ->assertFormSet([
+                'price' => 15000000,
+            ]);
+    }
+
     public function test_sparepart_detail_page_shows_part_number_and_catalog_pdf(): void
     {
         [$motor, $sparepart] = $this->seedTypes();

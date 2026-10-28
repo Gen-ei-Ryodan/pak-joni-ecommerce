@@ -194,6 +194,15 @@ class ItemResource extends Resource
                 ])->columns(2),
 
             Section::make('Harga')->schema([
+                Forms\Components\TextInput::make('price')
+                    ->label('Harga')
+                    ->numeric()
+                    ->prefix('Rp')
+                    ->minValue(0)
+                    ->step(0.01)
+                    ->default(fn ($record) => $record?->price ?? 0)
+                    ->helperText('Harga dasar produk. Harga akhir otomatis dihitung dari diskon bila diisi.'),
+
                 Forms\Components\Select::make('discount_type')
                     ->label('Tipe Diskon')
                     ->options(['fixed' => 'Fixed (Rp)', 'percent' => 'Persentase (%)'])
