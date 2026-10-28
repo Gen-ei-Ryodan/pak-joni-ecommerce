@@ -59,16 +59,9 @@ class MotorController
             $item->load(['compatibleMotors.brand', 'compatibleMotors.type']);
         }
 
-        // Sparepart bertipe item yang compatible dengan kendaraan ini (untuk tab sparepart).
-        $compatibleSpareparts = $item->type->slug === 'sparepart'
-            ? collect()
-            : $item->compatibleSpareparts()
-                ->where('status', 'active')
-                ->where('is_active', true)
-                ->with(['brand', 'category', 'colors'])
-                ->get();
-
         $tab = $request->tab === 'parts' && $item->type->slug !== 'sparepart' ? 'parts' : 'detail';
+
+        $partSearch = trim((string) ($request->q ?? $request->search ?? ''));
 
         // Filter parts by group
         $partGroup = $request->part_group;
@@ -85,6 +78,30 @@ class MotorController
         }
 
         $parts = $partsQuery->with(['category', 'defaultVariant'])->paginate(12);
+
+        // Sparepart yang kompatibel dengan motor ini (untuk tab sparepart).
+        $compatibleSpareparts = $item->type->slug === 'sparepart'
+            ? collect()
+            : $item->compatibleSpareparts()
+                ->where('status', 'active')
+                ->where('is_active', true)
+                ->when($partSearch !== '', function ($query) use ($partSearch) {
+                    $query->where(function ($q2) use ($partSearch) {
+                        $q2->where('name', 'like', "%{$partSearch}%")
+                           ->orWhere('part_number', 'like', "%{$partSearch}%")
+                           ->orWhere('short_description', 'like', "%{$partSearch}%");
+                    });
+                })
+                ->with(['brand', 'category', 'colors'])
+                ->get();
+
+        // AJAX request untuk tab parts: kembalikan partial tabel saja.
+        if ($request->ajax() && $tab === 'parts') {
+            return response()->json([
+                'html' => view('buyer.motors.partials.parts-table', compact('item', 'compatibleSpareparts'))->render(),
+                'count' => $compatibleSpareparts->count(),
+            ]);
+        }
 
         // Related items
         $relatedItems = Item::with(['brand', 'type', 'colors'])
@@ -105,6 +122,6 @@ class MotorController
         $selectedPartGroup = $partGroup;
         $partGroups = $groups->keys();
 
-        return view('buyer.motors.show', compact('item', 'tab', 'parts', 'partsGrouped', 'selectedPartGroup', 'partGroups', 'relatedItems', 'specsGrouped', 'compatibleSpareparts'));
+        return view('buyer.motors.show', array_merge(compact('item', 'tab', 'parts', 'partsGrouped', 'selectedPartGroup', 'partGroups', 'relatedItems', 'specsGrouped', 'compatibleSpareparts'), ['q' => $partSearch, 'partSearch' => $partSearch]));
     }
 }

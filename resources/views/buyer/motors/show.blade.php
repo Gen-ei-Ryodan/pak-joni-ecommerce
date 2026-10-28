@@ -254,54 +254,14 @@
                 <div class="parts-tab-section">
                     <p style="color:var(--muted);margin-bottom:20px;text-align:center;">Sparepart yang kompatibel dengan <strong>{{ $item->name }}</strong></p>
 
-                    <table class="part-table">
-                        <thead>
-                            <tr>
-                                <th class="part-table-no">No</th>
-                                <th class="part-table-name">Part Number</th>
-                                <th class="part-table-name">Nama Sparepart</th>
-                                <th class="part-table-price">SRP (Harga Rp)</th>
-                                <th class="part-table-stock">Status Stok</th>
-                                <th class="part-table-action">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($compatibleSpareparts ?? [] as $index => $sp)
-                                @php $spTotalStock = $sp->colors->sum('stock'); @endphp
-                                <tr>
-                                    <td class="part-table-no">{{ $index + 1 }}</td>
-                                    <td class="part-table-name">{{ $sp->part_number ?? '-' }}</td>
-                                    <td class="part-table-name">{{ $sp->name }}</td>
-                                    <td class="part-table-price">Rp {{ number_format($sp->price ?? 0, 0, ',', '.') }}</td>
-                                    <td class="part-table-stock">
-                                        <span class="stock-tag {{ $spTotalStock > 0 ? 'ready' : 'indent' }}">{{ $spTotalStock > 0 ? 'Ready Stock' : 'Habis' }}</span>
-                                    </td>
-                                    <td class="part-table-action">
-                                        @php
-                                            $firstColor = $sp->colors->first();
-                                        @endphp
-                                        @if($firstColor)
-                                            <form method="post" action="{{ route('buyer.cart.store') }}" style="display:inline;">
-                                                @csrf
-                                                <input type="hidden" name="itemable_type" value="item_color">
-                                                <input type="hidden" name="itemable_id" value="{{ $firstColor->id }}">
-                                                <input type="hidden" name="quantity" value="1">
-                                                <button type="submit" class="btn btn-sm btn-primary" style="padding:6px 14px;font-size:12px;">
-                                                    + Keranjang
-                                                </button>
-                                            </form>
-                                        @else
-                                            <span style="color:var(--muted);font-size:12px;">-</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td class="part-table-no" colspan="6">Belum ada sparepart tersedia untuk motor ini.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                    <form id="partsSearchForm" method="get" action="{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts']) }}" style="max-width:520px;margin:0 auto 20px;display:flex;gap:8px;">
+                        <input type="text" id="partsSearchInput" name="q" class="form-input" placeholder="Cari part number / nama sparepart..." value="{{ $q ?? '' }}" autocomplete="off" style="flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-family:inherit;font-size:13px;">
+                        <button type="submit" class="btn btn-primary" style="padding:10px 18px;border-radius:10px;">Cari</button>
+                    </form>
+
+                    <div id="partsTableWrapper" style="transition:opacity .2s;">
+                        @include('buyer.motors.partials.parts-table')
+                    </div>
                 </div>
             @endif
         </div>
@@ -728,5 +688,50 @@
                 document.addEventListener('touchend', () => { dragging = false; });
             })();
         </script>
+    @endpush
+@endif
+
+@if($tab === 'parts')
+    @push('scripts')
+    <script>
+    (function() {
+        const form = document.getElementById('partsSearchForm');
+        const input = document.getElementById('partsSearchInput');
+        const wrapper = document.getElementById('partsTableWrapper');
+        if (!input || !wrapper) return;
+        const baseUrl = '{{ route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug, 'tab' => 'parts']) }}';
+        let timer = null;
+        function doSearch() {
+            const q = input.value.trim();
+            const url = new URL(baseUrl, window.location.origin);
+            url.searchParams.set('_ts', Date.now());
+            if (q) url.searchParams.set('q', q);
+            wrapper.style.opacity = '0.5';
+            fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, cache: 'no-store' })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    wrapper.innerHTML = data.html;
+                    wrapper.style.opacity = '1';
+                })
+                .catch(function () {
+                    wrapper.style.opacity = '1';
+                    if (form) form.submit();
+                });
+        }
+        function schedule() {
+            clearTimeout(timer);
+            timer = setTimeout(doSearch, 250);
+        }
+        input.addEventListener('input', schedule);
+        input.addEventListener('keyup', schedule);
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                clearTimeout(timer);
+                doSearch();
+            });
+        }
+    })();
+    </script>
     @endpush
 @endif
