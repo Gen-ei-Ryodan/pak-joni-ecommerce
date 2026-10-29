@@ -332,6 +332,84 @@ class OcbcPaymentTest extends TestCase
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => 'pending']);
     }
 
+    public function test_generate_qr_sets_three_minute_validity_period(): void
+    {
+        $order = $this->makeOrder(500000, 'VAL01');
+        $this->fakeOcbc();
+
+        $result = app(OcbcPaymentService::class)->generateQr($order);
+
+        $body = json_decode($this->sentRequest('qr-mpm-generate')->body(), true);
+        $this->assertArrayHasKey('validityPeriod', $body);
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $body['validityPeriod']);
+
+        $this->assertNotNull($result['expires_at']);
+        $this->assertEqualsWithDelta(180, strtotime($result['expires_at']) - time(), 10);
+        $this->assertEqualsWithDelta(strtotime($result['expires_at']), strtotime($body['validityPeriod']), 1);
+
+        $payment = $order->payment()->firstOrFail();
+        $this->assertSame($result['expires_at'], $payment->payload['expires_at']);
+
+        // QR yang masih berlaku dipakai ulang, bukan generate baru.
+        $again = app(OcbcPaymentService::class)->generateQr($order);
+        $this->assertSame($result['expires_at'], $again['expires_at']);
+        $this->assertSame(1, $this->generateCallCount());
+    }
+
+    public function test_expired_cached_qr_is_regenerated_with_fresh_expiry(): void
+    {
+        $order = $this->makeOrder(500000, 'VAL02');
+        $this->fakeOcbc();
+
+        $first = app(OcbcPaymentService::class)->generateQr($order);
+
+        $payment = $order->payment()->firstOrFail();
+        $payload = $payment->payload;
+        $payload['expires_at'] = now()->subMinute()->toIso8601String();
+        $payment->update(['payload' => $payload]);
+
+        $second = app(OcbcPaymentService::class)->generateQr($order);
+
+        $this->assertSame(2, $this->generateCallCount());
+        $this->assertEqualsWithDelta(180, strtotime($first['expires_at']) - time(), 10);
+        $this->assertEqualsWithDelta(180, strtotime($second['expires_at']) - time(), 10);
+        $this->assertSame($second['expires_at'], $order->payment()->firstOrFail()->payload['expires_at']);
+    }
+
+    public function test_status_endpoint_exposes_qr_expiry(): void
+    {
+        $order = $this->makeOrder(500000, 'VAL03');
+        $this->fakeOcbc();
+        $result = app(OcbcPaymentService::class)->generateQr($order);
+
+        $this->actingAs($order->user)
+            ->getJson('/payment/ocbc/status/'.$order->id)
+            ->assertOk()
+            ->assertJsonPath('paid', false)
+            ->assertJsonPath('expires_at', $result['expires_at']);
+    }
+
+    public function test_qr_endpoint_returns_expiry_together_with_qr_content(): void
+    {
+        $order = $this->makeOrder(500000, 'VAL04');
+        $this->fakeOcbc();
+
+        $response = $this->actingAs($order->user)
+            ->getJson('/payment/ocbc/qr/'.$order->id);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure(['qr_content', 'reference_no', 'expires_at']);
+
+        $this->assertEqualsWithDelta(180, strtotime($response->json('expires_at')) - time(), 10);
+        $this->assertSame($response->json('expires_at'), $order->payment()->firstOrFail()->payload['expires_at']);
+    }
+
+    private function generateCallCount(): int
+    {
+        return Http::recorded(fn (Request $request) => str_contains($request->url(), 'qr-mpm-generate'))->count();
+    }
+
     private function makeOrder(float $total, string $suffix): Order
     {
         $user = User::factory()->create(['role' => 'buyer']);

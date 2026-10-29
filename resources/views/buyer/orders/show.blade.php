@@ -27,6 +27,9 @@
                 <div style="color:var(--accent);font-weight:700;font-size:22px;margin-top:8px;">Rp {{ number_format((float) $order->total, 0, ',', '.') }}</div>
 
                 <div id="qris-payment" style="margin-top:16px;text-align:center;">
+                    <div id="qris-countdown" style="display:none;margin-bottom:10px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid var(--line);font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:1px;">
+                        Sisa Waktu Pembayaran: <span id="qris-countdown-value">03:00</span>
+                    </div>
                     <div id="qris-code" style="background:#fff;padding:12px;width:264px;min-height:264px;margin:0 auto;display:flex;align-items:center;justify-content:center;"></div>
                     <div id="qris-hint" class="muted" style="font-size:12px;margin-top:10px;">Scan QRIS untuk membayar.</div>
                 </div>
@@ -238,10 +241,61 @@
         var checkStatusUrl = '{{ route('payment.ocbc.status', $order) }}';
         var isPaying = false;
         var pollTimer = null;
+        var countTimer = null;
+        var countExpired = false;
 
         function setPayStatus(text) {
             var hint = document.getElementById('qris-hint');
             if (hint) hint.textContent = text;
+        }
+
+        function pad(n) {
+            return (n < 10 ? '0' : '') + n;
+        }
+
+        function resetCountdown() {
+            if (countTimer) {
+                clearTimeout(countTimer);
+                countTimer = null;
+            }
+            countExpired = false;
+            var box = document.getElementById('qris-countdown');
+            if (box) {
+                box.style.display = 'none';
+                box.style.color = '';
+                box.style.borderColor = '';
+            }
+        }
+
+        function startCountdown(expiresAt) {
+            resetCountdown();
+
+            var parsed = expiresAt ? Date.parse(expiresAt) : NaN;
+            // Fallback 3 menit kalau server tidak mengirim expiry.
+            var deadline = isNaN(parsed) ? Date.now() + 180000 : parsed;
+            var box = document.getElementById('qris-countdown');
+            var valueEl = document.getElementById('qris-countdown-value');
+            if (box) box.style.display = 'block';
+
+            function tick() {
+                var left = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+                if (valueEl) valueEl.textContent = pad(Math.floor(left / 60)) + ':' + pad(left % 60);
+
+                if (left <= 0) {
+                    countExpired = true;
+                    stopPolling();
+                    if (box) {
+                        box.style.color = '#ef4444';
+                        box.style.borderColor = 'rgba(239,68,68,0.4)';
+                    }
+                    setPayStatus('QR Code Kadaluarsa / Expired. Pembayaran tidak dapat diproses lagi.');
+                    return;
+                }
+
+                countTimer = window.setTimeout(tick, 1000);
+            }
+
+            tick();
         }
 
         function openQrModal() {
@@ -274,7 +328,7 @@
                 })
                 .then(function(data) {
                     if (data && data.success && data.qr_content) {
-                        callback(null, data.qr_content);
+                        callback(null, data.qr_content, data.expires_at);
                     } else {
                         callback((data && data.error) || 'Gagal membuat QR pembayaran.');
                     }
@@ -289,12 +343,14 @@
             var attempts = 0;
 
             function poll() {
+                if (countExpired) return;
                 attempts++;
                 setPayStatus('Memeriksa status pembayaran... (' + attempts + '/' + maxAttempts + ')');
 
                 fetch(checkStatusUrl)
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
+                        if (countExpired) return;
                         if (data.paid || data.status === 'paid') {
                             stopPolling();
                             setPayStatus('Pembayaran berhasil! Memuat halaman...');
@@ -312,6 +368,7 @@
                         }
                     })
                     .catch(function() {
+                        if (countExpired) return;
                         if (attempts < maxAttempts) {
                             pollTimer = setTimeout(poll, 5000);
                         } else {
@@ -371,6 +428,7 @@
         function payWithOcbc() {
             if (isPaying) return;
             isPaying = true;
+            resetCountdown();
 
             var allPayBtns = document.querySelectorAll('#pay-button, #pay-button-sidebar');
             allPayBtns.forEach(function(b) {
@@ -388,7 +446,7 @@
             if (downloadBtn) downloadBtn.style.display = 'none';
             setPayStatus('Membuat QR pembayaran...');
 
-            getQr(function(error, qrContent) {
+            getQr(function(error, qrContent, expiresAt) {
                 if (error) {
                     if (qrArea) qrArea.style.display = 'none';
                     resetPayButtons();
@@ -422,6 +480,7 @@
                         modalPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                     resetPayButtons();
+                    startCountdown(expiresAt);
                     startPolling(60);
                 });
             });

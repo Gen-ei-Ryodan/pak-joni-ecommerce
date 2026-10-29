@@ -26,7 +26,10 @@
                 </div>
 
                 @if($qrContent)
-                    <div id="qris-code" style="background:#fff;padding:16px;width:272px;min-height:272px;margin:20px auto 12px;border-radius:12px;display:flex;align-items:center;justify-content:center;"></div>
+                    <div id="qris-countdown" style="margin:20px auto 0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid var(--line);font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:1px;">
+                        Sisa Waktu Pembayaran: <span id="qris-countdown-value">03:00</span>
+                    </div>
+                    <div id="qris-code" style="background:#fff;padding:16px;width:272px;min-height:272px;margin:12px auto;border-radius:12px;display:flex;align-items:center;justify-content:center;"></div>
                     <div id="payment-hint" class="muted" style="font-size:12px;line-height:1.6;">Menunggu konfirmasi pembayaran...</div>
                 @else
                     <div style="margin-top:20px;color:#ef4444;font-size:13px;">{{ $qrError ?? 'QR pembayaran belum tersedia.' }}</div>
@@ -48,7 +51,49 @@
                 var qrContent = @json($qrContent);
                 var statusUrl = @json(route('payment.ocbc.status', $order));
                 var orderUrl = @json(route('buyer.orders.show', $order));
+                var expiresAt = @json($expiresAt ?? null);
                 var attempts = 0;
+                var expired = false;
+                var pollTimer = null;
+                var deadline = parseDeadline(expiresAt);
+
+                function parseDeadline(value) {
+                    var parsed = value ? Date.parse(value) : NaN;
+                    // Fallback: 3 menit dari sekarang kalau server tidak kirim expiry.
+                    return isNaN(parsed) ? Date.now() + 180000 : parsed;
+                }
+
+                function pad(n) {
+                    return (n < 10 ? '0' : '') + n;
+                }
+
+                function startCountdown() {
+                    var valueEl = document.getElementById('qris-countdown-value');
+                    var box = document.getElementById('qris-countdown');
+
+                    function tick() {
+                        var left = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+                        if (valueEl) valueEl.textContent = pad(Math.floor(left / 60)) + ':' + pad(left % 60);
+
+                        if (left <= 0) {
+                            expired = true;
+                            if (pollTimer) {
+                                clearTimeout(pollTimer);
+                                pollTimer = null;
+                            }
+                            if (box) {
+                                box.style.color = '#ef4444';
+                                box.style.borderColor = 'rgba(239,68,68,0.4)';
+                            }
+                            setHint('QR Code Kadaluarsa / Expired. Pembayaran tidak dapat diproses lagi.');
+                            return;
+                        }
+
+                        window.setTimeout(tick, 1000);
+                    }
+
+                    tick();
+                }
 
                 function fail() {
                     var qrElement = document.getElementById('qris-code');
@@ -62,11 +107,17 @@
                     if (hint) hint.textContent = text;
                 }
 
+                function schedule(fn, ms) {
+                    pollTimer = window.setTimeout(fn, ms);
+                }
+
                 function checkStatus() {
+                    if (expired) return;
                     attempts++;
                     fetch(statusUrl)
                         .then(function (response) { return response.json(); })
                         .then(function (data) {
+                            if (expired) return;
                             if (data.paid || data.status === 'paid') {
                                 setHint('Pembayaran berhasil. Mengalihkan...');
                                 window.location.href = orderUrl;
@@ -77,9 +128,12 @@
                                 return;
                             }
                             setHint('Menunggu konfirmasi pembayaran... (' + attempts + ')');
-                            window.setTimeout(checkStatus, 5000);
+                            schedule(checkStatus, 5000);
                         })
-                        .catch(function () { window.setTimeout(checkStatus, 8000); });
+                        .catch(function () {
+                            if (expired) return;
+                            schedule(checkStatus, 8000);
+                        });
                 }
 
                 function render() {
@@ -104,6 +158,7 @@
                     checkStatus();
                 }
 
+                startCountdown();
                 window.qrCodeReady(render);
             })();
         </script>

@@ -87,12 +87,16 @@ class OcbcController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        $expiresAt = data_get($order->payment, 'payload.expires_at');
+
         if ($order->payment_status === 'paid') {
-            return response()->json(['paid' => true, 'status' => 'paid']);
+            return response()->json(['paid' => true, 'status' => 'paid', 'expires_at' => $expiresAt]);
         }
 
         try {
-            return response()->json($this->paymentService->query($order));
+            return response()->json($this->paymentService->query($order) + [
+                'expires_at' => $expiresAt,
+            ]);
         } catch (\Throwable $e) {
             Log::error('OCBC payment status failed', [
                 'order_id' => $order->id,
@@ -103,6 +107,7 @@ class OcbcController extends Controller
             return response()->json([
                 'paid' => false,
                 'status' => 'pending',
+                'expires_at' => $expiresAt,
             ]);
         }
     }

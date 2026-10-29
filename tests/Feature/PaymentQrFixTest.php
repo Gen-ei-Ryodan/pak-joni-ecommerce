@@ -12,6 +12,37 @@ class PaymentQrFixTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_countdown_timer_shows_on_finish_page_and_order_modal(): void
+    {
+        $user = User::factory()->create(['role' => 'buyer']);
+        $order = $this->makeOrder($user);
+        $expiresAt = now()->addMinutes(3)->toIso8601String();
+
+        $this->mock(OcbcPaymentService::class)
+            ->shouldReceive('generateQr')
+            ->andReturn(['success' => true, 'qr_content' => '000201FIXTEST', 'expires_at' => $expiresAt]);
+
+        $this->actingAs($user);
+
+        $finish = $this->get('/checkout/finish/'.$order->id);
+        $finish->assertOk();
+        $finish->assertSee('id="qris-countdown"', false);
+        $finish->assertSee('Sisa Waktu Pembayaran');
+        $finish->assertSee('QR Code Kadaluarsa / Expired. Pembayaran tidak dapat diproses lagi.');
+        // Deadline dari server dipakai countdown, bukan tebak-tebakan frontend.
+        $finish->assertSee($expiresAt);
+
+        $detail = $this->get('/my/orders/'.$order->order_no);
+        $detail->assertOk();
+        $detail->assertSee('Sisa Waktu Pembayaran');
+        $detail->assertSee('QR Code Kadaluarsa / Expired. Pembayaran tidak dapat diproses lagi.');
+        $this->assertSame(
+            1,
+            substr_count($detail->getContent(), 'id="qris-countdown"'),
+            'countdown hanya boleh ada satu (di modal QRIS)'
+        );
+    }
+
     private function makeOrder(User $user): Order
     {
         return Order::create([

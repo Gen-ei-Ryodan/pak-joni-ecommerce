@@ -13,6 +13,12 @@ use RuntimeException;
 
 class OcbcPaymentService
 {
+    /**
+     * Masa berlaku QRIS (menit). Lewat batas ini QR dianggap kadaluarsa dan
+     * generate ulang akan membuat QR baru (bukan memakai cache lama).
+     */
+    public const QR_VALIDITY_MINUTES = 3;
+
     public function __construct(
         protected OrderService $orderService,
     ) {}
@@ -25,14 +31,16 @@ class OcbcPaymentService
         );
 
         $payload = $payment->payload ?? [];
-        if (! empty($payload['qr_content']) && $payment->provider === 'ocbc') {
+        if (! empty($payload['qr_content']) && $payment->provider === 'ocbc' && ! $this->qrExpired($payload)) {
             return [
                 'success' => true,
                 'qr_content' => $payload['qr_content'],
                 'reference_no' => $payment->provider_reference,
+                'expires_at' => $payload['expires_at'] ?? null,
             ];
         }
 
+        $expiresAt = now()->addMinutes(self::QR_VALIDITY_MINUTES);
         $path = '/v2.0/qr/qr-mpm-generate';
         $body = [
             'merchantId' => $this->merchantId(),
@@ -42,6 +50,7 @@ class OcbcPaymentService
                 'value' => number_format((float) $order->total, 2, '.', ''),
                 'currency' => 'IDR',
             ],
+            'validityPeriod' => $expiresAt->format('Y-m-d\TH:i:sP'),
             'additionalInfo' => [
                 'memberBank' => $this->memberBank(),
             ],
@@ -67,6 +76,7 @@ class OcbcPaymentService
                 'external_id' => $externalId,
                 'merchant_id' => $data['additionalInfo']['merchantId'] ?? $body['merchantId'],
                 'terminal_id' => $data['terminalId'] ?? $body['terminalId'],
+                'expires_at' => $expiresAt->toIso8601String(),
                 'generated_response' => $data,
             ]),
         ]);
@@ -75,7 +85,18 @@ class OcbcPaymentService
             'success' => true,
             'qr_content' => $data['qrContent'],
             'reference_no' => $data['referenceNo'] ?? null,
+            'expires_at' => $expiresAt->toIso8601String(),
         ];
+    }
+
+    /**
+     * QR kadaluarsa kalau expires_at tidak ada (payload lama) atau sudah lewat.
+     */
+    private function qrExpired(array $payload): bool
+    {
+        $expiresAt = $payload['expires_at'] ?? null;
+
+        return ! is_string($expiresAt) || strtotime($expiresAt) === false || strtotime($expiresAt) <= time();
     }
 
     public function query(Order $order): array

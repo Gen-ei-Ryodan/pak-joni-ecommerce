@@ -593,8 +593,11 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
 
         $qrContent = null;
         $qrError = null;
+        $expiresAt = null;
         try {
-            $qrContent = $this->ocbcPaymentService->generateQr($order)['qr_content'] ?? null;
+            $qr = $this->ocbcPaymentService->generateQr($order);
+            $qrContent = $qr['qr_content'] ?? null;
+            $expiresAt = $qr['expires_at'] ?? null;
         } catch (\Throwable $e) {
             Log::error('OCBC QR generation failed on checkout finish', [
                 'order_id' => $order->id,
@@ -604,7 +607,7 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
             $qrError = 'QR pembayaran belum dapat dibuat. Silakan coba dari halaman detail pesanan.';
         }
 
-        return view('buyer.checkout.finish', compact('order', 'qrContent', 'qrError'));
+        return view('buyer.checkout.finish', compact('order', 'qrContent', 'qrError', 'expiresAt'));
     }
 
     /**
