@@ -50,7 +50,6 @@ class OcbcPaymentService
                 'value' => number_format((float) $order->total, 2, '.', ''),
                 'currency' => 'IDR',
             ],
-            'validityPeriod' => $expiresAt->format('Y-m-d\TH:i:sP'),
             'additionalInfo' => [
                 'memberBank' => $this->memberBank(),
             ],

@@ -340,12 +340,11 @@ class OcbcPaymentTest extends TestCase
         $result = app(OcbcPaymentService::class)->generateQr($order);
 
         $body = json_decode($this->sentRequest('qr-mpm-generate')->body(), true);
-        $this->assertArrayHasKey('validityPeriod', $body);
-        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $body['validityPeriod']);
+        // Yokke SNAP schema rejects 'validityPeriod' in request body with 40047A1 Validation Failed
+        $this->assertArrayNotHasKey('validityPeriod', $body);
 
         $this->assertNotNull($result['expires_at']);
         $this->assertEqualsWithDelta(180, strtotime($result['expires_at']) - time(), 10);
-        $this->assertEqualsWithDelta(strtotime($result['expires_at']), strtotime($body['validityPeriod']), 1);
 
         $payment = $order->payment()->firstOrFail();
         $this->assertSame($result['expires_at'], $payment->payload['expires_at']);
