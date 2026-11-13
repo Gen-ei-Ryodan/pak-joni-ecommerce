@@ -18,7 +18,7 @@
                 <td class="part-table-name">{{ $sp->name }}</td>
                 <td class="part-table-price">Rp {{ number_format($sp->price ?? 0, 0, ',', '.') }}</td>
                 <td class="part-table-stock">
-                    <span class="stock-tag {{ $spTotalStock > 0 ? 'ready' : 'indent' }}">{{ $spTotalStock > 0 ? 'Ready Stock' : 'Habis' }}</span>
+                    <span class="stock-tag {{ $spTotalStock > 0 ? 'ready' : 'indent' }}">{{ $spTotalStock > 0 ? 'Ready Stock' : 'Indent' }}</span>
                 </td>
                 <td class="part-table-action">
                     @php
