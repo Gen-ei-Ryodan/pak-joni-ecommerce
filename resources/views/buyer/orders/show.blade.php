@@ -7,7 +7,23 @@
 @endpush
 
 @section('dashboard-content')
-    @if($order->status === 'unpaid' && $order->payment_status === 'pending')
+    @if($order->isCredit() && $order->status !== 'cancelled' && ! $order->creditApplication?->isCompleted())
+        <div class="payment-banner">
+            <div>
+                <div style="font-weight:600;font-size:14px;">Pembelian Kredit</div>
+                <div class="muted" style="margin-top:4px;font-size:13px;">
+                    @if($order->creditApplication)
+                        Tahap saat ini:
+                        <strong>{{ \App\Models\CreditApplication::stageLabelStatic($order->creditApplication->stage) }}</strong>
+                        — {{ \App\Models\CreditApplication::stageDescription($order->creditApplication->stage) }}.
+                    @else
+                        Pengajuan kredit sedang diproses oleh dealer.
+                    @endif
+                    DP dibayarkan ke dealer setelah nominal ditentukan leasing, pelunasan dibayarkan oleh leasing.
+                </div>
+            </div>
+        </div>
+    @elseif($order->status === 'unpaid' && $order->payment_status === 'pending')
         <div class="payment-banner" id="payment-banner">
             <div>
                 <div style="font-weight:600;font-size:14px;">Menunggu Pembayaran</div>
@@ -171,6 +187,70 @@
                 </div>
             </div>
 
+            {{-- Timeline Kredit (khusus pembelian kredit) --}}
+            @if($order->isCredit() && $creditTimeline)
+                <div class="sidebar-card">
+                    <div class="card-title-sm">Timeline Kredit</div>
+                    @if($order->creditApplication)
+                        <div class="muted" style="font-size:12px;margin-bottom:8px;">
+                            No. Pengajuan: <span style="font-family:var(--mono);">{{ $order->creditApplication->application_no }}</span>
+                            @if($order->creditApplication->leasing_name)
+                                <br>Leasing: {{ $order->creditApplication->leasing_name }}
+                            @endif
+                        </div>
+                    @endif
+                    <div class="timeline-modern">
+                        @php($hasCurrentCredit = false)
+                        @foreach($creditTimeline as $i => $t)
+                            @php($isCurrentCredit = !$hasCurrentCredit && !$t['done'] && $t['current'])
+                            @php($hasCurrentCredit = $hasCurrentCredit || $isCurrentCredit)
+                            <div class="timeline-step">
+                                <div class="timeline-indicator">
+                                    <div class="timeline-dot {{ $t['done'] ? 'done' : ($isCurrentCredit ? 'current' : '') }}"></div>
+                                    @if(!$loop->last)
+                                        <div class="timeline-line {{ $t['done'] ? 'done' : 'pending' }}"></div>
+                                    @endif
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-label {{ !$t['done'] ? 'pending' : '' }}">{{ $t['label'] }}</div>
+                                    <div class="muted" style="font-size:11px;line-height:1.5;">{{ $t['description'] }}</div>
+                                    @if($t['time'])
+                                        <div class="timeline-time">{{ $t['time']->format('d M Y, H:i') }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if($order->creditApplication)
+                        <div style="margin-top:10px;padding:8px 10px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:8px;font-size:12px;display:grid;gap:4px;">
+                            <div class="summary-row" style="margin:0;">
+                                <span style="color:var(--muted);">DP (customer)</span>
+                                <span>
+                                    @if($order->creditApplication->dpPayment())
+                                        Rp {{ number_format((float) $order->creditApplication->dpPayment()->amount, 0, ',', '.') }} ✓
+                                    @elseif($order->creditApplication->dp_amount > 0)
+                                        Rp {{ number_format((float) $order->creditApplication->dp_amount, 0, ',', '.') }} — menunggu
+                                    @else
+                                        Menentukan leasing
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="summary-row" style="margin:0;">
+                                <span style="color:var(--muted);">Pelunasan (leasing)</span>
+                                <span>
+                                    @if($order->creditApplication->pelunasanPayment())
+                                        Rp {{ number_format((float) $order->creditApplication->pelunasanPayment()->amount, 0, ',', '.') }} ✓
+                                    @else
+                                        Menunggu leasing
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             {{-- Payment Summary --}}
             <div class="sidebar-card">
                 <div class="card-title-sm">Payment Summary</div>
@@ -207,7 +287,16 @@
 
             {{-- Action Buttons --}}
             <div class="sidebar-card" style="display:grid;gap:8px;">
-                @if($order->status === 'unpaid' && $order->payment_status === 'pending')
+                @if($order->isCredit() && $order->status === 'unpaid')
+                    <div class="muted" style="font-size:13px;text-align:center;line-height:1.6;">
+                        Menunggu pembayaran DP oleh customer
+                        @if($order->creditApplication?->dp_amount > 0)
+                            (Rp {{ number_format((float) $order->creditApplication->dp_amount, 0, ',', '.') }})
+                        @endif
+                        — dicatat oleh dealer.
+                    </div>
+                    <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Continue Shopping</a>
+                @elseif(! $order->isCredit() && $order->status === 'unpaid' && $order->payment_status === 'pending')
                     <button id="pay-button-sidebar" class="action-btn-primary" type="button">Bayar Sekarang</button>
                     <div class="muted" style="font-size:12px;text-align:center;">QRIS dibuka di pop-up pembayaran.</div>
                     <a class="action-btn-secondary" href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}">Continue Shopping</a>

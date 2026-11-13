@@ -54,6 +54,46 @@
 
                     <div style="height:14px;"></div>
 
+                    <div style="font-weight:600;margin-bottom:8px;">Metode Pembayaran</div>
+                    <div style="display:grid;gap:8px;margin-bottom:14px;">
+                        <label class="panel" style="padding:10px 12px;display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
+                            <input type="radio" name="payment_method" id="pm-cash" value="qris" checked style="margin-top:3px;">
+                            <div>
+                                <div style="font-weight:600;">Tunai / QRIS</div>
+                                <div class="muted" style="font-size:12px;margin-top:2px;">Bayar penuh sekarang melalui QRIS.</div>
+                            </div>
+                        </label>
+
+                        @if(!empty($canCredit))
+                            <label class="panel" style="padding:10px 12px;display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
+                                <input type="radio" name="payment_method" id="pm-credit" value="credit" style="margin-top:3px;">
+                                <div>
+                                    <div style="font-weight:600;">Kredit (Leasing)</div>
+                                    <div class="muted" style="font-size:12px;margin-top:2px;">
+                                        Ajukan pembelian kredit. DP dibayarkan ke dealer setelah nominal DP ditentukan
+                                        leasing (PO), pelunasan dibayarkan oleh leasing ke dealer.
+                                    </div>
+                                </div>
+                            </label>
+                            <div id="credit-note" style="display:none;margin-top:2px;padding:8px 10px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:8px;font-size:12px;color:#1d4ed8;">
+                                Tahapan kredit: SPK → Survey → Persetujuan Survey → Persiapan Unit → Pembayaran (DP + Pelunasan) → Pengambilan Unit.
+                                Nominal DP mengikuti keputusan leasing (bukan DP indent 50%).
+                            </div>
+                            <script>
+                                (function () {
+                                    var creditNote = document.getElementById('credit-note');
+                                    var cashRadio = document.getElementById('pm-cash');
+                                    var creditRadio = document.getElementById('pm-credit');
+                                    if (!creditNote || !cashRadio || !creditRadio) return;
+                                    function sync() { creditNote.style.display = creditRadio.checked ? 'block' : 'none'; }
+                                    cashRadio.addEventListener('change', sync);
+                                    creditRadio.addEventListener('change', sync);
+                                    sync();
+                                })();
+                            </script>
+                        @endif
+                    </div>
+
                     <form method="post" action="{{ route('buyer.checkout.place') }}">
                         @csrf
                         <button class="btn btn-primary" type="submit">Place Order</button>
@@ -72,6 +112,7 @@
                                 <div style="font-weight:600;margin-bottom:4px;">Indent Order - DP 50%</div>
                                 <div>DP (dibayar sekarang): <span style="font-family:var(--mono);">{{ number_format($dpAmount, 2, '.', ',') }}</span></div>
                                 <div>Sisa (saat barang ready): <span style="font-family:var(--mono);">{{ number_format($remainingAmount, 2, '.', ',') }}</span></div>
+                                <div style="margin-top:4px;font-style:italic;">Berlaku untuk pembayaran tunai — untuk kredit, DP mengikuti nominal leasing.</div>
                             </div>
                         @endif
                         @if(isset($itemDiscount) && $itemDiscount > 0)

@@ -55,3 +55,14 @@
 
 ### 9. Keamanan
 *   Kata sandi aman, CSRF protection, validasi input, hindari XSS dengan Blade escaping.
+
+### 10. Pembelian Kredit (Leasing)
+*   **Opsi kredit hanya untuk kendaraan:** pilihan "Kredit (Leasing)" hanya tampil bila keranjang memuat minimal satu `ItemColor` (motor/mobil/ATV). Cart sparepart-only → `payment_method=credit` ditolak validasi.
+*   **Dua pihak pembayar:** DP dibayarkan **customer → dealer**; pelunasan dibayarkan **leasing → dealer**. Keduanya dicatat terpisah di `credit_payments` (maksimal masing-masing satu kali per pengajuan — unique DB).
+*   **PO leasing menentukan nominal DP:** `dp_amount` diisi via aksi "Catat PO Leasing" (nominal > 0 dan ≤ total order); PO terkunci setelah DP tercatat.
+*   **Stok berkurang saat DP tercatat:** pencatatan DP menandai order `paid` via `OrderService::markAsPaid` (stok berkurang saat itu juga).
+*   **Tahap "Pembayaran" selesai hanya bila DP dan pelunasan sama-sama tercatat** (`payment_at` terisi) — order `paid` saja tidak menyelesaikan tahap.
+*   **Timeline 6 tahap berurutan (tidak boleh melompat):** SPK → Survey → Persetujuan Survey → Persiapan Unit → Pembayaran → Pengambilan Unit. Melanggar urutan melempar `CreditException`.
+*   **Persetujuan survey ditolak** → pengajuan `rejected`, semua aksi lanjutan ditolak.
+*   **Pengambilan unit** (konfirmasi "Barang Sudah Diterima" atau aksi admin) menyelesaikan pengajuan (`completed`) dan mengubah order ke `completed` bila sudah `shipped`/`processing` (ambil di dealer).
+*   **Akses leasing:** saat ini seluruh tahap dikelola **admin dealer** (`config/leasing.php` → `access_mode = 'admin'`); keputusan login portal leasing masih tertunda (stub `portal` disiapkan).

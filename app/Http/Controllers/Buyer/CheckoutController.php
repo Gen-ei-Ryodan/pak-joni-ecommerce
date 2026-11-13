@@ -12,6 +12,7 @@ use App\Models\OrderItem;
 use App\Models\PartVariant;
 use App\Models\Voucher;
 use App\Services\BiteshipService;
+use App\Services\CreditService;
 use App\Services\OcbcPaymentService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
@@ -26,6 +27,7 @@ class CheckoutController extends Controller
         private PaymentService $paymentService,
         private OcbcPaymentService $ocbcPaymentService,
         private BiteshipService $biteshipService,
+        private CreditService $creditService,
     ) {}
 
     public function address(Request $request)
@@ -251,6 +253,9 @@ class CheckoutController extends Controller
 
         $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
 
+        // Opsi kredit (leasing) hanya untuk pembelian kendaraan (motor/mobil/ATV).
+        $canCredit = $this->hasVehicleItems($cart);
+
         // Get applied voucher from session
         $voucherSession = $request->session()->get('checkout.voucher');
         $voucherCode = null;
@@ -294,6 +299,7 @@ class CheckoutController extends Controller
                 'dpAmount' => $dpAmount,
                 'remainingAmount' => $remainingAmount,
                 'isDealerPickup' => $isDealerPickup,
+                'canCredit' => $canCredit,
                 'voucherCode' => $voucherCode,
                 'voucherDiscount' => $voucherDiscount,
                 'itemDiscount' => $itemDiscount,
@@ -338,6 +344,7 @@ class CheckoutController extends Controller
             'dpAmount' => $dpAmount,
             'remainingAmount' => $remainingAmount,
             'isDealerPickup' => $isDealerPickup,
+            'canCredit' => $canCredit,
             'voucherCode' => $voucherCode,
             'voucherDiscount' => $voucherDiscount,
             'itemDiscount' => $itemDiscount,
@@ -424,7 +431,18 @@ class CheckoutController extends Controller
             $address = Address::query()->where('user_id', $request->user()->id)->findOrFail($addressId);
         }
 
-$result = DB::transaction(function () use ($request, $cart, $address, $shipping, $isDealerPickup) {
+        // Metode pembayaran: tunai (QRIS) atau kredit (leasing).
+        $paymentMethod = (string) $request->input('payment_method', 'qris');
+        if (! in_array($paymentMethod, ['qris', 'credit'], true)) {
+            return redirect()->back()->withErrors(['payment_method' => 'Metode pembayaran tidak valid.']);
+        }
+        $isCredit = $paymentMethod === 'credit';
+
+        if ($isCredit && ! $this->hasVehicleItems($cart)) {
+            return redirect()->back()->withErrors(['payment_method' => 'Pembelian kredit hanya tersedia untuk motor/kendaraan.']);
+        }
+
+$result = DB::transaction(function () use ($request, $cart, $address, $shipping, $isDealerPickup, $isCredit) {
             // Validate stock for part variants only (exclude indent quantity)
             foreach ($cart->items as $it) {
                 if ($it->itemable_type === PartVariant::class) {
@@ -486,8 +504,15 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
                 ];
             }
 
-            $hasIndent = $this->hasIndentItems($cart);
-            $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
+            if ($isCredit) {
+                // Pembelian kredit tidak memakai skema DP indent 50% —
+                // nominal DP ditentukan oleh leasing dan dicatat di credit_applications.
+                $hasIndent = false;
+                $indentCalc = ['dp' => 0, 'remaining' => 0];
+            } else {
+                $hasIndent = $this->hasIndentItems($cart);
+                $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
+            }
             $dpAmount = $indentCalc['dp'];
             $remainingAmount = $indentCalc['remaining'];
             $isIndent = $hasIndent;
@@ -503,6 +528,8 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
                 'order_no' => $this->newOrderNo(),
                 'status' => 'unpaid',
                 'payment_status' => 'pending',
+                'payment_method' => $isCredit ? 'credit' : null,
+                'purchase_type' => $isCredit ? Order::PURCHASE_TYPE_CREDIT : Order::PURCHASE_TYPE_CASH,
                 'subtotal' => $subtotal,
                 'shipping_cost' => $shippingCost,
                 'shipping_type' => $shippingType,
@@ -518,7 +545,13 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
                 'discount_amount' => $voucherDiscount,
             ]);
 
-            $this->paymentService->createPayment($order, 'qris', 'ocbc');
+            if ($isCredit) {
+                // Tidak ada QRIS: pembayaran DP & pelunasan dicatat admin (CreditService).
+                $this->paymentService->createPayment($order, 'credit', 'credit');
+                $this->creditService->createForOrder($order);
+            } else {
+                $this->paymentService->createPayment($order, 'qris', 'ocbc');
+            }
 
             foreach ($cart->items as $it) {
                 $partId = null;
@@ -594,20 +627,39 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
         $qrContent = null;
         $qrError = null;
         $expiresAt = null;
-        try {
-            $qr = $this->ocbcPaymentService->generateQr($order);
-            $qrContent = $qr['qr_content'] ?? null;
-            $expiresAt = $qr['expires_at'] ?? null;
-        } catch (\Throwable $e) {
-            Log::error('OCBC QR generation failed on checkout finish', [
-                'order_id' => $order->id,
-                'error' => $e->getMessage(),
-                'exception' => $e,
-            ]);
-            $qrError = 'QR pembayaran belum dapat dibuat. Silakan coba dari halaman detail pesanan.';
+        $creditApplication = null;
+
+        if ($order->isCredit()) {
+            // Pembelian kredit: tidak ada QRIS — DP & pelunasan dicatat oleh dealer.
+            $creditApplication = $order->creditApplication;
+        } else {
+            try {
+                $qr = $this->ocbcPaymentService->generateQr($order);
+                $qrContent = $qr['qr_content'] ?? null;
+                $expiresAt = $qr['expires_at'] ?? null;
+            } catch (\Throwable $e) {
+                Log::error('OCBC QR generation failed on checkout finish', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                    'exception' => $e,
+                ]);
+                $qrError = 'QR pembayaran belum dapat dibuat. Silakan coba dari halaman detail pesanan.';
+            }
         }
 
-        return view('buyer.checkout.finish', compact('order', 'qrContent', 'qrError', 'expiresAt'));
+        return view('buyer.checkout.finish', compact('order', 'qrContent', 'qrError', 'expiresAt', 'creditApplication'));
+    }
+
+    /** Cart mengandung minimal satu kendaraan (motor/mobil/ATV) — syarat opsi kredit. */
+    private function hasVehicleItems(Cart $cart): bool
+    {
+        foreach ($cart->items as $it) {
+            if ($it->itemable_type === ItemColor::class) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

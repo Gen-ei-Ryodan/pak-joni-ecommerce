@@ -34,6 +34,11 @@ class OrderResource extends Resource
         return true;
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with('creditApplication');
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -48,6 +53,16 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Customer')
                     ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('purchase_type')
+                    ->label('Tipe')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        Order::PURCHASE_TYPE_CREDIT => 'purple',
+                        default => 'info',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => $state === Order::PURCHASE_TYPE_CREDIT ? 'Kredit' : 'Tunai')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')
@@ -156,6 +171,13 @@ class OrderResource extends Resource
                         'expired' => 'Expired',
                     ])
                     ->searchable(),
+
+                Tables\Filters\SelectFilter::make('purchase_type')
+                    ->label('Tipe Pembelian')
+                    ->options([
+                        Order::PURCHASE_TYPE_CASH => 'Tunai',
+                        Order::PURCHASE_TYPE_CREDIT => 'Kredit',
+                    ]),
             ])
             ->headerActions([
                 Actions\Action::make('export_orders')
@@ -171,11 +193,18 @@ class OrderResource extends Resource
             ])
             ->actions([
                 Actions\ViewAction::make(),
+                Actions\Action::make('credit_detail')
+                    ->label('Detail Kredit')
+                    ->icon('heroicon-o-credit-card')
+                    ->color('purple')
+                    ->visible(fn (Order $record) => $record->isCredit() && $record->creditApplication !== null)
+                    ->url(fn (Order $record) => \App\Filament\Resources\CreditApplicationResource::getUrl('view', ['record' => $record->creditApplication]))
+                    ->openUrlInNewTab(),
                 Actions\Action::make('mark_paid')
                     ->label('Mark Paid')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn (Order $record) => $record->status === 'unpaid')
+                    ->visible(fn (Order $record) => $record->status === 'unpaid' && ! $record->isCredit())
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
                         app(\App\Services\OrderService::class)->markAsPaid($record);
@@ -339,6 +368,59 @@ class OrderResource extends Resource
                                     }),
                             ]),
                     ]),
+
+                Section::make('Pembelian Kredit')
+                    ->schema([
+                        Grid::make(4)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('purchase_type')
+                                    ->label('Tipe')
+                                    ->badge()
+                                    ->color(fn (?string $state): string => $state === Order::PURCHASE_TYPE_CREDIT ? 'purple' : 'info')
+                                    ->formatStateUsing(fn (?string $state): string => $state === Order::PURCHASE_TYPE_CREDIT ? 'Kredit' : 'Tunai'),
+                                Infolists\Components\TextEntry::make('creditApplication.application_no')
+                                    ->label('No. Pengajuan')
+                                    ->placeholder('-'),
+                                Infolists\Components\TextEntry::make('creditApplication.leasing_name')
+                                    ->label('Leasing')
+                                    ->placeholder('-'),
+                                Infolists\Components\TextEntry::make('creditApplication.stage')
+                                    ->label('Tahap')
+                                    ->badge()
+                                    ->color(fn (?string $state): string => match ($state) {
+                                        'spk' => 'gray',
+                                        'survey' => 'info',
+                                        'survey_approved' => 'purple',
+                                        'unit_preparation' => 'warning',
+                                        'payment' => 'orange',
+                                        'unit_pickup' => 'success',
+                                        default => 'gray',
+                                    })
+                                    ->formatStateUsing(fn (?string $state): string => $state ? \App\Models\CreditApplication::stageLabelStatic($state) : '-')
+                                    ->placeholder('-'),
+                            ]),
+                        Grid::make(4)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('creditApplication.dp_amount')
+                                    ->label('Nominal DP (PO)')
+                                    ->money('IDR')
+                                    ->placeholder('-'),
+                                Infolists\Components\TextEntry::make('creditApplication.po_number')
+                                    ->label('No. PO Leasing')
+                                    ->placeholder('-'),
+                                Infolists\Components\TextEntry::make('credit_dp_paid')
+                                    ->label('DP Tercatat')
+                                    ->state(fn (Order $record): string => $record->creditApplication?->dpPayment()
+                                        ? 'Rp '.number_format((float) $record->creditApplication->dpPayment()->amount, 0, ',', '.')
+                                        : 'Belum ada'),
+                                Infolists\Components\TextEntry::make('credit_pelunasan_paid')
+                                    ->label('Pelunasan Tercatat')
+                                    ->state(fn (Order $record): string => $record->creditApplication?->pelunasanPayment()
+                                        ? 'Rp '.number_format((float) $record->creditApplication->pelunasanPayment()->amount, 0, ',', '.')
+                                        : 'Belum ada'),
+                            ]),
+                    ])
+                    ->visible(fn ($record) => $record?->isCredit() ?? false),
 
                 Section::make('Indent Info')
                     ->schema([

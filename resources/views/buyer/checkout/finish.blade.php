@@ -13,19 +13,45 @@
                 </div>
 
                 <div style="height:20px;"></div>
-                <div style="font-size:20px;font-weight:700;">Pesanan Berhasil Dibuat!</div>
-                <div class="muted" style="margin-top:8px;line-height:1.6;font-size:14px;">
-                    Scan QRIS berikut untuk menyelesaikan pembayaran.
-                </div>
+                @if($order->isCredit())
+                    <div style="font-size:20px;font-weight:700;">Pengajuan Kredit Diterima!</div>
+                    <div class="muted" style="margin-top:8px;line-height:1.6;font-size:14px;">
+                        Pengajuan pembelian kredit Anda telah tercatat. Nominal DP akan ditentukan oleh pihak leasing
+                        (PO) dan dibayarkan langsung ke dealer; pelunasan dibayarkan oleh leasing.
+                    </div>
+                @else
+                    <div style="font-size:20px;font-weight:700;">Pesanan Berhasil Dibuat!</div>
+                    <div class="muted" style="margin-top:8px;line-height:1.6;font-size:14px;">
+                        Scan QRIS berikut untuk menyelesaikan pembayaran.
+                    </div>
+                @endif
 
                 <div style="height:16px;"></div>
                 <div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:14px;border:1px solid var(--line);">
                     <div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Nomor Invoice</div>
                     <div style="font-family:var(--mono);font-size:15px;font-weight:600;margin-top:6px;">{{ $order->order_no }}</div>
                     <div style="margin-top:8px;color:var(--accent);font-weight:700;">Rp {{ number_format((float) $order->total, 0, ',', '.') }}</div>
+                    @if($order->isCredit())
+                        <div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-top:10px;">No. Pengajuan Kredit</div>
+                        <div style="font-family:var(--mono);font-size:13px;font-weight:600;margin-top:4px;">{{ $creditApplication?->application_no ?? '-' }}</div>
+                        <div style="margin-top:8px;font-size:12px;">
+                            Tahap saat ini:
+                            <span style="color:var(--accent);font-weight:600;">
+                                {{ $creditApplication ? \App\Models\CreditApplication::stageLabelStatic($creditApplication->stage) : 'SPK' }}
+                            </span>
+                        </div>
+                    @endif
                 </div>
 
-                @if($qrContent)
+                @if($order->isCredit())
+                    <div style="margin-top:16px;padding:12px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:8px;font-size:13px;color:#1d4ed8;line-height:1.6;text-align:left;">
+                        <strong style="display:block;margin-bottom:4px;">Selanjutnya:</strong>
+                        1. Dealer menerbitkan SPK.<br>
+                        2. Leasing melakukan survey customer.<br>
+                        3. Leasing menerbitkan PO berisi nominal DP.<br>
+                        4. Anda membayarkan DP ke dealer, lalu leasing membayarkan pelunasan.
+                    </div>
+                @elseif($qrContent)
                     <div id="qris-countdown" style="margin:20px auto 0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid var(--line);font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:1px;">
                         Sisa Waktu Pembayaran: <span id="qris-countdown-value">03:00</span>
                     </div>

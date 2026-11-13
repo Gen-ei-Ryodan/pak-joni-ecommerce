@@ -1,11 +1,18 @@
 # DATABASE.md
 
 ## Ringkasan Database
-Database relasional **MySQL** di shared hosting (cPanel). Skema dikelola via Eloquent Migrations (38 file). Database berada di `.env` production.
+Database relasional **MySQL** di shared hosting (cPanel). Skema dikelola via Eloquent Migrations (39 file). Database berada di `.env` production.
 
 ## Peringatan
 - **JANGAN jalankan `migrate:fresh` / `db:wipe` di production** — banyak data customer nyata.
 - Gunakan migration non-destruktif untuk perubahan skema.
+
+### Tabel Kredit (Leasing) — migration `2026_11_13_000001`
+| Tabel/Kolom | Tipe | Keterangan |
+|-------------|------|------------|
+| `credit_applications` | tabel baru | 1 pengajuan per order. `order_id` (FK cascade), `application_no` (unique, prefix `KRT`), data PO (`leasing_name`, `po_number`, `po_date`, `dp_amount` decimal 12,2), `stage` (tahap berjalan, default `spk`), `status` (`in_progress`/`completed`/`rejected`), 6 timestamp tahapan (`spk_at`, `survey_at`, `survey_approved_at`, `unit_preparation_at`, `payment_at`, `unit_pickup_at`), `notes` text. |
+| `credit_payments` | tabel baru | DP & pelunasan dicatat **terpisah**: `credit_application_id` (FK cascade), `type` (`dp`/`pelunasan`), `payer_type` (`customer`/`leasing`), `amount`, `paid_at`, `method`, `reference`, `notes`, `recorded_by` (FK users, nullOnDelete). **Unique `(credit_application_id, type)`** → maks 1 DP + 1 pelunasan per pengajuan. |
+| `orders.purchase_type` | string(16), default `cash`, index | `cash` atau `credit`; ditaruh setelah `payment_method`. Order kredit: `payment_method = 'credit'`, `is_indent = false`, `dp_amount = 0` (DP kredit hidup di `credit_applications.dp_amount`). |
 
 ### Tabel Orders — kolom `shipping_type`
 | Kolom | Tipe | Keterangan |
