@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
 #[Fillable([
     'user_id',
@@ -33,6 +34,32 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'shipped_at',
     'completed_at',
     'cancelled_at',
+    'invoice_no',
+    'invoice_date',
+    'receipt_no',
+    'receipt_date',
+    'receipt_payment_for',
+    'spk_no',
+    'spk_date',
+    'stnk_name',
+    'stnk_address',
+    'motor_color',
+    'manufacturing_year',
+    'spk_payment_type',
+    'leasing_provider',
+    'spk_dp_amount',
+    'credit_tenor',
+    'monthly_installment',
+    'booking_fee',
+    'spk_checklist_docs',
+    'spk_notes',
+    'chassis_no',
+    'engine_no',
+    'buyer_nik',
+    'buyer_name',
+    'buyer_address',
+    'notes',
+    'signatory_name',
 ])]
 class Order extends Model
 {
@@ -45,13 +72,25 @@ class Order extends Model
         'dp_amount', 'remaining_amount', 'is_indent', 'indent_status',
         'address_snapshot', 'shipping_snapshot', 'shipping_courier', 'shipping_receipt',
         'shipped_at', 'completed_at', 'cancelled_at',
+        'invoice_no', 'invoice_date', 'receipt_no', 'receipt_date', 'receipt_payment_for',
+        'spk_no', 'spk_date', 'stnk_name', 'stnk_address', 'motor_color', 'manufacturing_year',
+        'spk_payment_type', 'leasing_provider', 'spk_dp_amount', 'credit_tenor',
+        'monthly_installment', 'booking_fee', 'spk_checklist_docs', 'spk_notes',
+        'chassis_no', 'engine_no', 'buyer_nik',
+        'buyer_name', 'buyer_address', 'notes', 'signatory_name',
     ];
 
     public const STATUSES = ['unpaid', 'paid', 'processing', 'shipped', 'completed', 'cancelled'];
+
     public const SHIPPING_TYPE_COURIER = 'courier';
+
     public const SHIPPING_TYPE_DEALER_PICKUP = 'dealer_pickup';
+
     public const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'expired'];
+
     public const INDENT_STATUSES = ['waiting_stock', 'ready_for_delivery', 'waiting_payment', 'paid_full'];
+
+    public const DEFAULT_MOTOR_INVOICE_NOTES = "Harga pada Dokumen ini mengacu pada harga Jual (On The Road),\nHarga sudah termasuk PPN 11%\nDokumen ini bukan merupakan tanda terima Uang,\nPembayaran dianggap SAH apabila Keseluruhan Uang telah diterima di Rekening Resmi atas nama CV. Jowimar Mandiri Makmur.";
 
     protected function casts(): array
     {
@@ -68,12 +107,130 @@ class Order extends Model
             'shipped_at' => 'datetime',
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'invoice_date' => 'date',
+            'receipt_date' => 'date',
+            'spk_date' => 'date',
+            'spk_dp_amount' => 'decimal:2',
+            'monthly_installment' => 'decimal:2',
+            'booking_fee' => 'decimal:2',
+            'spk_checklist_docs' => 'array',
         ];
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * SPK (Surat Pemesanan Motor) data: stored values merged with sensible defaults
+     */
+    public function spkData(): array
+    {
+        $item = $this->items->first();
+        $snapshot = $this->address_snapshot ?? [];
+
+        $buyerName = $this->buyer_name ?: ($snapshot['recipient_name'] ?? $this->user?->name ?? '-');
+        $buyerPhone = $snapshot['phone'] ?? $this->user?->phone ?? '-';
+        $buyerAddress = $this->buyer_address ?: collect([
+            $snapshot['address_line1'] ?? '',
+            $snapshot['address_line2'] ?? '',
+            $snapshot['city'] ?? '',
+            $snapshot['province'] ?? '',
+            $snapshot['postal_code'] ?? '',
+        ])->filter()->implode(', ');
+
+        $modelName = $item ? ($item->name.($item->variant_name ? ' '.$item->variant_name : '')) : 'Sepeda Motor';
+        $subtotal = $item ? (float) $item->line_total : (float) $this->total;
+        $discount = (float) ($this->discount_amount ?? 0);
+        $afterDiscount = max(0, $subtotal - $discount);
+
+        return [
+            'spk_no' => $this->spk_no ?: $this->order_no,
+            'spk_date' => $this->spk_date ? Carbon::parse($this->spk_date)->toDateString() : ($this->created_at ? Carbon::parse($this->created_at)->toDateString() : now()->toDateString()),
+            'buyer_name' => $buyerName,
+            'buyer_phone' => $buyerPhone,
+            'stnk_name' => $this->stnk_name ?: $buyerName,
+            'stnk_address' => $this->stnk_address ?: $buyerAddress,
+            'buyer_nik' => $this->buyer_nik ?: '-',
+            'motor_model' => $modelName,
+            'motor_color' => $this->motor_color ?: ($item?->variant_name ?: '-'),
+            'manufacturing_year' => $this->manufacturing_year ?: date('Y'),
+            'otr_price' => $subtotal,
+            'discount' => $discount,
+            'price_after_discount' => $afterDiscount,
+            'payment_type' => $this->spk_payment_type ?: 'cash',
+            'leasing_provider' => $this->leasing_provider,
+            'dp_amount' => $this->spk_dp_amount !== null ? (float) $this->spk_dp_amount : (float) ($this->dp_amount ?? 0),
+            'credit_tenor' => $this->credit_tenor,
+            'monthly_installment' => $this->monthly_installment !== null ? (float) $this->monthly_installment : null,
+            'booking_fee' => $this->booking_fee !== null ? (float) $this->booking_fee : 500000,
+            'checklist_docs' => is_array($this->spk_checklist_docs) ? $this->spk_checklist_docs : ['ktp_suami', 'kartu_keluarga', 'slip_gaji', 'rekening_listrik', 'bukti_pbb'],
+            'spk_notes' => $this->spk_notes ?: '',
+            'seller_name' => $this->signatory_name ?: 'Syati',
+        ];
+    }
+
+    /**
+     * Receipt data: stored values merged with defaults
+     */
+    public function receiptData(): array
+    {
+        $item = $this->items->first();
+        $itemName = $item ? ($item->name.($item->variant_name ? ' '.$item->variant_name : '')) : 'Unit Sepeda Motor';
+        $defaultPaymentFor = 'Pelunasan '.$itemName;
+
+        $snapshot = $this->address_snapshot ?? [];
+        $buyerName = $this->buyer_name ?: ($snapshot['recipient_name'] ?? $this->user?->name);
+
+        return [
+            'receipt_no' => $this->receipt_no ?: $this->order_no,
+            'receipt_date' => $this->receipt_date ? Carbon::parse($this->receipt_date)->toDateString() : ($this->paid_at ? Carbon::parse($this->paid_at)->toDateString() : now()->toDateString()),
+            'received_from' => $buyerName,
+            'amount' => (float) $this->total,
+            'amount_words' => terbilang((float) $this->total),
+            'payment_for' => $this->receipt_payment_for ?: $defaultPaymentFor,
+            'chassis_no' => $this->chassis_no,
+            'engine_no' => $this->engine_no,
+            'signatory_name' => $this->signatory_name ?: 'JONI',
+        ];
+    }
+
+    /**
+     * Motor invoice data: stored values merged with sensible defaults
+     * (auto-fill from the order) for every field not yet filled in.
+     */
+    public function motorInvoiceData(): array
+    {
+        $snapshot = $this->address_snapshot ?? [];
+
+        $data = [
+            'invoice_no' => 'INV/'.$this->order_no,
+            'invoice_date' => now()->toDateString(),
+            'chassis_no' => null,
+            'engine_no' => null,
+            'buyer_nik' => null,
+            'buyer_name' => $snapshot['recipient_name'] ?? $this->user?->name,
+            'buyer_address' => collect([
+                $snapshot['address_line1'] ?? '',
+                $snapshot['address_line2'] ?? '',
+                $snapshot['city'] ?? '',
+                $snapshot['province'] ?? '',
+                $snapshot['postal_code'] ?? '',
+            ])->filter()->implode(', ') ?: null,
+            'notes' => self::DEFAULT_MOTOR_INVOICE_NOTES,
+            'signatory_name' => 'JONI',
+        ];
+
+        foreach ($this->only(array_keys($data)) as $key => $value) {
+            if ($value !== null && $value !== '') {
+                $data[$key] = $value;
+            }
+        }
+
+        $data['invoice_date'] = Carbon::parse($data['invoice_date'])->toDateString();
+
+        return $data;
     }
 
     public function items(): HasMany
@@ -171,7 +328,7 @@ class Order extends Model
     /**
      * Calculate payment expiry time (24 hours from creation).
      */
-    public function paymentExpiresAt(): \Illuminate\Support\Carbon
+    public function paymentExpiresAt(): Carbon
     {
         return $this->created_at->addHours(24);
     }

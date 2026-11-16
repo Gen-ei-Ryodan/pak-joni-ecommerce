@@ -73,6 +73,23 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
                             Cetak Invoice
                         </a>
+                        @if($order->invoice_no)
+                            <a class="btn btn-outline" href="{{ route('buyer.orders.motor-invoice', $order->order_no) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
+                                Cetak Faktur Motor
+                            </a>
+                        @endif
+                        <a class="btn btn-outline" href="{{ route('buyer.orders.spk', $order->order_no) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
+                            Cetak SPK
+                        </a>
+                        <a class="btn btn-outline" href="{{ route('buyer.orders.parts-invoice', $order->order_no) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
+                            Cetak Faktur Sukucadang
+                        </a>
+                        @if($order->payment_status === 'paid' || $order->status === 'paid' || $order->paid_at)
+                            <a class="btn btn-outline" href="{{ route('buyer.orders.receipt', $order->order_no) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                Cetak Kwitansi
+                            </a>
+                        @endif
                         <a class="btn" href="{{ route('buyer.orders.index') }}" style="flex-shrink:0;">Back</a>
                     </div>
                 </div>

@@ -13,6 +13,33 @@ class ViewOrder extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\EditAction::make()
+                ->label('Edit Faktur Motor')
+                ->icon('heroicon-o-pencil-square'),
+            Actions\Action::make('print_motor_invoice')
+                ->label('Cetak Faktur Motor')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('info')
+                ->url(fn (): string => route('admin.orders.motor-invoice', ['order' => $this->record]))
+                ->openUrlInNewTab(),
+            Actions\Action::make('print_spk')
+                ->label('Cetak SPK')
+                ->icon('heroicon-o-clipboard-document-check')
+                ->color('primary')
+                ->url(fn (): string => route('admin.orders.spk', ['order' => $this->record]))
+                ->openUrlInNewTab(),
+            Actions\Action::make('print_parts_invoice')
+                ->label('Cetak Faktur Sukucadang')
+                ->icon('heroicon-o-wrench-screwdriver')
+                ->color('warning')
+                ->url(fn (): string => route('admin.orders.parts-invoice', ['order' => $this->record]))
+                ->openUrlInNewTab(),
+            Actions\Action::make('print_receipt')
+                ->label('Cetak Kwitansi')
+                ->icon('heroicon-o-receipt-percent')
+                ->color('success')
+                ->url(fn (): string => route('admin.orders.receipt', ['order' => $this->record]))
+                ->openUrlInNewTab(),
             Actions\DeleteAction::make()
                 ->label('Delete Order')
                 ->icon('heroicon-o-trash')

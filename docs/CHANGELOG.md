@@ -2,6 +2,15 @@
 
 ## Catatan Perubahan Proyek
 
+### Unreleased — Faktur Pembelian Sepeda Motor (PDF)
+*   **Dependency baru**: `barryvdh/laravel-dompdf ^3.1` untuk render PDF.
+*   **Migration `2026_11_09_000001`** menambah kolom pada `orders`: `invoice_no` (unique, nullable), `invoice_date`, `chassis_no`, `engine_no`, `buyer_nik`, `buyer_name`, `buyer_address`, `notes`, `signatory_name` (default `JONI`). Non-destruktif.
+*   **`Order::motorInvoiceData()`** — mengembalikan data faktur hasil merge antara kolom tersimpan dan default auto-fill dari order (no. faktur `INV/{order_no}`, tanggal hari ini, pembeli dari `address_snapshot`, catatan default Harga OTR/PPN, penandatangan `JONI`).
+*   **Admin Filament (`OrderResource`)** — section form **"Faktur Pembelian Sepeda Motor"** di halaman edit (baru: `Pages/EditOrder`), tombol **Cetak Faktur Motor** di tabel & halaman view.
+*   **PDF** `resources/views/pdf/motor-invoice.blade.php` — kop CV. JOWIMAR MANDIRI MAKMUR, judul FAKTUR PEMBELIAN SEPEDA MOTOR, meta kanan (tanggal/nomor/pembeli), tabel deskripsi + rangka/mesin + total, kotak CATATAN dan kotak tanda tangan.
+*   **Routes**: `GET /orders/{order}/faktur-motor` (`role:admin`) dan `GET /my/orders/{order:order_no}/faktur-motor` (buyer, hanya jika `invoice_no` terisi); `?download=1` untuk download, default stream inline.
+*   **Tests**: `tests/Feature/MotorInvoicePdfTest.php` — 7 test (autofill, render view, download admin/buyer, otorisasi, form edit Filament, aksi tabel).
+
 ### Unreleased — Part Katalog: Galeri Gambar per Model
 *   **Alur baru part catalog**: `/pilih/sparepart` → pilih merk (WMOTO, SM SPORT, CF MOTO, ZONTES, ZEEHO) → `/pilih/sparepart/brand-pdf/{brand}` menampilkan **daftar model (list/tabel)** dengan tombol Lihat Gambar & Buka PDF → `/pilih/sparepart/brand-pdf/{brand}/{catalog}` menampilkan seluruh halaman katalog sebagai **grid kotak-kotak kecil** (klik untuk memperbesar lewat **lightbox**: navigasi prev/next, tombol Esc/panah) plus tombol download PDF asli.
 *   **PDF dipecah menjadi gambar**: 1.339 halaman JPG (27 model, 5 merk) disimpan di `storage/app/public/items/part-catalogs/pages/{slug}/`. Sumber: folder `PART CATALOG` hasil split PDF katalog.

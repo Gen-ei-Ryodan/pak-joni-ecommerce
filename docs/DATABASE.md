@@ -12,6 +12,21 @@ Database relasional **MySQL** di shared hosting (cPanel). Skema dikelola via Elo
 |-------|------|------------|
 | `shipping_type` | string (default: 'courier') | Jenis pengiriman: `courier` (dikirim via kurir) atau `dealer_pickup` (ambil di dealer) |
 
+### Tabel Orders — kolom faktur motor (migration `2026_11_09_000001`)
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| `invoice_no` | string, nullable, unique | Nomor faktur pembelian motor. |
+| `invoice_date` | date, nullable | Tanggal faktur. |
+| `chassis_no` | string, nullable | Nomor rangka. |
+| `engine_no` | string, nullable | Nomor mesin. |
+| `buyer_nik` | string, nullable | NIK pembeli. |
+| `buyer_name` | string, nullable | Nama pembeli (auto-fill dari `address_snapshot.recipient_name`). |
+| `buyer_address` | text, nullable | Alamat lengkap pembeli (auto-fill dari `address_snapshot`). |
+| `notes` | text, nullable | Catatan faktur (default: harga OTR + PPN). |
+| `signatory_name` | string, nullable, default `JONI` | Nama penandatangan. |
+
+Default yang belum diisi dihitung saat render lewat `Order::motorInvoiceData()`.
+
 ### Perubahan `parts` (migration `2026_10_06_000001`)
 | Kolom | Tipe | Keterangan |
 |-------|------|------------|

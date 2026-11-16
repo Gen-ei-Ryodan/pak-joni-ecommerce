@@ -13,11 +13,15 @@ use App\Http\Controllers\Buyer\OrderController as BuyerOrderController;
 use App\Http\Controllers\Buyer\PageController as BuyerPageController;
 use App\Http\Controllers\Buyer\PartController as BuyerPartController;
 use App\Http\Controllers\Buyer\WishlistController as BuyerWishlistController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MotorInvoiceController;
 use App\Http\Controllers\Payment\MidtransController;
 use App\Http\Controllers\Payment\OcbcController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RegionController;
+use App\Mail\SalesOrderMail;
+use App\Models\Item;
 use App\Models\Order;
+use App\Models\Part;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [BuyerPageController::class, 'home'])->name('buyer.home');
@@ -37,8 +41,11 @@ Route::get('/regions/villages/{districtCode}', [RegionController::class, 'villag
 Route::redirect('/motors', '/pilih/motor', 301);
 Route::get('/parts/{part:slug}', [BuyerPartController::class, 'show'])->name('buyer.parts.show');
 Route::get('/motors/{slug}', function ($slug) {
-    $item = \App\Models\Item::where('slug', $slug)->where('status', 'active')->where('is_active', true)->first();
-    if (!$item) abort(404);
+    $item = Item::where('slug', $slug)->where('status', 'active')->where('is_active', true)->first();
+    if (! $item) {
+        abort(404);
+    }
+
     return redirect()->route('buyer.motors.show', ['categoryType' => $item->type->slug, 'slug' => $item->slug]);
 })->name('buyer.motors.redirect');
 
@@ -58,16 +65,17 @@ Route::get('/part-katalog', [BuyerPageController::class, 'partCatalog'])->name('
 Route::get('/whatsapp/{type}/{id}', function ($type, $id) {
     $phone = config('app.whatsapp_number', '6281234567890');
     if ($type === 'motor') {
-        $item = \App\Models\Item::with('brand')->findOrFail($id);
+        $item = Item::with('brand')->findOrFail($id);
         $msg = "Halo, saya tertarik dengan {$item->name} ({$item->brand?->name})%0A%0A".
-               "Link: ".route('buyer.motors.show', $item->slug)."%0A%0A".
-               "Mohon info lebih lanjut.";
+               'Link: '.route('buyer.motors.show', $item->slug).'%0A%0A'.
+               'Mohon info lebih lanjut.';
     } else {
-        $part = \App\Models\Part::with('category')->findOrFail($id);
+        $part = Part::with('category')->findOrFail($id);
         $msg = "Halo, saya tertarik dengan sparepart {$part->name} ({$part->category?->name})%0A%0A".
-               "Link: ".route('buyer.parts.show', $part->slug)."%0A%0A".
-               "Mohon info lebih lanjut.";
+               'Link: '.route('buyer.parts.show', $part->slug).'%0A%0A'.
+               'Mohon info lebih lanjut.';
     }
+
     return redirect("https://wa.me/{$phone}?text={$msg}");
 })->name('buyer.whatsapp');
 
@@ -101,6 +109,13 @@ Route::middleware(['auth', 'throttle:payment-actions'])->group(function () {
     Route::get('/payment/midtrans/snap-token/{order}', [MidtransController::class, 'snapToken'])->name('payment.midtrans.snap-token');
     Route::get('/payment/ocbc/qr/{order}', [OcbcController::class, 'qr'])->name('payment.ocbc.qr');
     Route::get('/payment/ocbc/status/{order}', [OcbcController::class, 'status'])->name('payment.ocbc.status');
+});
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/orders/{order}/faktur-motor', MotorInvoiceController::class)->name('admin.orders.motor-invoice');
+    Route::get('/orders/{order}/faktur-sukucadang', \App\Http\Controllers\PartsInvoiceController::class)->name('admin.orders.parts-invoice');
+    Route::get('/orders/{order}/kwitansi', \App\Http\Controllers\ReceiptController::class)->name('admin.orders.receipt');
+    Route::get('/orders/{order}/spk', \App\Http\Controllers\SpkController::class)->name('admin.orders.spk');
 });
 
 Route::middleware(['guest', 'throttle:auth'])->group(function () {
@@ -140,7 +155,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/account/addresses/{address}', [BuyerAddressController::class, 'destroy'])->name('buyer.addresses.destroy');
 
     Route::get('/checkout', [BuyerCheckoutController::class, 'address'])->name('buyer.checkout.address');
-    Route::get('/checkout/address', fn() => redirect('/checkout'));
+    Route::get('/checkout/address', fn () => redirect('/checkout'));
     Route::post('/checkout/address', [BuyerCheckoutController::class, 'setAddress'])->name('buyer.checkout.setAddress');
     Route::get('/checkout/shipping', [BuyerCheckoutController::class, 'shipping'])->name('buyer.checkout.shipping');
     Route::get('/checkout/shipping/rates', [BuyerCheckoutController::class, 'rates'])->name('buyer.checkout.rates');
@@ -154,17 +169,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/my/orders', [BuyerOrderController::class, 'index'])->name('buyer.orders.index');
     Route::get('/my/orders/{order:order_no}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
     Route::get('/my/orders/{order:order_no}/invoice', [BuyerOrderController::class, 'invoice'])->name('buyer.orders.invoice');
+    Route::get('/my/orders/{order:order_no}/faktur-motor', MotorInvoiceController::class)->name('buyer.orders.motor-invoice');
+    Route::get('/my/orders/{order:order_no}/faktur-sukucadang', \App\Http\Controllers\PartsInvoiceController::class)->name('buyer.orders.parts-invoice');
+    Route::get('/my/orders/{order:order_no}/kwitansi', \App\Http\Controllers\ReceiptController::class)->name('buyer.orders.receipt');
+    Route::get('/my/orders/{order:order_no}/spk', \App\Http\Controllers\SpkController::class)->name('buyer.orders.spk');
     Route::post('/my/orders/{order:order_no}/confirm-received', [BuyerOrderController::class, 'confirmReceived'])->name('buyer.orders.confirmReceived');
     Route::post('/my/orders/{order:order_no}/pay-remaining', [BuyerOrderController::class, 'payRemaining'])->name('buyer.orders.payRemaining');
 
     // Preview sales order email
     Route::get('/preview/sales-order/{order}', function (Order $order) {
         $order->load(['items', 'user']);
-        return new \App\Mail\SalesOrderMail($order);
+
+        return new SalesOrderMail($order);
     })->name('preview.sales-order');
 });
-
-
 
 // Catch-all for item detail — MUST be at the end after all other routes
 Route::get('/{categoryType}/{slug}', [BuyerMotorController::class, 'show'])->name('buyer.motors.show');

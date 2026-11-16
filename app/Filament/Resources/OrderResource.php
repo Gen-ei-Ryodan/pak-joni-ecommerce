@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\OrderExport;
 use App\Filament\Resources\OrderResource\Pages;
 use App\Models\Order;
+use App\Services\OrderService;
 use BackedEnum;
 use Filament\Actions;
 use Filament\Forms;
@@ -14,7 +16,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
 use UnitEnum;
 
 class OrderResource extends Resource
@@ -126,7 +128,7 @@ class OrderResource extends Resource
                         'paid_full' => 'success',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn (?string $state): string => $state ? \App\Models\Order::indentStatusLabelStatic($state) : '-')
+                    ->formatStateUsing(fn (?string $state): string => $state ? Order::indentStatusLabelStatic($state) : '-')
                     ->visible(fn ($record) => $record?->is_indent ?? false),
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -163,14 +165,38 @@ class OrderResource extends Resource
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('success')
                     ->action(function () {
-                        $export = new \App\Filament\Exports\OrderExport();
+                        $export = new OrderExport;
                         $fileName = $export->export();
 
-                        return redirect()->to(\Illuminate\Support\Facades\Storage::disk('public')->url('exports/' . $fileName));
+                        return redirect()->to(Storage::disk('public')->url('exports/'.$fileName));
                     }),
             ])
             ->actions([
                 Actions\ViewAction::make(),
+                Actions\Action::make('print_motor_invoice')
+                    ->label('Cetak Faktur Motor')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('info')
+                    ->url(fn (Order $record): string => route('admin.orders.motor-invoice', ['order' => $record]))
+                    ->openUrlInNewTab(),
+                Actions\Action::make('print_spk')
+                    ->label('Cetak SPK')
+                    ->icon('heroicon-o-clipboard-document-check')
+                    ->color('primary')
+                    ->url(fn (Order $record): string => route('admin.orders.spk', ['order' => $record]))
+                    ->openUrlInNewTab(),
+                Actions\Action::make('print_parts_invoice')
+                    ->label('Cetak Faktur Sukucadang')
+                    ->icon('heroicon-o-wrench-screwdriver')
+                    ->color('warning')
+                    ->url(fn (Order $record): string => route('admin.orders.parts-invoice', ['order' => $record]))
+                    ->openUrlInNewTab(),
+                Actions\Action::make('print_receipt')
+                    ->label('Cetak Kwitansi')
+                    ->icon('heroicon-o-receipt-percent')
+                    ->color('success')
+                    ->url(fn (Order $record): string => route('admin.orders.receipt', ['order' => $record]))
+                    ->openUrlInNewTab(),
                 Actions\Action::make('mark_paid')
                     ->label('Mark Paid')
                     ->icon('heroicon-o-check-circle')
@@ -178,7 +204,7 @@ class OrderResource extends Resource
                     ->visible(fn (Order $record) => $record->status === 'unpaid')
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
-                        app(\App\Services\OrderService::class)->markAsPaid($record);
+                        app(OrderService::class)->markAsPaid($record);
                     }),
                 Actions\Action::make('ready_for_delivery')
                     ->label('Ready For Delivery')
@@ -199,13 +225,13 @@ class OrderResource extends Resource
                     ->visible(fn (Order $record) => $record->status === 'paid')
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
-                        app(\App\Services\OrderService::class)->processOrder($record);
+                        app(OrderService::class)->processOrder($record);
                     }),
                 Actions\Action::make('ship')
                     ->label('Ship')
                     ->icon('heroicon-o-truck')
                     ->color('orange')
-                    ->visible(fn (Order $record) => $record->status === 'processing' && !$record->isDealerPickup())
+                    ->visible(fn (Order $record) => $record->status === 'processing' && ! $record->isDealerPickup())
                     ->form([
                         Forms\Components\TextInput::make('courier')
                             ->label('Courier')
@@ -216,7 +242,7 @@ class OrderResource extends Resource
                             ->required(),
                     ])
                     ->action(function (Order $record, array $data) {
-                        app(\App\Services\OrderService::class)->markAsShipped($record, $data['courier'], $data['receipt']);
+                        app(OrderService::class)->markAsShipped($record, $data['courier'], $data['receipt']);
                     }),
 
                 Actions\Action::make('ready_for_pickup')
@@ -226,7 +252,7 @@ class OrderResource extends Resource
                     ->visible(fn (Order $record) => $record->status === 'processing' && $record->isDealerPickup())
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
-                        app(\App\Services\OrderService::class)->markAsShipped($record, 'dealer_pickup', 'Siap Diambil');
+                        app(OrderService::class)->markAsShipped($record, 'dealer_pickup', 'Siap Diambil');
                     }),
                 Actions\Action::make('complete')
                     ->label('Complete')
@@ -235,7 +261,7 @@ class OrderResource extends Resource
                     ->visible(fn (Order $record) => $record->status === 'shipped')
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
-                        app(\App\Services\OrderService::class)->markAsCompleted($record);
+                        app(OrderService::class)->markAsCompleted($record);
                     }),
                 Actions\Action::make('cancel')
                     ->label('Cancel')
@@ -244,7 +270,7 @@ class OrderResource extends Resource
                     ->visible(fn (Order $record) => in_array($record->status, ['unpaid', 'paid', 'processing']))
                     ->requiresConfirmation()
                     ->action(function (Order $record) {
-                        app(\App\Services\OrderService::class)->cancelOrder($record);
+                        app(OrderService::class)->cancelOrder($record);
                     }),
                 Actions\DeleteAction::make()
                     ->label('Delete')
@@ -260,6 +286,58 @@ class OrderResource extends Resource
                     Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function form(Schema $schema): Schema
+    {
+        $autoFill = fn (?Order $record, string $key, $default = null) => $record?->motorInvoiceData()[$key] ?? $default;
+
+        return $schema->schema([
+            Section::make('Faktur Pembelian Sepeda Motor')
+                ->description('Data faktur pembelian sepeda motor. Kolom yang masih kosong otomatis terisi dari data order.')
+                ->columnSpanFull()
+                ->schema([
+                    Forms\Components\TextInput::make('invoice_no')
+                        ->label('Nomor Faktur')
+                        ->default(fn (?Order $record) => $autoFill($record, 'invoice_no'))
+                        ->placeholder(fn (?Order $record) => $autoFill($record, 'invoice_no'))
+                        ->unique(ignoreRecord: true),
+
+                    Forms\Components\DatePicker::make('invoice_date')
+                        ->label('Tanggal Faktur')
+                        ->default(fn (?Order $record) => $autoFill($record, 'invoice_date')),
+
+                    Forms\Components\TextInput::make('chassis_no')
+                        ->label('Nomor Rangka (Chassis No)')
+                        ->placeholder('Contoh: MH1JM8118NK123456'),
+
+                    Forms\Components\TextInput::make('engine_no')
+                        ->label('Nomor Mesin (Engine No)')
+                        ->placeholder('Contoh: JM81E111111'),
+
+                    Forms\Components\TextInput::make('buyer_nik')
+                        ->label('NIK Pembeli')
+                        ->maxLength(32),
+
+                    Forms\Components\TextInput::make('buyer_name')
+                        ->label('Nama Pembeli')
+                        ->default(fn (?Order $record) => $autoFill($record, 'buyer_name')),
+
+                    Forms\Components\Textarea::make('buyer_address')
+                        ->label('Alamat Pembeli')
+                        ->rows(3)
+                        ->default(fn (?Order $record) => $autoFill($record, 'buyer_address')),
+
+                    Forms\Components\Textarea::make('notes')
+                        ->label('Catatan')
+                        ->rows(4)
+                        ->default(fn (?Order $record) => $autoFill($record, 'notes')),
+
+                    Forms\Components\TextInput::make('signatory_name')
+                        ->label('Penandatangan')
+                        ->default(fn (?Order $record) => $autoFill($record, 'signatory_name', 'JONI')),
+                ]),
+        ]);
     }
 
     public static function infolist(Schema $schema): Schema
@@ -352,7 +430,7 @@ class OrderResource extends Resource
                                 'paid_full' => 'success',
                                 default => 'gray',
                             })
-                            ->formatStateUsing(fn (?string $state): string => $state ? \App\Models\Order::indentStatusLabelStatic($state) : '-'),
+                            ->formatStateUsing(fn (?string $state): string => $state ? Order::indentStatusLabelStatic($state) : '-'),
                         Infolists\Components\TextEntry::make('dp_amount')
                             ->label('DP (50%)')
                             ->money('IDR'),
@@ -379,7 +457,7 @@ class OrderResource extends Resource
                             ])->filter()->implode(', '))
                             ->columnSpanFull(),
                     ])
-                    ->visible(fn (Order $record) => !$record->isDealerPickup()),
+                    ->visible(fn (Order $record) => ! $record->isDealerPickup()),
                 Section::make('Info Kurir')
                     ->schema([
                         Grid::make(3)
@@ -390,7 +468,7 @@ class OrderResource extends Resource
                                         strtoupper($record->shipping_snapshot['courier'] ?? ''),
                                         strtoupper($record->shipping_snapshot['service'] ?? ''),
                                     ])->filter()->implode(' - ') ?: '-')
-                                    ->visible(fn (Order $record) => !empty($record->shipping_snapshot)),
+                                    ->visible(fn (Order $record) => ! empty($record->shipping_snapshot)),
                                 Infolists\Components\TextEntry::make('shipping_receipt')
                                     ->label('No Resi')
                                     ->placeholder('-'),
@@ -400,7 +478,7 @@ class OrderResource extends Resource
                                     ->placeholder('-'),
                             ]),
                     ])
-                    ->visible(fn (Order $record) => !$record->isDealerPickup()),
+                    ->visible(fn (Order $record) => ! $record->isDealerPickup()),
 
                 Section::make('Informasi Pengambilan')
                     ->schema([
@@ -443,6 +521,7 @@ class OrderResource extends Resource
         return [
             'index' => Pages\ListOrders::route('/'),
             'view' => Pages\ViewOrder::route('/{record}'),
+            'edit' => Pages\EditOrder::route('/{record}/edit'),
         ];
     }
 }
