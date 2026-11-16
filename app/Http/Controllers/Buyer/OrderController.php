@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\CreditService;
 use App\Services\OrderService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ class OrderController extends Controller
     public function __construct(
         private PaymentService $paymentService,
         private OrderService $orderService,
+        private CreditService $creditService,
     ) {}
 
     public function index(Request $request)
@@ -53,11 +55,12 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['items.part', 'items.variant.part', 'shipment', 'payment']);
+        $order->load(['items.part', 'items.variant.part', 'shipment', 'payment', 'creditApplication.payments']);
 
         $timeline = $this->buildTimeline($order);
+        $creditTimeline = $order->creditApplication?->timeline();
 
-        return view('buyer.orders.show', compact('order', 'timeline'));
+        return view('buyer.orders.show', compact('order', 'timeline', 'creditTimeline'));
     }
 
     public function invoice(Request $request, Order $order)
@@ -82,6 +85,18 @@ class OrderController extends Controller
         }
 
         $this->orderService->markAsCompleted($order);
+
+        // Pembelian kredit: penerimaan unit oleh customer menutup tahap terakhir.
+        if ($order->creditApplication) {
+            try {
+                $this->creditService->confirmPickupIfReady(
+                    $order->creditApplication,
+                    'Unit diterima customer.'
+                );
+            } catch (\App\Exceptions\CreditException $e) {
+                report($e);
+            }
+        }
 
         return redirect()->route('buyer.orders.show', $order)->with('status', 'Pesanan telah dikonfirmasi diterima.');
     }

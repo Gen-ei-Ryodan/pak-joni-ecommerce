@@ -2,14 +2,27 @@
 
 ## Catatan Perubahan Proyek
 
-### Unreleased — Faktur Pembelian Sepeda Motor (PDF)
-*   **Dependency baru**: `barryvdh/laravel-dompdf ^3.1` untuk render PDF.
-*   **Migration `2026_11_09_000001`** menambah kolom pada `orders`: `invoice_no` (unique, nullable), `invoice_date`, `chassis_no`, `engine_no`, `buyer_nik`, `buyer_name`, `buyer_address`, `notes`, `signatory_name` (default `JONI`). Non-destruktif.
-*   **`Order::motorInvoiceData()`** — mengembalikan data faktur hasil merge antara kolom tersimpan dan default auto-fill dari order (no. faktur `INV/{order_no}`, tanggal hari ini, pembeli dari `address_snapshot`, catatan default Harga OTR/PPN, penandatangan `JONI`).
-*   **Admin Filament (`OrderResource`)** — section form **"Faktur Pembelian Sepeda Motor"** di halaman edit (baru: `Pages/EditOrder`), tombol **Cetak Faktur Motor** di tabel & halaman view.
-*   **PDF** `resources/views/pdf/motor-invoice.blade.php` — kop CV. JOWIMAR MANDIRI MAKMUR, judul FAKTUR PEMBELIAN SEPEDA MOTOR, meta kanan (tanggal/nomor/pembeli), tabel deskripsi + rangka/mesin + total, kotak CATATAN dan kotak tanda tangan.
-*   **Routes**: `GET /orders/{order}/faktur-motor` (`role:admin`) dan `GET /my/orders/{order:order_no}/faktur-motor` (buyer, hanya jika `invoice_no` terisi); `?download=1` untuk download, default stream inline.
-*   **Tests**: `tests/Feature/MotorInvoicePdfTest.php` — 7 test (autofill, render view, download admin/buyer, otorisasi, form edit Filament, aksi tabel).
+### Unreleased — Dokumen Transaksi (Faktur Motor, Faktur Sukucadang, Kwitansi, SPK PDF)
+*   **Dependency baru**: `barryvdh/laravel-dompdf ^3.1` untuk render PDF dokumen transaksi.
+*   **Migration dokumen**:
+    *   `2026_11_09_000001_add_motor_invoice_fields_to_orders_table` — nomor faktur, no rangka, no mesin, NIK, penandatangan.
+    *   `2026_11_16_032738_add_receipt_fields_to_orders_table` — kwitansi bukti pembayaran dengan terbilang rupiah otomatis (hanya aktif setelah status bayar lunas).
+    *   `2026_11_16_044902_add_spk_fields_to_orders_table` — surat pemesanan motor (SPK) lengkap dengan skema cash/kredit, DP, tenor, angsuran, checklist berkas leasing, dan 9 klausul resmi.
+*   **Admin Filament & Buyer**: Aksi cetak PDF untuk 4 dokumen transaksi resmi JOMOTO CENTER (Faktur Motor, SPK, Faktur Sukucadang, Kwitansi).
+
+### Unreleased — Filter Admin Katalog Sparepart
+*   **Halaman daftar sparepart admin** (`/admin/items/type/{sparepart}`, `ItemResource::table()`): filter **Motor** baru (`SelectFilter` multi-select pada relasi `compatibleMotors`, pivot `item_motor_compatibility`) — hanya tampil saat tipe halaman = `sparepart`, sembunyi otomatis di halaman motor/mobil/ATV. Filter **Brand** (`brand_id`) dan **search nama sparepart** (kolom `name` + `part_number` `searchable`) sudah ada sebelumnya dan ikut diverifikasi.
+*   **Tests**: `tests/Feature/AdminItemSparepartFormTest.php` — 5 test baru: render field filter via HTTP (sparepart tampil, halaman motor tidak), visibilitas filter brand/motor/kategori, filter by brand, filter by motor (kompatibilitas `item_motor_compatibility`), dan search by nama. Baseline: 58 lulus; 7 gagal lama di `OcbcPaymentTest` (private key OCBC tidak ada di environment — sudah gagal sebelum perubahan ini).
+
+### Unreleased — Pembelian Kredit (Leasing)
+*   **Checkout kredit**: opsi pembayaran **"Kredit (Leasing)"** pada `/checkout/payment` (hanya bila keranjang memuat kendaraan — `ItemColor`; cart sparepart-only ditolak validasi). Order kredit dibuat dengan `orders.purchase_type = 'credit'`, `payment_method = 'credit'`, tanpa QRIS, tanpa skema indent DP 50%, dan otomatis membuat `credit_applications` (no. `KRT…`, tahap awal `spk`).
+*   **Dua pihak pembayar dicatat terpisah** (`credit_payments`): **DP** dibayarkan customer ke dealer (pencatatan otomatis menandai order `paid` → stok berkurang lewat `OrderService::markAsPaid`), **pelunasan** dibayarkan leasing ke dealer (wajib setelah DP). Unique DB `(credit_application_id, type)` → maksimal 1 DP + 1 pelunasan. Tahap "Pembayaran" selesai hanya saat **keduanya** tercatat (`payment_at`).
+*   **Timeline 6 tahap berurutan** (tidak boleh melompat, divalidasi `CreditService` + `CreditException`): **SPK → Survey → Persetujuan Survey → Persiapan Unit → Pembayaran → Pengambilan Unit** — tiap tahap punya timestamp sendiri (`spk_at` … `unit_pickup_at`), kolom `stage` = tahap pertama yang belum selesai. Persetujuan survey bisa **ditolak** → pengajuan `rejected` dan proses berhenti. PO leasing (nomor, tanggal, nama leasing, **nominal DP**) dicatat di tahap Persiapan Unit dan terkunci setelah DP tercatat.
+*   **Admin Filament**: resource baru **Pengajuan Kredit** (`CreditApplicationResource`) — tabel + filter + badge navigasi, halaman view dengan section timeline, ringkasan PO, dan daftar pembayaran; 9 aksi header (Terbitkan SPK, Catat Survey, Setujui/Tolak Survey, Catat PO Leasing, Siapkan Unit, Catat DP, Catat Pelunasan, Konfirmasi Pengambilan Unit, Buka Pesanan). `OrderResource` menambah kolom/filter `purchase_type`, detail kredit per baris, section "Pembelian Kredit" di infolist, dan menyembunyikan aksi mark-paid manual untuk order kredit.
+*   **Buyer**: banner status kredit + kartu **"Timeline Kredit"** di halaman `/my/orders/{order_no}` (status tahap, DP & pelunasan, deskripsi tahap); tombol "Bayar Sekarang" QRIS disembunyikan untuk order kredit; konfirmasi "Barang Sudah Diterima" ikut menyelesaikan pengajuan kredit (`CreditService::confirmPickupIfReady`). Halaman finish checkout menampilkan konfirmasi pengajuan kredit (tanpa QRIS).
+*   **Config**: `config/leasing.php` — `subdomain` (`LEASING_SUBDOMAIN`), `access_mode` (`admin`/`portal`, default **`admin`**), stub `portal.*` untuk persiapan subdomain leasing. Keputusan apakah leasing mendapat login sendiri **masih tertunda** — seluruh tahap saat ini dikelola admin dealer. Riset lengkap: `docs/LEASING_RESEARCH.md`.
+*   **Migration**: `2026_11_13_000001_create_credit_tables` (tabel `credit_applications`, `credit_payments`, kolom `orders.purchase_type`) — non-destructive, sudah dijalankan di DB lokal.
+*   **Tests**: `tests/Feature/CreditPurchaseTest.php` — 10 test (checkout kredit + pembuatan pengajuan, opsi kredit tidak tersedia untuk cart part, DP & pelunasan terpisah + stok berkurang, tahap tidak bisa dilompati, survey ditolak menghentikan proses, pengambilan menyelesaikan order, timeline tampil di halaman buyer, halaman admin render, aksi admin maju per tahap, aksi admin menjalankan timeline penuh). Baseline: 52 lulus; 3 gagal lama di `OcbcPaymentTest` (private key OCBC tidak ada di environment).
 
 ### Unreleased — Part Katalog: Galeri Gambar per Model
 *   **Alur baru part catalog**: `/pilih/sparepart` → pilih merk (WMOTO, SM SPORT, CF MOTO, ZONTES, ZEEHO) → `/pilih/sparepart/brand-pdf/{brand}` menampilkan **daftar model (list/tabel)** dengan tombol Lihat Gambar & Buka PDF → `/pilih/sparepart/brand-pdf/{brand}/{catalog}` menampilkan seluruh halaman katalog sebagai **grid kotak-kotak kecil** (klik untuk memperbesar lewat **lightbox**: navigasi prev/next, tombol Esc/panah) plus tombol download PDF asli.

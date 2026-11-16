@@ -9,7 +9,7 @@ Laravel 13 (JOMOTO Center)
 ├── Storefront        app/Http/Controllers/Buyer/* + resources/views/buyer/*
 ├── Services          app/Services/*             (logika bisnis terpusat)
 ├── Models            app/Models/*               (40+ Eloquent models)
-├── Migrations        database/migrations/*      (38 migration)
+├── Migrations        database/migrations/*      (39 migration)
 └── Routes            routes/web.php
 ```
 
@@ -30,6 +30,7 @@ Laravel 13 (JOMOTO Center)
 |---------|--------|
 | `StockService` | Semua operasi stok varian + mutasi (adjust, set, get history, decrease on order) |
 | `OrderService` | Update status order, cancel, markAsPaid, auto-decrease stok saat paid |
+| `CreditService` | Pembelian kredit (leasing): pengajuan, timeline 6 tahap berurutan, PO leasing, pencatatan DP & pelunasan terpisah, penyelesaian order saat pengambilan unit |
 | `PaymentService` | Pencatatan payment dan kompatibilitas Midtrans lama |
 | `OcbcPaymentService` | Access token, signature, QR generation, inquiry, dan callback QRIS MTI |
 | `BiteshipService` | Integrasi pengiriman |
@@ -39,13 +40,15 @@ Laravel 13 (JOMOTO Center)
 - `Item` → variasi warna `ItemColor` (stok di ItemColor). Item = motor/mobil/ATV.
 - `Part` → variasi `PartVariant` (stok). Part = sparepart.
 - `StockMutation` — polymorphic ke Item/ItemColor/PartVariant, mencatat riwayat.
-- `Order` / `OrderItem` — order item terhubung via polymorphic `itemable`.
+- `Order` / `OrderItem` — order item terhubung via polymorphic `itemable`. `Order.purchase_type` = `cash`/`credit`.
 - `Cart` / `CartItem` — polymorphic `itemable`.
+- `CreditApplication` (1:1 `Order`) → `CreditPayment` (DP/pelunasan, unik per type) — pembelian kredit/leasing.
 - Content: Banner, Event, News, Career, Dealer, HeroVideo, ShowroomGallery, MapsLocation, WhyChooseUs, StoreAddress.
 
 ## Database
-*   MySQL; Eloquent Migrations (38 file). **Jangan `migrate:fresh` di production.**
+*   MySQL; Eloquent Migrations (39 file). **Jangan `migrate:fresh` di production.**
 *   Tabel stok: `stock_mutations`, kolom `stock`/`stock_updated_at` di `item_colors`. Lihat DATABASE.md.
+*   Tabel kredit: `credit_applications`, `credit_payments` + kolom `orders.purchase_type`. Lihat DATABASE.md & LEASING_RESEARCH.md.
 
 ## Pola Desain
 1.  **MVC** arsitektur utama.

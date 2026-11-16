@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
     'status',
     'payment_status',
     'payment_method',
+    'purchase_type',
     'payment_provider',
     'payment_reference',
     'paid_at',
@@ -67,7 +68,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id', 'order_no', 'status', 'payment_status',
-        'payment_method', 'payment_provider', 'payment_reference', 'paid_at',
+        'payment_method', 'purchase_type', 'payment_provider', 'payment_reference', 'paid_at',
         'subtotal', 'shipping_cost', 'shipping_type', 'total',
         'dp_amount', 'remaining_amount', 'is_indent', 'indent_status',
         'address_snapshot', 'shipping_snapshot', 'shipping_courier', 'shipping_receipt',
@@ -89,6 +90,8 @@ class Order extends Model
     public const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'expired'];
 
     public const INDENT_STATUSES = ['waiting_stock', 'ready_for_delivery', 'waiting_payment', 'paid_full'];
+    public const PURCHASE_TYPE_CASH = 'cash';
+    public const PURCHASE_TYPE_CREDIT = 'credit';
 
     public const DEFAULT_MOTOR_INVOICE_NOTES = "Harga pada Dokumen ini mengacu pada harga Jual (On The Road),\nHarga sudah termasuk PPN 11%\nDokumen ini bukan merupakan tanda terima Uang,\nPembayaran dianggap SAH apabila Keseluruhan Uang telah diterima di Rekening Resmi atas nama CV. Jowimar Mandiri Makmur.";
 
@@ -246,6 +249,25 @@ class Order extends Model
     public function shipment(): HasOne
     {
         return $this->hasOne(Shipment::class);
+    }
+
+    public function creditApplication(): HasOne
+    {
+        return $this->hasOne(CreditApplication::class);
+    }
+
+    /** Pembelian secara kredit (leasing): DP dari customer, pelunasan dari leasing. */
+    public function isCredit(): bool
+    {
+        return $this->purchase_type === self::PURCHASE_TYPE_CREDIT;
+    }
+
+    public function purchaseTypeLabel(): string
+    {
+        return match ($this->purchase_type) {
+            self::PURCHASE_TYPE_CREDIT => 'Kredit',
+            default => 'Tunai',
+        };
     }
 
     public function isDealerPickup(): bool

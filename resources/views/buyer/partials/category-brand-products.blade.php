@@ -23,7 +23,7 @@
                 @if($totalStock > 0)
                     <span class="stock-badge ready">({{ $totalStock }} unit)</span>
                 @else
-                    <span class="stock-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">(Habis)</span>
+                    <span class="stock-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">(Indent)</span>
                 @endif
                 <span class="stock-badge otr">OTR SURABAYA</span>
             @endif

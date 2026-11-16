@@ -73,7 +73,7 @@
                             @if($totalStock > 0)
                                 - {{ $totalStock }} unit tersedia
                             @else
-                                - Habis
+                                - Indent
                             @endif
                         </span>
                         @if($item->discount_type)
@@ -125,7 +125,7 @@
                                 @if($item->stock_status === 'indent')
                                     Pre-Order (Indent) - DP 50%
                                 @elseif($item->stock_status === 'ready' && $firstColorStock <= 0)
-                                    Stok Habis
+                                    Indent
                                 @else
                                     Add to Cart
                                 @endif
@@ -138,7 +138,7 @@
                             </div>
                         @elseif($item->stock_status === 'ready' && $totalStock <= 0)
                             <div class="indent-notice" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #dc2626;">
-                                Maaf, stok motor ini sedang habis. Silakan hubungi kami untuk informasi lebih lanjut.
+                                Produk ini tersedia secara indent. Hubungi kami untuk proses indent.
                             </div>
                         @endif
                     @endif
@@ -623,7 +623,7 @@
                         badge.style.background = 'rgba(34,197,94,0.1)';
                         badge.style.color = '#22c55e';
                     } else {
-                        badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;"></span> Stok Habis';
+                        badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span> Indent';
                         badge.style.background = 'rgba(239,68,68,0.1)';
                         badge.style.color = '#ef4444';
                     }
@@ -634,7 +634,7 @@
                         btn.textContent = 'Add to Cart';
                     } else {
                         btn.disabled = true;
-                        btn.textContent = 'Stok Habis';
+                        btn.textContent = 'Indent';
                     }
                 }
             }

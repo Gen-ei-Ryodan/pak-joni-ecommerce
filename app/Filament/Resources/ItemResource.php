@@ -95,6 +95,13 @@ class ItemResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('brand_id')->label('Brand')
                     ->relationship('brand', 'name')->searchable()->preload(),
+                Tables\Filters\SelectFilter::make('compatibleMotors')->label('Motor')
+                    ->relationship('compatibleMotors', 'name')
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn ($livewire) => $livewire instanceof Pages\ListItemsByType
+                        && $livewire->getCategoryType()?->slug === 'sparepart'),
                 Tables\Filters\SelectFilter::make('category_id')->label('Kategori')
                     ->relationship('category', 'name')->searchable()->preload(),
             ])

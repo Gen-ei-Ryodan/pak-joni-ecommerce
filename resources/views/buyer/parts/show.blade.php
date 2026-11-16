@@ -74,7 +74,7 @@
                                         data-price="{{ $v->price }}"
                                         data-stock="{{ $v->stock }}"
                                         onclick="document.querySelectorAll('.variant-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelector('[data-variant-id]').value=this.dataset.variantId;document.querySelector('[data-price-view]').textContent='Rp '+parseInt(this.dataset.price).toLocaleString('id-ID');var qty=document.querySelector('[data-qty]');var warn=document.querySelector('[data-stock-warn]');warn.style.display=parseInt(this.dataset.stock)<10?'block':'none';warn.textContent='Stok tersedia: '+this.dataset.stock;document.querySelector('[data-stock-info]').textContent='Stok: '+this.dataset.stock;">
-                                        {{ $v->name }} <span class="variant-stock-hint">{{ $v->stock > 0 ? '('.$v->stock.')' : '(Habis)' }}</span>
+                                        {{ $v->name }} <span class="variant-stock-hint">{{ $v->stock > 0 ? '('.$v->stock.')' : '(Indent)' }}</span>
                                     </button>
                                 @endforeach
                             </div>

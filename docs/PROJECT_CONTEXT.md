@@ -24,10 +24,10 @@ Platform e-commerce untuk dealer motor/mobil/ATV dan sparepart (JOMOTO Center). 
 1.  **Manajemen Produk (Item & Part):** Items = motor/mobil/ATV dengan varian warna (`ItemColor`), Parts = sparepart dengan varian (`PartVariant`). Relasi: images, specifications, 360 images, catalog, price list, kategori.
 2.  **Manajemen Stok:** Stok per varian (`ItemColor`/`PartVariant`), riwayat mutasi (`stock_mutations`), auto-decrease saat order paid, kelola via modal di admin.
 3.  **Keranjang & Wishlist:** Polymorphic (Item/ItemColor/Part/PartVariant).
-4.  **Checkout & Pembayaran:** Midtrans, opsi ambil di dealer (`dealer_pickup`) atau kurir (`courier`).
+4.  **Checkout & Pembayaran:** Midtrans, opsi ambil di dealer (`dealer_pickup`) atau kurir (`courier`), serta **pembelian kredit (leasing)** — DP dibayar customer ke dealer, pelunasan dibayar leasing ke dealer, timeline 6 tahap (SPK → Survey → Persetujuan Survey → Persiapan Unit → Pembayaran → Pengambilan Unit). Lihat LEASING_RESEARCH.md.
 5.  **Manajemen Pesanan:** Status lifecycle (pending → processing → shipped → completed; cancellable).
 6.  **Manajemen Pengiriman:** Biteship.
-7.  **Admin Dashboard (Filament v4):** 30+ resources (produk, part, order, banner, event, news, career, dealer, showroom, dll).
+7.  **Admin Dashboard (Filament v4):** 30+ resources (produk, part, order, pengajuan kredit, banner, event, news, career, dealer, showroom, dll).
 
 ## Peran Pengguna
 *   **Admin:** Mengelola seluruh platform via Filament (produk, stok, order, pengguna, kategori, konten).

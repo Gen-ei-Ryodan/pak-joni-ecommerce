@@ -46,7 +46,7 @@
                                     @if($totalStock > 0)
                                         <span style="font-size: 11px; color: var(--muted);">({{ $totalStock }} unit)</span>
                                     @else
-                                        <span style="font-size: 11px; color: #ef4444;">(Habis)</span>
+                                        <span style="font-size: 11px; color: #ef4444;">(Indent)</span>
                                     @endif
                                 @elseif($item->stock_status === 'indent')
                                     <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: #fef3c7; color: #92400e;">
