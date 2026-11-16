@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\ItemResource\Pages\CreateItem;
+use App\Filament\Resources\ItemResource\Pages\ListItemsByType;
+use App\Models\Brand;
 use App\Models\CategoryType;
 use App\Models\Item;
 use App\Models\User;
@@ -33,7 +35,130 @@ class AdminItemSparepartFormTest extends TestCase
 
         $this->actingAs($this->admin())
             ->get('/admin/items/type/' . $sparepart->id)
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('tableFiltersForm.brand_id')
+            ->assertSee('tableFiltersForm.compatibleMotors');
+    }
+
+    public function test_motor_list_page_does_not_show_motor_compatibility_filter(): void
+    {
+        [$motor, $sparepart] = $this->seedTypes();
+
+        $this->actingAs($this->admin())
+            ->get('/admin/items/type/' . $motor->id)
+            ->assertOk()
+            ->assertSee('tableFiltersForm.brand_id')
+            ->assertDontSee('tableFiltersForm.compatibleMotors');
+    }
+
+    public function test_sparepart_list_exposes_brand_and_motor_filters_with_name_search(): void
+    {
+        [$motor, $sparepart] = $this->seedTypes();
+
+        // Catatan: Livewire::test selalu mount lewat endpoint uji tanpa {categoryType},
+        // jadi tipe di-set sebagai properti publik lalu diperiksa secara live.
+        Livewire::test(ListItemsByType::class)
+            ->set('activeCategoryTypeId', (string) $sparepart->id)
+            ->assertTableFilterVisible('brand_id')
+            ->assertTableFilterVisible('compatibleMotors')
+            ->assertTableFilterVisible('category_id');
+
+        Livewire::test(ListItemsByType::class)
+            ->set('activeCategoryTypeId', (string) $motor->id)
+            ->assertTableFilterHidden('compatibleMotors');
+    }
+
+    public function test_admin_can_filter_sparepart_list_by_brand(): void
+    {
+        [$motor, $sparepart] = $this->seedTypes();
+
+        $brandA = Brand::create(['name' => 'Astra Honda', 'slug' => 'astra-honda', 'is_active' => true]);
+        $brandB = Brand::create(['name' => 'Yamaha', 'slug' => 'yamaha', 'is_active' => true]);
+
+        $itemA = Item::create([
+            'category_type_id' => $sparepart->id,
+            'brand_id' => $brandA->id,
+            'name' => 'Ban Tubeless 17',
+            'slug' => 'ban-tubeless-17',
+            'status' => 'active',
+            'is_active' => true,
+        ]);
+        $itemB = Item::create([
+            'category_type_id' => $sparepart->id,
+            'brand_id' => $brandB->id,
+            'name' => 'Oli Mesin 1L',
+            'slug' => 'oli-mesin-1l',
+            'status' => 'active',
+            'is_active' => true,
+        ]);
+
+        Livewire::test(ListItemsByType::class)
+            ->set('activeCategoryTypeId', (string) $sparepart->id)
+            ->filterTable('brand_id', $brandA->id)
+            ->assertCanSeeTableRecords([$itemA])
+            ->assertCanNotSeeTableRecords([$itemB]);
+    }
+
+    public function test_admin_can_filter_sparepart_list_by_motor(): void
+    {
+        [$motor, $sparepart] = $this->seedTypes();
+
+        $motorA = Item::create([
+            'category_type_id' => $motor->id,
+            'name' => 'SM Sport GT 250',
+            'slug' => 'sm-sport-gt-250',
+            'status' => 'active',
+            'is_active' => true,
+        ]);
+
+        $compatible = Item::create([
+            'category_type_id' => $sparepart->id,
+            'name' => 'Ban Tubeless 17',
+            'slug' => 'ban-tubeless-17',
+            'status' => 'active',
+            'is_active' => true,
+        ]);
+        $notCompatible = Item::create([
+            'category_type_id' => $sparepart->id,
+            'name' => 'Oli Mesin 1L',
+            'slug' => 'oli-mesin-1l',
+            'status' => 'active',
+            'is_active' => true,
+        ]);
+
+        $compatible->compatibleMotors()->attach($motorA->id);
+
+        Livewire::test(ListItemsByType::class)
+            ->set('activeCategoryTypeId', (string) $sparepart->id)
+            ->filterTable('compatibleMotors', [$motorA->id])
+            ->assertCanSeeTableRecords([$compatible])
+            ->assertCanNotSeeTableRecords([$notCompatible]);
+    }
+
+    public function test_admin_can_search_sparepart_list_by_name(): void
+    {
+        [$motor, $sparepart] = $this->seedTypes();
+
+        $ban = Item::create([
+            'category_type_id' => $sparepart->id,
+            'name' => 'Ban Tubeless 17',
+            'slug' => 'ban-tubeless-17',
+            'status' => 'active',
+            'is_active' => true,
+        ]);
+        $oli = Item::create([
+            'category_type_id' => $sparepart->id,
+            'name' => 'Oli Mesin 1L',
+            'slug' => 'oli-mesin-1l',
+            'status' => 'active',
+            'is_active' => true,
+        ]);
+
+        Livewire::test(ListItemsByType::class)
+            ->set('activeCategoryTypeId', (string) $sparepart->id)
+            ->searchTable('Ban Tubeless')
+            ->assertCanSeeTableRecords([$ban])
+            ->assertCanNotSeeTableRecords([$oli]);
     }
 
     public function test_sparepart_item_form_shows_part_number_pdf_and_motor_fields(): void

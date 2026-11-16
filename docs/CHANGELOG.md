@@ -2,6 +2,10 @@
 
 ## Catatan Perubahan Proyek
 
+### Unreleased — Filter Admin Katalog Sparepart
+*   **Halaman daftar sparepart admin** (`/admin/items/type/{sparepart}`, `ItemResource::table()`): filter **Motor** baru (`SelectFilter` multi-select pada relasi `compatibleMotors`, pivot `item_motor_compatibility`) — hanya tampil saat tipe halaman = `sparepart`, sembunyi otomatis di halaman motor/mobil/ATV. Filter **Brand** (`brand_id`) dan **search nama sparepart** (kolom `name` + `part_number` `searchable`) sudah ada sebelumnya dan ikut diverifikasi.
+*   **Tests**: `tests/Feature/AdminItemSparepartFormTest.php` — 5 test baru: render field filter via HTTP (sparepart tampil, halaman motor tidak), visibilitas filter brand/motor/kategori, filter by brand, filter by motor (kompatibilitas `item_motor_compatibility`), dan search by nama. Baseline: 58 lulus; 7 gagal lama di `OcbcPaymentTest` (private key OCBC tidak ada di environment — sudah gagal sebelum perubahan ini).
+
 ### Unreleased — Pembelian Kredit (Leasing)
 *   **Checkout kredit**: opsi pembayaran **"Kredit (Leasing)"** pada `/checkout/payment` (hanya bila keranjang memuat kendaraan — `ItemColor`; cart sparepart-only ditolak validasi). Order kredit dibuat dengan `orders.purchase_type = 'credit'`, `payment_method = 'credit'`, tanpa QRIS, tanpa skema indent DP 50%, dan otomatis membuat `credit_applications` (no. `KRT…`, tahap awal `spk`).
 *   **Dua pihak pembayar dicatat terpisah** (`credit_payments`): **DP** dibayarkan customer ke dealer (pencatatan otomatis menandai order `paid` → stok berkurang lewat `OrderService::markAsPaid`), **pelunasan** dibayarkan leasing ke dealer (wajib setelah DP). Unique DB `(credit_application_id, type)` → maksimal 1 DP + 1 pelunasan. Tahap "Pembayaran" selesai hanya saat **keduanya** tercatat (`payment_at`).
