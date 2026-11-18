@@ -9,6 +9,7 @@
         <div class="container dash-grid">
             <aside class="sidebar">
                 <a href="{{ url('/dashboard') }}" class="{{ request()->is('dashboard') ? 'active' : '' }}">Dashboard</a>
+                <a href="{{ route('buyer.profile.edit') }}" class="{{ request()->is('profile*') ? 'active' : '' }}">Profile</a>
                 <a href="{{ route('buyer.addresses.index') }}" class="{{ request()->is('addresses*') ? 'active' : '' }}">Addresses</a>
                 <a href="{{ route('buyer.orders.index') }}" class="{{ request()->is('orders*') ? 'active' : '' }}">My Orders</a>
                 <a href="{{ route('buyer.wishlist.index') }}" class="{{ request()->is('wishlist*') ? 'active' : '' }}">Wishlist</a>

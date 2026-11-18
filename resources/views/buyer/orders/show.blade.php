@@ -58,6 +58,23 @@
         </div>
     @endif
 
+    @if($order->isCashVehicle() && $order->isDpPaid() && (float) $order->remaining_amount > 0)
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+            <div>
+                <div style="font-weight:700;font-size:14px;color:#b45309;">Pembayaran Tahap 1 (DP Rp 500.000) Berhasil ✓</div>
+                <div class="muted" style="font-size:12.5px;margin-top:2px;">
+                    SPK & Kwitansi DP siap dicetak. Sisa tagihan pelunasan: <strong>Rp {{ number_format((float) $order->remaining_amount, 0, ',', '.') }}</strong>.
+                </div>
+            </div>
+            <form method="post" action="{{ route('buyer.orders.payRemaining', $order->order_no) }}">
+                @csrf
+                <button type="submit" class="btn btn-primary" onclick="return confirm('Lanjutkan pelunasan sebesar Rp {{ number_format((float) $order->remaining_amount, 0, ',', '.') }}?')">
+                    Bayar Pelunasan (Rp {{ number_format((float) $order->remaining_amount, 0, ',', '.') }})
+                </button>
+            </form>
+        </div>
+    @endif
+
     @if(! $order->is_admin_verified)
         <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13.5px; color: #60a5fa; display: flex; align-items: center; gap: 10px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
@@ -91,12 +108,61 @@
                                 <span class="order-meta-label">Payment</span>
                                 <span class="badge {{ $order->paymentStatusBadge() }}">{{ $order->payment_status }}</span>
                             </div>
+                            <div class="order-meta-item">
+                                <span class="order-meta-label">Faktur Pajak</span>
+                                @if($order->needs_tax_invoice)
+                                    <span class="badge bg-blue" style="font-size:11px;">Dibutuhkan</span>
+                                @else
+                                    <span class="badge bg-gray" style="font-size:11px;">Tidak Dibutuhkan</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                         <span class="badge {{ $order->statusBadge() }}" style="font-size:13px;padding:6px 16px;">{{ $order->statusLabel() }}</span>
 
-                        @if($order->hasVehicle())
+                        {{-- DOKUMEN SEPEDA MOTOR & ATV CASH (2-TAHAP: DP & PELUNASAN) --}}
+                        @if($order->isCashVehicle())
+                            {{-- Kwitansi DP: Aktif setelah DP dibayar --}}
+                            @if($order->isDpPaid() || $order->isFullyPaid() || $order->paid_at)
+                                <a class="btn btn-outline" href="{{ route('buyer.orders.receipt', ['order' => $order->order_no, 'type' => 'dp']) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
+                                    Cetak Kwitansi DP
+                                </a>
+                            @endif
+
+                            {{-- SPK: Aktif setelah DP dibayar dan diverifikasi admin --}}
+                            @if($order->is_admin_verified)
+                                <a class="btn btn-outline" href="{{ route('buyer.orders.spk', $order->order_no) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
+                                    Cetak SPK
+                                </a>
+                            @else
+                                <button class="btn btn-outline" type="button" disabled style="opacity:0.5;cursor:not-allowed;flex-shrink:0;" title="SPK sedang diverifikasi oleh admin dealer">
+                                    Cetak SPK
+                                </button>
+                            @endif
+
+                            {{-- Faktur Motor & Kwitansi Pelunasan: Aktif setelah pelunasan berhasil --}}
+                            @if($order->isFullyPaid())
+                                @if($order->is_admin_verified)
+                                    <a class="btn btn-outline" href="{{ route('buyer.orders.motor-invoice', $order->order_no) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
+                                        Cetak Faktur Motor
+                                    </a>
+                                @else
+                                    <button class="btn btn-outline" type="button" disabled style="opacity:0.5;cursor:not-allowed;flex-shrink:0;" title="Dokumen sedang diverifikasi oleh admin dealer">
+                                        Cetak Faktur Motor
+                                    </button>
+                                @endif
+                                <a class="btn btn-outline" href="{{ route('buyer.orders.receipt', ['order' => $order->order_no, 'type' => 'full']) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
+                                    Cetak Kwitansi Pelunasan
+                                </a>
+                            @else
+                                <button class="btn btn-outline" type="button" disabled style="opacity:0.5;cursor:not-allowed;flex-shrink:0;" title="Faktur motor dapat dicetak setelah pelunasan berhasil">
+                                    Cetak Faktur Motor (Menunggu Pelunasan)
+                                </button>
+                            @endif
+
+                        @elseif($order->hasVehicle())
+                            {{-- Kendaraan Kredit --}}
                             @if($order->is_admin_verified)
                                 <a class="btn btn-outline" href="{{ route('buyer.orders.motor-invoice', $order->order_no) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
                                     Cetak Faktur Motor
@@ -105,31 +171,36 @@
                                     Cetak SPK
                                 </a>
                             @else
-                                <button class="btn btn-outline" type="button" disabled style="opacity:0.5;cursor:not-allowed;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;" title="Dokumen sedang diverifikasi oleh admin dealer">
+                                <button class="btn btn-outline" type="button" disabled style="opacity:0.5;cursor:not-allowed;flex-shrink:0;" title="Dokumen sedang diverifikasi oleh admin dealer">
                                     Cetak Faktur Motor
                                 </button>
-                                <button class="btn btn-outline" type="button" disabled style="opacity:0.5;cursor:not-allowed;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;" title="Dokumen sedang diverifikasi oleh admin dealer">
+                                <button class="btn btn-outline" type="button" disabled style="opacity:0.5;cursor:not-allowed;flex-shrink:0;" title="Dokumen sedang diverifikasi oleh admin dealer">
                                     Cetak SPK
                                 </button>
                             @endif
+                            @if($order->payment_status === 'paid' || $order->status === 'paid' || $order->paid_at)
+                                <a class="btn btn-outline" href="{{ route('buyer.orders.receipt', $order->order_no) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
+                                    Cetak Kwitansi
+                                </a>
+                            @endif
                         @endif
 
+                        {{-- Sparepart Invoice --}}
                         @if($order->hasParts())
                             @if($order->is_admin_verified)
                                 <a class="btn btn-outline" href="{{ route('buyer.orders.parts-invoice', $order->order_no) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
                                     Cetak Faktur Sukucadang
                                 </a>
                             @else
-                                <button class="btn btn-outline" type="button" disabled style="opacity:0.5;cursor:not-allowed;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;" title="Dokumen sedang diverifikasi oleh admin dealer">
+                                <button class="btn btn-outline" type="button" disabled style="opacity:0.5;cursor:not-allowed;flex-shrink:0;" title="Dokumen sedang diverifikasi oleh admin dealer">
                                     Cetak Faktur Sukucadang
                                 </button>
                             @endif
-                        @endif
-                        @if($order->payment_status === 'paid' || $order->status === 'paid' || $order->paid_at)
-                            <a class="btn btn-outline" href="{{ route('buyer.orders.receipt', $order->order_no) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                                Cetak Kwitansi
-                            </a>
+                            @if(! $order->hasVehicle() && ($order->payment_status === 'paid' || $order->status === 'paid' || $order->paid_at))
+                                <a class="btn btn-outline" href="{{ route('buyer.orders.receipt', $order->order_no) }}" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
+                                    Cetak Kwitansi
+                                </a>
+                            @endif
                         @endif
                         <a class="btn" href="{{ route('buyer.orders.index') }}" style="flex-shrink:0;">Back</a>
                     </div>
@@ -165,6 +236,41 @@
                     @endif
                 @endif
             </div>
+
+            {{-- SPK & Document Data --}}
+            @if($order->hasVehicle())
+                <div class="shipping-card" style="border-left: 3px solid #3b82f6;">
+                    <div class="card-title-sm" style="color:#2563eb;">Data Dokumen SPK & Administrasi STNK/BPKB</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin-top:8px;font-size:13px;">
+                        <div>
+                            <span class="order-meta-label">Nama Pemesan:</span>
+                            <div style="font-weight:600;">{{ $order->buyer_name ?: ($order->user->name ?? '-') }}</div>
+                        </div>
+                        <div>
+                            <span class="order-meta-label">Telepon Pemesan:</span>
+                            <div>{{ $order->buyer_phone ?: ($order->user->phone ?? '-') }}</div>
+                        </div>
+                        <div>
+                            <span class="order-meta-label">Nomor KTP (NIK):</span>
+                            <div>{{ $order->buyer_nik ?: ($order->user->ktp_no ?? '-') }}</div>
+                        </div>
+                        <div>
+                            <span class="order-meta-label">Nama di STNK/BPKB:</span>
+                            <div style="font-weight:600;">{{ $order->stnk_name ?: '-' }}</div>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <span class="order-meta-label">Alamat di STNK/BPKB:</span>
+                            <div>{{ $order->stnk_address ?: '-' }}</div>
+                        </div>
+                        @if($order->ktp_image_path)
+                            <div style="grid-column: 1 / -1;display:flex;align-items:center;gap:8px;color:#059669;font-weight:500;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                <span>Foto KTP Customer telah terunggah dan diverifikasi oleh sistem</span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             {{-- Items --}}
             <div class="sidebar-card">

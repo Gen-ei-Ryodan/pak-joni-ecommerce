@@ -363,6 +363,9 @@ class OrderResource extends Resource
                         ->label('Verifikasi Data Faktur & SPK (Rilis Cetak ke Customer)')
                         ->helperText('Aktifkan setelah nomor rangka dan nomor mesin telah diisi dengan benar. Customer hanya bisa mencetak Faktur dan SPK setelah diverifikasi.')
                         ->default(false),
+                    Forms\Components\Toggle::make('needs_tax_invoice')
+                        ->label('Customer Membutuhkan Faktur Pajak')
+                        ->disabled(),
                 ]),
 
             Section::make('Faktur Pembelian Sepeda Motor')
@@ -425,6 +428,14 @@ class OrderResource extends Resource
                     Forms\Components\DatePicker::make('spk_order_date')
                         ->label('Tanggal Pemesanan')
                         ->default(fn (?Order $record) => $autoSpk($record, 'spk_order_date', now()->toDateString())),
+
+                    Forms\Components\FileUpload::make('ktp_image_path')
+                        ->label('Foto KTP Customer')
+                        ->image()
+                        ->disk('public')
+                        ->directory('ktp')
+                        ->columnSpanFull()
+                        ->helperText('Foto KTP asli yang diunggah oleh customer pada saat checkout SPK.'),
 
                     Forms\Components\TextInput::make('stnk_name')
                         ->label('Nama di STNK / BPKB')
@@ -563,7 +574,14 @@ class OrderResource extends Resource
                                 Infolists\Components\TextEntry::make('adminVerifier.name')
                                     ->label('Diverifikasi Oleh')
                                     ->placeholder('-'),
+                                Infolists\Components\IconEntry::make('needs_tax_invoice')
+                                    ->label('Faktur Pajak')
+                                    ->boolean(),
                             ]),
+                        Infolists\Components\ImageEntry::make('ktp_image_path')
+                            ->label('Foto KTP Customer')
+                            ->disk('public')
+                            ->visible(fn ($record) => ! empty($record?->ktp_image_path)),
                     ]),
 
                 Section::make('Payment Summary')

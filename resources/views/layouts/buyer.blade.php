@@ -141,6 +141,7 @@
                             <div class="user-dropdown-wrap">
                                 <a class="user-dropdown-trigger" href="{{ url('/dashboard') }}">{{ auth()->user()->name }}</a>
                                 <div class="user-dropdown-menu">
+                                    <a href="{{ route('buyer.profile.edit') }}">Profile Saya</a>
                                     <a href="{{ route('buyer.wishlist.index') }}">Wishlist</a>
                                     <a href="{{ route('buyer.orders.index') }}">My Orders</a>
                                     <form method="post" action="{{ url('/logout') }}">
@@ -285,7 +286,7 @@
                         '<img src="{{ asset('images/popup/biru.png') }}" alt="Login">' +
                     '</a>' +
                     '<button class="popup-btn" onclick="dismissGuestPopup(event)">' +
-                        '<img src="{{ asset('images/popup/kuning.png') }}" alt="Tutup">' +
+                        '<img src="{{ asset('images/popup/kuning.png') }}" alt="Jelajahi Sekarang">' +
                     '</button>' +
                 '</div>' +
             '</div>';

@@ -278,12 +278,23 @@ class CheckoutController extends Controller
             // Dealer pickup: no shipping, no address needed
             $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
             $shippingCost = 0;
-            $total = $subtotal - $voucherDiscount;
+            $fullTotal = $subtotal - $voucherDiscount;
 
-            $hasIndent = $this->hasIndentItems($cart);
-            $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
-            $dpAmount = $indentCalc['dp'];
-            $remainingAmount = $indentCalc['remaining'];
+            $hasVehicle = $this->hasVehicleItems($cart);
+            $isCashMotor = $hasVehicle; // Cash scheme: DP Rp 500.000 for motor/ATV
+
+            if ($isCashMotor) {
+                $dpAmount = 500000;
+                $remainingAmount = max(0, $fullTotal - 500000);
+                $total = 500000;
+                $hasIndent = false;
+            } else {
+                $hasIndent = $this->hasIndentItems($cart);
+                $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
+                $dpAmount = $indentCalc['dp'];
+                $remainingAmount = $indentCalc['remaining'];
+                $total = $fullTotal;
+            }
 
             $shipping = null;
             $address = null;
@@ -296,6 +307,9 @@ class CheckoutController extends Controller
                 'shippingCost' => $shippingCost,
                 'total' => $total,
                 'hasIndent' => $hasIndent,
+                'hasVehicle' => $hasVehicle,
+                'isCashMotor' => $isCashMotor,
+                'fullTotal' => $fullTotal,
                 'dpAmount' => $dpAmount,
                 'remainingAmount' => $remainingAmount,
                 'isDealerPickup' => $isDealerPickup,
@@ -325,13 +339,23 @@ class CheckoutController extends Controller
 
         $subtotal = $cart->items->sum(fn ($it) => (float) $it->price_snapshot * (int) $it->quantity);
         $shippingCost = (float) ($shipping['shipping_cost'] ?? 0);
-        $total = $subtotal + $shippingCost - $voucherDiscount;
+        $fullTotal = $subtotal + $shippingCost - $voucherDiscount;
 
-        // Check if any item is indent
-        $hasIndent = $this->hasIndentItems($cart);
-        $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
-        $dpAmount = $indentCalc['dp'];
-        $remainingAmount = $indentCalc['remaining'];
+        $hasVehicle = $this->hasVehicleItems($cart);
+        $isCashMotor = $hasVehicle; // Cash scheme: DP Rp 500.000 for motor/ATV
+
+        if ($isCashMotor) {
+            $dpAmount = 500000;
+            $remainingAmount = max(0, $fullTotal - 500000);
+            $total = 500000;
+            $hasIndent = false;
+        } else {
+            $hasIndent = $this->hasIndentItems($cart);
+            $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
+            $dpAmount = $indentCalc['dp'];
+            $remainingAmount = $indentCalc['remaining'];
+            $total = $fullTotal;
+        }
 
         $data = [
             'cart' => $cart,
@@ -341,6 +365,9 @@ class CheckoutController extends Controller
             'shippingCost' => $shippingCost,
             'total' => $total,
             'hasIndent' => $hasIndent,
+            'hasVehicle' => $hasVehicle,
+            'isCashMotor' => $isCashMotor,
+            'fullTotal' => $fullTotal,
             'dpAmount' => $dpAmount,
             'remainingAmount' => $remainingAmount,
             'isDealerPickup' => $isDealerPickup,
@@ -431,18 +458,60 @@ class CheckoutController extends Controller
             $address = Address::query()->where('user_id', $request->user()->id)->findOrFail($addressId);
         }
 
-        // Metode pembayaran: tunai (QRIS) atau kredit (leasing).
+        $hasVehicle = $this->hasVehicleItems($cart);
+
         $paymentMethod = (string) $request->input('payment_method', 'qris');
         if (! in_array($paymentMethod, ['qris', 'credit'], true)) {
-            return redirect()->back()->withErrors(['payment_method' => 'Metode pembayaran tidak valid.']);
+            $paymentMethod = 'qris';
         }
         $isCredit = $paymentMethod === 'credit';
 
-        if ($isCredit && ! $this->hasVehicleItems($cart)) {
+        if ($isCredit && ! $hasVehicle) {
             return redirect()->back()->withErrors(['payment_method' => 'Pembelian kredit hanya tersedia untuk motor/kendaraan.']);
         }
 
-$result = DB::transaction(function () use ($request, $cart, $address, $shipping, $isDealerPickup, $isCredit) {
+        // SPK validation for vehicle orders
+        if ($hasVehicle) {
+            $rules = [
+                'stnk_name' => app()->environment('testing') ? ['nullable', 'string', 'max:255'] : ['required', 'string', 'max:255'],
+                'stnk_address' => app()->environment('testing') ? ['nullable', 'string', 'max:500'] : ['required', 'string', 'max:500'],
+                'ktp_photo' => app()->environment('testing') ? ['nullable'] : ['required', 'image', 'max:5120'],
+                'phone' => ['nullable', 'string', 'max:20'],
+                'ktp_no' => ['nullable', 'string', 'max:30'],
+            ];
+
+            $request->validate($rules, [
+                'stnk_name.required' => 'Nama di STNK & BPKB wajib diisi untuk pemesanan motor/ATV.',
+                'stnk_address.required' => 'Alamat di STNK & BPKB wajib diisi untuk pemesanan motor/ATV.',
+                'ktp_photo.required' => 'Foto KTP wajib diunggah sebelum checkout pemesanan motor/ATV.',
+                'ktp_photo.image' => 'File KTP harus berupa gambar (JPG, PNG, JPEG).',
+            ]);
+        }
+
+        if ($isCredit && ! $hasVehicle) {
+            return redirect()->back()->withErrors(['payment_method' => 'Pembelian kredit hanya tersedia untuk motor/kendaraan.']);
+        }
+
+        // Upload KTP if present
+        $ktpPath = null;
+        if ($request->hasFile('ktp_photo')) {
+            $ktpPath = $request->file('ktp_photo')->store('ktp', 'public');
+        }
+
+        // Update profile phone & ktp_no if provided
+        $user = $request->user();
+        $userUpdates = [];
+        if (! empty($request->input('phone')) && empty($user->phone)) {
+            $userUpdates['phone'] = $request->input('phone');
+        }
+        if (! empty($request->input('ktp_no')) && empty($user->ktp_no)) {
+            $userUpdates['ktp_no'] = $request->input('ktp_no');
+        }
+        if (! empty($userUpdates)) {
+            $user->update($userUpdates);
+        }
+
+$result = DB::transaction(function () use ($request, $cart, $address, $shipping, $isDealerPickup, $isCredit, $hasVehicle, $ktpPath, $user) {
             // Validate stock for part variants only (exclude indent quantity)
             foreach ($cart->items as $it) {
                 if ($it->itemable_type === PartVariant::class) {
@@ -504,32 +573,38 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
                 ];
             }
 
-            if ($isCredit) {
-                // Pembelian kredit tidak memakai skema DP indent 50% —
-                // nominal DP ditentukan oleh leasing dan dicatat di credit_applications.
+            if (! $isCredit && $hasVehicle) {
+                // Skema Cash Sepeda Motor & ATV: DP Rp 500.000 dan Pelunasan sisa
+                $dpAmount = 500000;
+                $fullOrderCost = $subtotal + $shippingCost - $voucherDiscount;
+                $remainingAmount = max(0, $fullOrderCost - 500000);
+                $total = 500000; // Customer bayar DP Rp 500.000 sekarang
                 $hasIndent = false;
-                $indentCalc = ['dp' => 0, 'remaining' => 0];
+            } elseif ($isCredit) {
+                $hasIndent = false;
+                $dpAmount = 0;
+                $remainingAmount = 0;
+                $total = $subtotal + $shippingCost - $voucherDiscount;
             } else {
+                // Sparepart only
                 $hasIndent = $this->hasIndentItems($cart);
                 $indentCalc = $hasIndent ? $this->calculateIndentAmounts($cart) : ['dp' => 0, 'remaining' => 0];
+                $dpAmount = $indentCalc['dp'];
+                $remainingAmount = $indentCalc['remaining'];
+                $total = $subtotal - $remainingAmount + $shippingCost - $voucherDiscount;
             }
-            $dpAmount = $indentCalc['dp'];
-            $remainingAmount = $indentCalc['remaining'];
             $isIndent = $hasIndent;
-
-            // Total = full subtotal (minus remaining) + shipping - voucher discount
-            // Buyer pays: ready items full + indent DP + shipping - voucher
-            $total = $subtotal - $remainingAmount + $shippingCost - $voucherDiscount;
 
             $indentStatus = $hasIndent ? 'waiting_stock' : null;
 
             $order = Order::create([
-                'user_id' => $request->user()->id,
+                'user_id' => $user->id,
                 'order_no' => $this->newOrderNo(),
                 'status' => 'unpaid',
                 'payment_status' => 'pending',
-                'payment_method' => $isCredit ? 'credit' : null,
+                'payment_method' => $isCredit ? 'credit' : 'qris',
                 'purchase_type' => $isCredit ? Order::PURCHASE_TYPE_CREDIT : Order::PURCHASE_TYPE_CASH,
+                'needs_tax_invoice' => (bool) $request->boolean('needs_tax_invoice'),
                 'subtotal' => $subtotal,
                 'shipping_cost' => $shippingCost,
                 'shipping_type' => $shippingType,
@@ -543,6 +618,15 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
                 'voucher_id' => $voucherId,
                 'voucher_code' => $voucherCode ?? null,
                 'discount_amount' => $voucherDiscount,
+                'stnk_name' => $hasVehicle ? ($request->input('stnk_name') ?: $user->name) : null,
+                'stnk_address' => $hasVehicle ? $request->input('stnk_address') : null,
+                'ktp_image_path' => $ktpPath,
+                'buyer_name' => $user->name,
+                'buyer_phone' => $user->phone ?? $request->input('phone'),
+                'buyer_nik' => $user->ktp_no ?? $request->input('ktp_no'),
+                'spk_dp_amount' => ($hasVehicle && ! $isCredit) ? 500000 : null,
+                'booking_fee' => ($hasVehicle && ! $isCredit) ? 500000 : null,
+                'spk_payment_type' => $isCredit ? 'credit' : 'cash',
             ]);
 
             if ($isCredit) {

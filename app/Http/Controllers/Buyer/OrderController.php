@@ -107,34 +107,33 @@ class OrderController extends Controller
             abort(403);
         }
 
-        if (! $order->is_indent) {
-            return back()->withErrors(['indent' => 'Bukan pesanan indent.']);
+        if ((float) $order->remaining_amount <= 0) {
+            return back()->withErrors(['payment' => 'Pesanan ini sudah lunas.']);
         }
 
-        if ($order->indent_status !== 'waiting_payment') {
-            return back()->withErrors(['indent' => 'Belum waktunya pelunasan.']);
-        }
-
-        // Simulate full payment for the remaining amount
+        // Process full payment for the remaining amount
         DB::transaction(function () use ($order) {
+            $totalCost = (float) $order->subtotal + (float) $order->shipping_cost - (float) ($order->discount_amount ?? 0);
+
             $this->orderService->markAsPaid($order, [
-                'total' => $order->subtotal + $order->shipping_cost,
-                'dp_amount' => $order->dp_amount,
+                'total' => $totalCost,
                 'remaining_amount' => 0,
-                'indent_status' => 'paid_full',
+                'payment_status' => 'paid',
+                'status' => 'paid',
+                'indent_status' => $order->is_indent ? 'paid_full' : null,
             ]);
 
             // Update payment record
             if ($payment = $order->payment) {
                 $payment->update([
-                    'amount' => $order->total,
+                    'amount' => $totalCost,
                     'status' => 'success',
                     'paid_at' => now(),
                 ]);
             }
         });
 
-        return redirect()->route('buyer.orders.show', $order)->with('status', 'Pelunasan berhasil! Pesanan akan segera diproses.');
+        return redirect()->route('buyer.orders.show', $order)->with('status', 'Pelunasan berhasil! Faktur Pembelian Sepeda Motor & Kwitansi Pelunasan kini dapat dicetak.');
     }
 
     private function buildTimeline(Order $order): array

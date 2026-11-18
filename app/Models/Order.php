@@ -20,6 +20,9 @@ use Illuminate\Support\Carbon;
     'payment_status',
     'payment_method',
     'purchase_type',
+    'needs_tax_invoice',
+    'ktp_image_path',
+    'buyer_phone',
     'payment_provider',
     'payment_reference',
     'paid_at',
@@ -72,7 +75,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id', 'order_no', 'status', 'is_admin_verified', 'admin_verified_at', 'admin_verified_by',
-        'payment_status', 'payment_method', 'purchase_type', 'payment_provider', 'payment_reference', 'paid_at',
+        'payment_status', 'payment_method', 'purchase_type', 'needs_tax_invoice', 'ktp_image_path', 'buyer_phone', 'payment_provider', 'payment_reference', 'paid_at',
         'subtotal', 'shipping_cost', 'shipping_type', 'total',
         'dp_amount', 'remaining_amount', 'is_indent', 'indent_status',
         'address_snapshot', 'shipping_snapshot', 'shipping_courier', 'shipping_receipt',
@@ -189,7 +192,7 @@ class Order extends Model
         $snapshot = $this->address_snapshot ?? [];
 
         $buyerName = $this->buyer_name ?: ($snapshot['recipient_name'] ?? $this->user?->name ?? '-');
-        $buyerPhone = $snapshot['phone'] ?? $this->user?->phone ?? '-';
+        $buyerPhone = $this->buyer_phone ?: ($snapshot['phone'] ?? $this->user?->phone ?? '-');
         $buyerAddress = $this->buyer_address ?: collect([
             $snapshot['address_line1'] ?? '',
             $snapshot['address_line2'] ?? '',
@@ -211,7 +214,7 @@ class Order extends Model
             'buyer_phone' => $buyerPhone,
             'stnk_name' => $this->stnk_name ?: $buyerName,
             'stnk_address' => $this->stnk_address ?: $buyerAddress,
-            'buyer_nik' => $this->buyer_nik ?: '-',
+            'buyer_nik' => $this->buyer_nik ?: ($this->user?->ktp_no ?: '-'),
             'motor_model' => $modelName,
             'motor_color' => $this->motor_color ?: ($item?->variant_name ?: '-'),
             'manufacturing_year' => $this->manufacturing_year ?: date('Y'),
@@ -233,22 +236,54 @@ class Order extends Model
     /**
      * Receipt data: stored values merged with defaults
      */
-    public function receiptData(): array
+    public function isCashVehicle(): bool
+    {
+        return $this->hasVehicle() && ! $this->isCredit();
+    }
+
+    public function isDpPaid(): bool
+    {
+        return $this->dp_amount > 0 && ($this->payment_status === 'dp_paid' || ($this->paid_at !== null && (float) $this->remaining_amount > 0));
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return ($this->payment_status === 'paid' && (float) $this->remaining_amount <= 0)
+            || ($this->paid_at !== null && (float) $this->remaining_amount <= 0 && ! in_array($this->payment_status, ['unpaid', 'pending'], true));
+    }
+
+    public function receiptData(?string $type = 'auto'): array
     {
         $item = $this->vehicleItems()->first() ?? $this->items->first();
         $itemName = $item ? ($item->name.($item->variant_name ? ' '.$item->variant_name : '')) : 'Unit Sepeda Motor';
-        $defaultPaymentFor = 'Pelunasan '.$itemName;
 
         $snapshot = $this->address_snapshot ?? [];
         $buyerName = $this->buyer_name ?: ($snapshot['recipient_name'] ?? $this->user?->name);
 
+        $isDp = $type === 'dp' || ($type === 'auto' && $this->isCashVehicle() && $this->dp_amount > 0 && (float) $this->remaining_amount > 0);
+
+        if ($isDp) {
+            $amount = (float) ($this->dp_amount ?: 500000);
+            $receiptNo = $this->receipt_no ? $this->receipt_no . '-DP' : 'KW-DP-' . $this->order_no;
+            $paymentFor = 'Pembayaran Uang Muka (DP) / Tanda Jadi ' . $itemName;
+        } else {
+            if ($this->isCashVehicle() && $this->dp_amount > 0) {
+                $amount = (float) ($this->remaining_amount > 0 ? $this->remaining_amount : max(0, $this->total - $this->dp_amount));
+                $paymentFor = 'Pelunasan Pembelian ' . $itemName;
+            } else {
+                $amount = (float) $this->total;
+                $paymentFor = $this->receipt_payment_for ?: ('Pelunasan ' . $itemName);
+            }
+            $receiptNo = $this->receipt_no ?: ('KW-LNS-' . $this->order_no);
+        }
+
         return [
-            'receipt_no' => $this->receipt_no ?: $this->order_no,
+            'receipt_no' => $receiptNo,
             'receipt_date' => $this->receipt_date ? Carbon::parse($this->receipt_date)->toDateString() : ($this->paid_at ? Carbon::parse($this->paid_at)->toDateString() : now()->toDateString()),
             'received_from' => $buyerName,
-            'amount' => (float) $this->total,
-            'amount_words' => terbilang((float) $this->total),
-            'payment_for' => $this->receipt_payment_for ?: $defaultPaymentFor,
+            'amount' => $amount,
+            'amount_words' => terbilang($amount),
+            'payment_for' => $paymentFor,
             'chassis_no' => $this->chassis_no,
             'engine_no' => $this->engine_no,
             'signatory_name' => $this->signatory_name ?: 'JONI',
@@ -396,6 +431,7 @@ class Order extends Model
     {
         return match ($this->payment_status) {
             'pending' => 'bg-yellow',
+            'dp_paid' => 'bg-blue',
             'paid' => 'bg-green',
             'failed' => 'bg-red',
             'expired' => 'bg-gray',

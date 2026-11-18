@@ -135,6 +135,8 @@ Route::middleware(['guest', 'throttle:auth'])->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', LogoutController::class)->name('auth.logout');
     Route::get('/dashboard', DashboardController::class)->name('buyer.dashboard');
+    Route::get('/profile', [\App\Http\Controllers\Buyer\ProfileController::class, 'edit'])->name('buyer.profile.edit');
+    Route::put('/profile', [\App\Http\Controllers\Buyer\ProfileController::class, 'update'])->name('buyer.profile.update');
 
     Route::get('/wishlist', [BuyerWishlistController::class, 'index'])->name('buyer.wishlist.index');
     Route::post('/wishlist/{part}', [BuyerWishlistController::class, 'toggle'])->name('buyer.wishlist.toggle');

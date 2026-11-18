@@ -10,7 +10,7 @@ class MotorInvoiceController extends Controller
 {
     /**
      * Stream (or download with ?download=1) the motor purchase invoice PDF.
-     * Accessible by admins and by the order's buyer once the invoice is verified by admin.
+     * Accessible by admins and by the order's buyer once the invoice is verified by admin and order is fully paid.
      */
     public function __invoke(Request $request, Order $order)
     {
@@ -19,6 +19,11 @@ class MotorInvoiceController extends Controller
 
         abort_unless($isAdmin || ($user && $order->user_id === $user->id), 403);
         abort_unless($isAdmin || (bool) $order->is_admin_verified, 403, 'Dokumen belum diverifikasi oleh admin dealer.');
+
+        // Untuk order cash motor: Faktur hanya dapat diunduh setelah pelunasan berhasil
+        if (! $isAdmin && $order->isCashVehicle() && ! $order->isFullyPaid()) {
+            abort(403, 'Faktur Pembelian Sepeda Motor hanya dapat diunduh setelah pelunasan berhasil.');
+        }
 
         $order->load(['items', 'user']);
 

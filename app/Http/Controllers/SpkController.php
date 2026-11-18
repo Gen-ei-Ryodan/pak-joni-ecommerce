@@ -10,6 +10,7 @@ class SpkController extends Controller
 {
     /**
      * Stream or download the SPK (Surat Pemesanan Motor) PDF.
+     * Accessible by admins and by the buyer once verified and DP is paid.
      */
     public function __invoke(Request $request, Order $order)
     {
@@ -18,6 +19,12 @@ class SpkController extends Controller
 
         abort_unless($isAdmin || ($user && $order->user_id === $user->id), 403);
         abort_unless($isAdmin || (bool) $order->is_admin_verified, 403, 'Dokumen belum diverifikasi oleh admin dealer.');
+
+        // Untuk order cash motor: SPK dapat diunduh setelah DP berhasil dibayar
+        if (! $isAdmin && $order->isCashVehicle()) {
+            $canDownloadSpk = $order->isDpPaid() || $order->isFullyPaid() || $order->paid_at !== null;
+            abort_unless($canDownloadSpk, 403, 'SPK hanya dapat diunduh setelah pembayaran DP berhasil.');
+        }
 
         $order->load(['items', 'user']);
 
