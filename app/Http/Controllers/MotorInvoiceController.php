@@ -10,7 +10,7 @@ class MotorInvoiceController extends Controller
 {
     /**
      * Stream (or download with ?download=1) the motor purchase invoice PDF.
-     * Accessible by admins and by the order's buyer once the invoice is filled in.
+     * Accessible by admins and by the order's buyer once the invoice is verified by admin.
      */
     public function __invoke(Request $request, Order $order)
     {
@@ -18,7 +18,7 @@ class MotorInvoiceController extends Controller
         $isAdmin = (bool) $user?->isAdmin();
 
         abort_unless($isAdmin || ($user && $order->user_id === $user->id), 403);
-        abort_unless($isAdmin || (bool) $order->invoice_no, 403, 'Faktur motor belum tersedia.');
+        abort_unless($isAdmin || (bool) $order->is_admin_verified, 403, 'Dokumen belum diverifikasi oleh admin dealer.');
 
         $order->load(['items', 'user']);
 

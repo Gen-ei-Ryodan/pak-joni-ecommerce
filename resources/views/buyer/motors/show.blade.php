@@ -120,25 +120,18 @@
                             @php
                                 $firstColorStock = $item->colors->first()->stock ?? 0;
                             @endphp
-                            <button type="submit" class="btn btn-primary" style="width:100%;" id="addToCartBtn"
-                                @if($item->stock_status === 'ready' && $firstColorStock <= 0) disabled @endif>
-                                @if($item->stock_status === 'indent')
-                                    Pre-Order (Indent) - DP 50%
-                                @elseif($item->stock_status === 'ready' && $firstColorStock <= 0)
-                                    Indent
+                            <button type="submit" class="btn btn-primary" style="width:100%;" id="addToCartBtn">
+                                @if($item->stock_status === 'indent' || $firstColorStock <= 0)
+                                    Pesan Indent (DP 50%)
                                 @else
-                                    Add to Cart
+                                    Tambah ke Keranjang
                                 @endif
                             </button>
                         </form>
 
-                        @if($item->stock_status === 'indent')
+                        @if($item->stock_status === 'indent' || $firstColorStock <= 0)
                             <div class="indent-notice">
                                 Produk ini tersedia secara indent. DP 50% akan dibayarkan saat checkout.
-                            </div>
-                        @elseif($item->stock_status === 'ready' && $totalStock <= 0)
-                            <div class="indent-notice" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #dc2626;">
-                                Produk ini tersedia secara indent. Hubungi kami untuk proses indent.
                             </div>
                         @endif
                     @endif
@@ -629,12 +622,11 @@
                     }
                 }
                 if (btn) {
+                    btn.disabled = false;
                     if (stock > 0) {
-                        btn.disabled = false;
-                        btn.textContent = 'Add to Cart';
+                        btn.textContent = 'Tambah ke Keranjang';
                     } else {
-                        btn.disabled = true;
-                        btn.textContent = 'Indent';
+                        btn.textContent = 'Pesan Indent (DP 50%)';
                     }
                 }
             }

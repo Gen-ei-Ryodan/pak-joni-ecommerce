@@ -14,6 +14,9 @@ use Illuminate\Support\Carbon;
     'user_id',
     'order_no',
     'status',
+    'is_admin_verified',
+    'admin_verified_at',
+    'admin_verified_by',
     'payment_status',
     'payment_method',
     'purchase_type',
@@ -42,6 +45,7 @@ use Illuminate\Support\Carbon;
     'receipt_payment_for',
     'spk_no',
     'spk_date',
+    'spk_order_date',
     'stnk_name',
     'stnk_address',
     'motor_color',
@@ -67,14 +71,14 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'order_no', 'status', 'payment_status',
-        'payment_method', 'purchase_type', 'payment_provider', 'payment_reference', 'paid_at',
+        'user_id', 'order_no', 'status', 'is_admin_verified', 'admin_verified_at', 'admin_verified_by',
+        'payment_status', 'payment_method', 'purchase_type', 'payment_provider', 'payment_reference', 'paid_at',
         'subtotal', 'shipping_cost', 'shipping_type', 'total',
         'dp_amount', 'remaining_amount', 'is_indent', 'indent_status',
         'address_snapshot', 'shipping_snapshot', 'shipping_courier', 'shipping_receipt',
         'shipped_at', 'completed_at', 'cancelled_at',
         'invoice_no', 'invoice_date', 'receipt_no', 'receipt_date', 'receipt_payment_for',
-        'spk_no', 'spk_date', 'stnk_name', 'stnk_address', 'motor_color', 'manufacturing_year',
+        'spk_no', 'spk_date', 'spk_order_date', 'stnk_name', 'stnk_address', 'motor_color', 'manufacturing_year',
         'spk_payment_type', 'leasing_provider', 'spk_dp_amount', 'credit_tenor',
         'monthly_installment', 'booking_fee', 'spk_checklist_docs', 'spk_notes',
         'chassis_no', 'engine_no', 'buyer_nik',
@@ -98,6 +102,9 @@ class Order extends Model
     protected function casts(): array
     {
         return [
+            'is_admin_verified' => 'boolean',
+            'admin_verified_at' => 'datetime',
+            'admin_verified_by' => 'integer',
             'subtotal' => 'decimal:2',
             'shipping_cost' => 'decimal:2',
             'total' => 'decimal:2',
@@ -113,6 +120,7 @@ class Order extends Model
             'invoice_date' => 'date',
             'receipt_date' => 'date',
             'spk_date' => 'date',
+            'spk_order_date' => 'date',
             'spk_dp_amount' => 'decimal:2',
             'monthly_installment' => 'decimal:2',
             'booking_fee' => 'decimal:2',
@@ -125,12 +133,59 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function adminVerifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'admin_verified_by');
+    }
+
+    public function vehicleItems()
+    {
+        return $this->items->filter(fn (OrderItem $item) => $item->isVehicle());
+    }
+
+    public function partItems()
+    {
+        return $this->items->filter(fn (OrderItem $item) => $item->isPart());
+    }
+
+    public function hasVehicle(): bool
+    {
+        return $this->vehicleItems()->isNotEmpty();
+    }
+
+    public function hasParts(): bool
+    {
+        return $this->partItems()->isNotEmpty();
+    }
+
+    public function isDocumentsVerified(): bool
+    {
+        return (bool) $this->is_admin_verified;
+    }
+
+    public static function generateMotorInvoiceNumber(): string
+    {
+        $year = now()->format('Y');
+        $pattern = "%/FPSM-T/{$year}";
+
+        $lastInvoice = self::where('invoice_no', 'like', $pattern)
+            ->orderBy('invoice_no', 'desc')
+            ->value('invoice_no');
+
+        $seq = 1;
+        if ($lastInvoice && preg_match('/^(\d+)\/FPSM-T\/' . $year . '$/', $lastInvoice, $m)) {
+            $seq = (int) $m[1] + 1;
+        }
+
+        return sprintf('%03d/FPSM-T/%s', $seq, $year);
+    }
+
     /**
      * SPK (Surat Pemesanan Motor) data: stored values merged with sensible defaults
      */
     public function spkData(): array
     {
-        $item = $this->items->first();
+        $item = $this->vehicleItems()->first() ?? $this->items->first();
         $snapshot = $this->address_snapshot ?? [];
 
         $buyerName = $this->buyer_name ?: ($snapshot['recipient_name'] ?? $this->user?->name ?? '-');
@@ -151,6 +206,7 @@ class Order extends Model
         return [
             'spk_no' => $this->spk_no ?: $this->order_no,
             'spk_date' => $this->spk_date ? Carbon::parse($this->spk_date)->toDateString() : ($this->created_at ? Carbon::parse($this->created_at)->toDateString() : now()->toDateString()),
+            'spk_order_date' => $this->spk_order_date ? Carbon::parse($this->spk_order_date)->toDateString() : ($this->spk_date ? Carbon::parse($this->spk_date)->toDateString() : ($this->created_at ? Carbon::parse($this->created_at)->toDateString() : now()->toDateString())),
             'buyer_name' => $buyerName,
             'buyer_phone' => $buyerPhone,
             'stnk_name' => $this->stnk_name ?: $buyerName,
@@ -179,7 +235,7 @@ class Order extends Model
      */
     public function receiptData(): array
     {
-        $item = $this->items->first();
+        $item = $this->vehicleItems()->first() ?? $this->items->first();
         $itemName = $item ? ($item->name.($item->variant_name ? ' '.$item->variant_name : '')) : 'Unit Sepeda Motor';
         $defaultPaymentFor = 'Pelunasan '.$itemName;
 
@@ -208,7 +264,7 @@ class Order extends Model
         $snapshot = $this->address_snapshot ?? [];
 
         $data = [
-            'invoice_no' => 'INV/'.$this->order_no,
+            'invoice_no' => $this->invoice_no ?: self::generateMotorInvoiceNumber(),
             'invoice_date' => now()->toDateString(),
             'chassis_no' => null,
             'engine_no' => null,

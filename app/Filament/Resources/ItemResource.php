@@ -8,6 +8,7 @@ use App\Models\Item;
 use App\Services\StockService;
 use Filament\Forms;
 use Filament\Navigation\NavigationItem;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -65,9 +66,18 @@ class ItemResource extends Resource
             ->defaultSort('sort_order')
             ->columns([
                 Tables\Columns\ImageColumn::make('thumbnail_path')->label('Gambar')->square()->size(40)
-                    ->getStateUsing(fn ($r) => $r?->thumbnail_path ? Storage::disk('public')->url($r->thumbnail_path) : null),
+                    ->getStateUsing(fn ($r) => $r?->thumbnail_path ? Storage::disk('public')->url($r?->thumbnail_path) : null),
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('part_number')->label('Part Number')->searchable()->sortable()->placeholder('-'),
+                Tables\Columns\TextColumn::make('compatibleMotors.name')
+                    ->label('Motor Kompatibel')
+                    ->badge()
+                    ->separator(', ')
+                    ->limitList(3)
+                    ->expandableLimitedList()
+                    ->visible(fn ($livewire) => $livewire instanceof Pages\ListItemsByType
+                        && $livewire->getCategoryType()?->slug === 'sparepart')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('brand.name')->label('Brand')->sortable(),
                 Tables\Columns\TextColumn::make('category.name')->label('Kategori')->sortable(),
                 Tables\Columns\TextColumn::make('year')->label('Tahun')->numeric()->sortable()->toggleable(),
@@ -104,18 +114,84 @@ class ItemResource extends Resource
                         && $livewire->getCategoryType()?->slug === 'sparepart'),
                 Tables\Filters\SelectFilter::make('category_id')->label('Kategori')
                     ->relationship('category', 'name')->searchable()->preload(),
-            ])
+            ], layout: Tables\Enums\FiltersLayout::AboveContent)
             ->actions([
                 \Filament\Actions\Action::make('manage_stock')
                     ->label('Kelola Stok')
                     ->icon('heroicon-o-archive-box')
                     ->color('primary')
-                    ->modalHeading('Kelola Stok per Varian')
-                    ->modalContent(fn ($record) => view('filament.modals.item-stock-management', [
-                        'item' => $record->load('colors'),
-                    ]))
-                    ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Tutup'),
+                    ->modalHeading(fn (Item $record) => 'Kelola Stok: ' . $record->name)
+                    ->modalDescription('Ubah kuantitas stok varian langsung dan catat riwayat mutasi.')
+                    ->modalSubmitActionLabel('Simpan Perubahan Stok')
+                    ->form(function (Item $record): array {
+                        $record->load('colors');
+                        $fields = [];
+
+                        if ($record->colors->isEmpty()) {
+                            $fields[] = Forms\Components\Placeholder::make('info_no_variants')
+                                ->label('Informasi')
+                                ->content('Item ini belum memiliki varian warna terpisah. Silakan masukkan stok utama item:');
+
+                            $fields[] = Forms\Components\TextInput::make('stock_main')
+                                ->label('Stok Item')
+                                ->numeric()
+                                ->minValue(0)
+                                ->default((int) $record->stock)
+                                ->required();
+                        } else {
+                            foreach ($record->colors as $color) {
+                                $fields[] = Forms\Components\TextInput::make("stock_color_{$color->id}")
+                                    ->label("Stok: {$color->name}")
+                                    ->helperText("Stok saat ini: {$color->stock} unit")
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->default($color->stock)
+                                    ->required();
+                            }
+                        }
+
+                        $fields[] = Forms\Components\TextInput::make('notes')
+                            ->label('Catatan Mutasi')
+                            ->placeholder('Penyesuaian stok langsung oleh admin')
+                            ->default('Penyesuaian stok langsung oleh admin');
+
+                        return $fields;
+                    })
+                    ->action(function (Item $record, array $data): void {
+                        $stockService = app(StockService::class);
+                        $notes = $data['notes'] ?? 'Penyesuaian stok langsung oleh admin';
+                        $record->load('colors');
+
+                        if ($record->colors->isEmpty()) {
+                            $newStock = (int) ($data['stock_main'] ?? 0);
+                            $stockService->setStock($record, $newStock, $notes);
+                            $record->update([
+                                'stock' => $newStock,
+                                'stock_status' => $newStock > 0 ? 'ready' : 'indent',
+                                'stock_updated_at' => now(),
+                            ]);
+                        } else {
+                            foreach ($record->colors as $color) {
+                                $key = "stock_color_{$color->id}";
+                                if (isset($data[$key])) {
+                                    $newStock = (int) $data[$key];
+                                    $stockService->setStock($color, $newStock, $notes);
+                                }
+                            }
+                            $totalStock = $record->colors()->sum('stock');
+                            $record->update([
+                                'stock' => $totalStock,
+                                'stock_status' => $totalStock > 0 ? 'ready' : 'indent',
+                                'stock_updated_at' => now(),
+                            ]);
+                        }
+
+                        Notification::make()
+                            ->title('Stok Berhasil Diperbarui')
+                            ->body("Stok untuk {$record->name} berhasil disimpan.")
+                            ->success()
+                            ->send();
+                    }),
                 \Filament\Actions\EditAction::make(),
                 \Filament\Actions\DeleteAction::make(),
             ])
@@ -332,8 +408,6 @@ class ItemResource extends Resource
                 ])
                 ->collapsible()
                 ->collapsed(),
-
-
         ]);
     }
 

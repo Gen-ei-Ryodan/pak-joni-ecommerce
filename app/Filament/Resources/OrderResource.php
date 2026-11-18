@@ -10,6 +10,7 @@ use BackedEnum;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Infolists;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -39,7 +40,7 @@ class OrderResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with('creditApplication');
+        return parent::getEloquentQuery()->with(['creditApplication', 'adminVerifier']);
     }
 
     public static function table(Table $table): Table
@@ -106,6 +107,11 @@ class OrderResource extends Resource
                         'expired' => 'Expired',
                         default => $state,
                     }),
+
+                Tables\Columns\IconColumn::make('is_admin_verified')
+                    ->label('Verif')
+                    ->boolean()
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('shipping_type')
                     ->label('Pengiriman')
@@ -196,28 +202,53 @@ class OrderResource extends Resource
             ])
             ->actions([
                 Actions\ViewAction::make(),
+                Actions\EditAction::make()->label('Edit Faktur & SPK'),
+                Actions\Action::make('verify_order')
+                    ->label('Verifikasi')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->visible(fn (Order $record) => ! $record->is_admin_verified)
+                    ->requiresConfirmation()
+                    ->modalHeading('Verifikasi Data Faktur & SPK')
+                    ->modalDescription('Apakah Anda yakin ingin memverifikasi dokumen pesanan ini dan merilis izin cetak ke customer?')
+                    ->action(function (Order $record) {
+                        $record->update([
+                            'is_admin_verified' => true,
+                            'admin_verified_at' => now(),
+                            'admin_verified_by' => auth()->id(),
+                        ]);
+                        Notification::make()
+                            ->title('Dokumen Berhasil Diverifikasi')
+                            ->body("Order {$record->order_no} berhasil diverifikasi.")
+                            ->success()
+                            ->send();
+                    }),
                 Actions\Action::make('print_motor_invoice')
                     ->label('Cetak Faktur Motor')
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('info')
+                    ->visible(fn (Order $record) => $record->hasVehicle())
                     ->url(fn (Order $record): string => route('admin.orders.motor-invoice', ['order' => $record]))
                     ->openUrlInNewTab(),
                 Actions\Action::make('print_spk')
                     ->label('Cetak SPK')
                     ->icon('heroicon-o-clipboard-document-check')
                     ->color('primary')
+                    ->visible(fn (Order $record) => $record->hasVehicle())
                     ->url(fn (Order $record): string => route('admin.orders.spk', ['order' => $record]))
                     ->openUrlInNewTab(),
                 Actions\Action::make('print_parts_invoice')
                     ->label('Cetak Faktur Sukucadang')
                     ->icon('heroicon-o-wrench-screwdriver')
                     ->color('warning')
+                    ->visible(fn (Order $record) => $record->hasParts())
                     ->url(fn (Order $record): string => route('admin.orders.parts-invoice', ['order' => $record]))
                     ->openUrlInNewTab(),
                 Actions\Action::make('print_receipt')
                     ->label('Cetak Kwitansi')
                     ->icon('heroicon-o-receipt-percent')
                     ->color('success')
+                    ->visible(fn (Order $record) => $record->status === 'paid' || $record->payment_status === 'paid' || (bool) $record->paid_at)
                     ->url(fn (Order $record): string => route('admin.orders.receipt', ['order' => $record]))
                     ->openUrlInNewTab(),
                 Actions\Action::make('credit_detail')
@@ -321,21 +352,32 @@ class OrderResource extends Resource
     public static function form(Schema $schema): Schema
     {
         $autoFill = fn (?Order $record, string $key, $default = null) => $record?->motorInvoiceData()[$key] ?? $default;
+        $autoSpk = fn (?Order $record, string $key, $default = null) => $record?->spkData()[$key] ?? $default;
 
         return $schema->schema([
+            Section::make('Verifikasi Dokumen Faktur & SPK')
+                ->description('Gerbang verifikasi admin untuk merilis izin cetak dokumen kepada customer.')
+                ->columnSpanFull()
+                ->schema([
+                    Forms\Components\Toggle::make('is_admin_verified')
+                        ->label('Verifikasi Data Faktur & SPK (Rilis Cetak ke Customer)')
+                        ->helperText('Aktifkan setelah nomor rangka dan nomor mesin telah diisi dengan benar. Customer hanya bisa mencetak Faktur dan SPK setelah diverifikasi.')
+                        ->default(false),
+                ]),
+
             Section::make('Faktur Pembelian Sepeda Motor')
                 ->description('Data faktur pembelian sepeda motor. Kolom yang masih kosong otomatis terisi dari data order.')
                 ->columnSpanFull()
                 ->schema([
                     Forms\Components\TextInput::make('invoice_no')
                         ->label('Nomor Faktur')
-                        ->default(fn (?Order $record) => $autoFill($record, 'invoice_no'))
-                        ->placeholder(fn (?Order $record) => $autoFill($record, 'invoice_no'))
+                        ->default(fn (?Order $record) => $autoFill($record, 'invoice_no', Order::generateMotorInvoiceNumber()))
+                        ->placeholder(fn (?Order $record) => $autoFill($record, 'invoice_no', Order::generateMotorInvoiceNumber()))
                         ->unique(ignoreRecord: true),
 
                     Forms\Components\DatePicker::make('invoice_date')
                         ->label('Tanggal Faktur')
-                        ->default(fn (?Order $record) => $autoFill($record, 'invoice_date')),
+                        ->default(fn (?Order $record) => $autoFill($record, 'invoice_date', now()->toDateString())),
 
                     Forms\Components\TextInput::make('chassis_no')
                         ->label('Nomor Rangka (Chassis No)')
@@ -361,12 +403,104 @@ class OrderResource extends Resource
                     Forms\Components\Textarea::make('notes')
                         ->label('Catatan')
                         ->rows(4)
-                        ->default(fn (?Order $record) => $autoFill($record, 'notes')),
+                        ->default(fn (?Order $record) => $autoFill($record, 'notes', Order::DEFAULT_MOTOR_INVOICE_NOTES)),
 
                     Forms\Components\TextInput::make('signatory_name')
                         ->label('Penandatangan')
                         ->default(fn (?Order $record) => $autoFill($record, 'signatory_name', 'JONI')),
-                ]),
+                ])->columns(2),
+
+            Section::make('Surat Pesanan Kendaraan (SPK)')
+                ->description('Data Surat Pesanan Kendaraan (SPK), data pemesan/STNK, skema pembayaran, dan kelengkapan berkas fisik.')
+                ->columnSpanFull()
+                ->schema([
+                    Forms\Components\TextInput::make('spk_no')
+                        ->label('Nomor SPK')
+                        ->default(fn (?Order $record) => $autoSpk($record, 'spk_no', $record?->order_no)),
+
+                    Forms\Components\DatePicker::make('spk_date')
+                        ->label('Tanggal SPK')
+                        ->default(fn (?Order $record) => $autoSpk($record, 'spk_date', now()->toDateString())),
+
+                    Forms\Components\DatePicker::make('spk_order_date')
+                        ->label('Tanggal Pemesanan')
+                        ->default(fn (?Order $record) => $autoSpk($record, 'spk_order_date', now()->toDateString())),
+
+                    Forms\Components\TextInput::make('stnk_name')
+                        ->label('Nama di STNK / BPKB')
+                        ->helperText('Nama pemilik kendaraan yang tercantum pada STNK/BPKB.')
+                        ->default(fn (?Order $record) => $autoSpk($record, 'stnk_name')),
+
+                    Forms\Components\Textarea::make('stnk_address')
+                        ->label('Alamat di STNK / BPKB')
+                        ->rows(2)
+                        ->default(fn (?Order $record) => $autoSpk($record, 'stnk_address')),
+
+                    Forms\Components\TextInput::make('motor_color')
+                        ->label('Warna Kendaraan')
+                        ->default(fn (?Order $record) => $autoSpk($record, 'motor_color', '-')),
+
+                    Forms\Components\TextInput::make('manufacturing_year')
+                        ->label('Tahun Rakitan')
+                        ->default(fn (?Order $record) => $autoSpk($record, 'manufacturing_year', date('Y'))),
+
+                    Forms\Components\Select::make('spk_payment_type')
+                        ->label('Metode Pembayaran')
+                        ->options([
+                            'cash' => 'Tunai (Cash)',
+                            'credit' => 'Kredit (Leasing)',
+                        ])
+                        ->default(fn (?Order $record) => $autoSpk($record, 'payment_type', 'cash')),
+
+                    Forms\Components\TextInput::make('leasing_provider')
+                        ->label('Nama Leasing / Pembiayaan')
+                        ->placeholder('Contoh: Pegadaian, Adira, FIF')
+                        ->default(fn (?Order $record) => $autoSpk($record, 'leasing_provider')),
+
+                    Forms\Components\TextInput::make('spk_dp_amount')
+                        ->label('Nominal DP (Rp)')
+                        ->numeric()
+                        ->prefix('Rp')
+                        ->default(fn (?Order $record) => $autoSpk($record, 'dp_amount', 0)),
+
+                    Forms\Components\TextInput::make('credit_tenor')
+                        ->label('Tenor Kredit')
+                        ->placeholder('Contoh: 12 Bulan, 24 Bulan, 36 Bulan')
+                        ->default(fn (?Order $record) => $autoSpk($record, 'credit_tenor')),
+
+                    Forms\Components\TextInput::make('monthly_installment')
+                        ->label('Angsuran per Bulan (Rp)')
+                        ->numeric()
+                        ->prefix('Rp')
+                        ->default(fn (?Order $record) => $autoSpk($record, 'monthly_installment')),
+
+                    Forms\Components\TextInput::make('booking_fee')
+                        ->label('Uang Tanda Jadi / Booking Fee (Rp)')
+                        ->numeric()
+                        ->prefix('Rp')
+                        ->default(fn (?Order $record) => $autoSpk($record, 'booking_fee', 500000)),
+
+                    Forms\Components\CheckboxList::make('spk_checklist_docs')
+                        ->label('Checklist Berkas Persyaratan')
+                        ->options([
+                            'ktp_suami' => 'KTP Suami',
+                            'ktp_istri' => 'KTP Istri',
+                            'kartu_keluarga' => 'Kartu Keluarga',
+                            'slip_gaji' => 'Slip Gaji',
+                            'rekening_listrik' => 'Rekening Listrik',
+                            'bukti_pbb' => 'Bukti PBB',
+                            'rekening_tabungan_3_bulan' => 'Rekening Tabungan 3 Bulan',
+                        ])
+                        ->columns(4)
+                        ->columnSpanFull()
+                        ->default(fn (?Order $record) => $record?->spk_checklist_docs ?? ['ktp_suami', 'kartu_keluarga', 'slip_gaji', 'rekening_listrik', 'bukti_pbb']),
+
+                    Forms\Components\Textarea::make('spk_notes')
+                        ->label('Catatan SPK')
+                        ->rows(3)
+                        ->columnSpanFull()
+                        ->default(fn (?Order $record) => $autoSpk($record, 'spk_notes')),
+                ])->columns(2),
         ]);
     }
 
@@ -415,6 +549,20 @@ class OrderResource extends Resource
                                 Infolists\Components\TextEntry::make('payment_method')
                                     ->label('Payment Method')
                                     ->formatStateUsing(fn (?string $state) => $state ? strtoupper($state) : '-'),
+                            ]),
+
+                        Grid::make(3)
+                            ->schema([
+                                Infolists\Components\IconEntry::make('is_admin_verified')
+                                    ->label('Verifikasi Admin')
+                                    ->boolean(),
+                                Infolists\Components\TextEntry::make('admin_verified_at')
+                                    ->label('Waktu Verifikasi')
+                                    ->dateTime('d M Y, H:i')
+                                    ->placeholder('Belum diverifikasi'),
+                                Infolists\Components\TextEntry::make('adminVerifier.name')
+                                    ->label('Diverifikasi Oleh')
+                                    ->placeholder('-'),
                             ]),
                     ]),
 

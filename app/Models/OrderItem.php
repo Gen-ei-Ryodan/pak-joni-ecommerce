@@ -56,4 +56,40 @@ class OrderItem extends Model
     {
         return (int) ($this->indent_quantity ?? 0) > 0;
     }
+
+    public function isPart(): bool
+    {
+        if ($this->part_id !== null || $this->part_variant_id !== null) {
+            return true;
+        }
+
+        if ($this->itemable_type === PartVariant::class || $this->itemable_type === Part::class) {
+            return true;
+        }
+
+        $itemable = $this->itemable;
+        if ($itemable instanceof PartVariant || $itemable instanceof Part) {
+            return true;
+        }
+
+        if ($itemable instanceof ItemColor) {
+            $item = $itemable->item;
+            if ($item && ($item->type?->slug === 'sparepart' || $item->type === 'sparepart')) {
+                return true;
+            }
+        }
+
+        if ($itemable instanceof Item) {
+            if ($itemable->type?->slug === 'sparepart' || $itemable->type === 'sparepart') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function isVehicle(): bool
+    {
+        return ! $this->isPart();
+    }
 }

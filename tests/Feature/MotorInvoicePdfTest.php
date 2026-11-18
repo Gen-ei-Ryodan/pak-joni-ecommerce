@@ -55,7 +55,8 @@ class MotorInvoicePdfTest extends TestCase
 
         $data = $order->motorInvoiceData();
 
-        $this->assertSame('INV/PJ261109MOTO01', $data['invoice_no']);
+        $expectedNo = sprintf('%03d/FPSM-T/%d', $order->id, now()->year);
+        $this->assertSame($expectedNo, $data['invoice_no']);
         $this->assertSame('Budi Santoso', $data['buyer_name']);
         $this->assertStringContainsString('Jl. Merdeka No. 1', $data['buyer_address']);
         $this->assertSame('JONI', $data['signatory_name']);
@@ -103,17 +104,24 @@ class MotorInvoicePdfTest extends TestCase
         $this->assertStringStartsWith('%PDF', (string) $response->getContent());
     }
 
-    public function test_buyer_can_download_only_when_invoice_is_filled(): void
+    public function test_buyer_can_download_only_when_invoice_is_filled_and_admin_verified(): void
     {
         $user = User::factory()->create(['role' => 'buyer']);
         $order = $this->makeOrder($user);
 
+        // Unverified and no invoice_no -> forbidden
         $this->actingAs($user)
             ->get(route('buyer.orders.motor-invoice', ['order' => $order->order_no]))
             ->assertForbidden();
 
-        $order->update(['invoice_no' => 'INV/2026/002']);
+        // Invoice filled but still not verified -> forbidden
+        $order->update(['invoice_no' => 'INV/2026/002', 'is_admin_verified' => false]);
+        $this->actingAs($user)
+            ->get(route('buyer.orders.motor-invoice', ['order' => $order->order_no]))
+            ->assertForbidden();
 
+        // Verified by admin -> OK
+        $order->update(['is_admin_verified' => true]);
         $response = $this->actingAs($user)
             ->get(route('buyer.orders.motor-invoice', ['order' => $order->order_no]));
 
@@ -125,7 +133,7 @@ class MotorInvoicePdfTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'buyer']);
         $other = User::factory()->create(['role' => 'buyer']);
-        $order = $this->makeOrder($owner, ['invoice_no' => 'INV/2026/003']);
+        $order = $this->makeOrder($owner, ['invoice_no' => 'INV/2026/003', 'is_admin_verified' => true]);
 
         $this->actingAs($other)
             ->get(route('buyer.orders.motor-invoice', ['order' => $order->order_no]))
@@ -137,9 +145,11 @@ class MotorInvoicePdfTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $order = $this->makeOrder(User::factory()->create(['role' => 'buyer']));
 
+        $expectedNo = sprintf('%03d/FPSM-T/%d', $order->id, now()->year);
+
         $component = Livewire::test(EditOrder::class, ['record' => $order->id])
             ->assertSee('Faktur Pembelian Sepeda Motor')
-            ->assertSet('data.invoice_no', 'INV/PJ261109MOTO01')
+            ->assertSet('data.invoice_no', $expectedNo)
             ->assertSet('data.signatory_name', 'JONI');
 
         $component

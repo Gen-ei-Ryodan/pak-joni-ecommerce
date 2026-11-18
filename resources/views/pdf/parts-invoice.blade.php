@@ -264,7 +264,7 @@
         </thead>
         <tbody>
             @php
-                $items = $order->items;
+                $items = $order->partItems();
                 $rowCount = $items->count();
                 $minRows = 14; // Menyesuaikan layout tinggi pada gambar referensi
                 $subtotal = 0;

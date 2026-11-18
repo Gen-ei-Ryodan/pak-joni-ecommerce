@@ -17,6 +17,7 @@ class SpkController extends Controller
         $isAdmin = (bool) $user?->isAdmin();
 
         abort_unless($isAdmin || ($user && $order->user_id === $user->id), 403);
+        abort_unless($isAdmin || (bool) $order->is_admin_verified, 403, 'Dokumen belum diverifikasi oleh admin dealer.');
 
         $order->load(['items', 'user']);
 

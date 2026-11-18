@@ -283,7 +283,7 @@
 
         <!-- 4. Baris Barang -->
         @php
-            $item = $order->items->first();
+            $item = $order->vehicleItems()->first() ?? $order->items->first();
             $qty = $item ? max(1, (int) $item->quantity) : 1;
             $price = $item ? ((float) $item->line_total / $qty) : (float) $order->total;
             $total = $item ? (float) $item->line_total : (float) $order->total;
