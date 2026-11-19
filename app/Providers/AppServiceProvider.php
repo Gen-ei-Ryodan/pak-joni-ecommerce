@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
@@ -38,6 +41,13 @@ class AppServiceProvider extends ServiceProvider
         // ke server" saat klik Bayar Sekarang.
         RateLimiter::for('payment-actions', function ($job) {
             return Limit::perMinute(60)->by($job->user()?->id ?: $job->ip());
+        });
+
+        // Catat aktivitas login pelanggan / user
+        Event::listen(Login::class, function (Login $event) {
+            if ($event->user instanceof User) {
+                $event->user->recordLogin(request()?->ip());
+            }
         });
     }
 }

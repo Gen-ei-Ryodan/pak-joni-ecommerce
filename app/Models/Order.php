@@ -332,6 +332,22 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function itemsSummary(): string
+    {
+        if (! $this->relationLoaded("items")) {
+            $this->load("items");
+        }
+
+        if ($this->items->isEmpty()) {
+            return "-";
+        }
+
+        return $this->items->map(function ($item) {
+            $variant = $item->variant_name ? " (" . $item->variant_name . ")" : "";
+            return $item->name . $variant . " x " . $item->quantity;
+        })->implode(", ");
+    }
+
     public function payment(): HasOne
     {
         return $this->hasOne(Payment::class);
