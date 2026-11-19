@@ -16,6 +16,21 @@
             @if($item->price)
                 <div class="price">Rp {{ number_format($item->price, 0, ',', '.') }}</div>
             @endif
+
+            @if($type->slug === 'sparepart' && $item->compatibleMotors && $item->compatibleMotors->isNotEmpty())
+                <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
+                    <span style="font-size:10.5px;color:var(--muted);font-weight:600;">Cocok untuk:</span>
+                    @foreach($item->compatibleMotors->take(3) as $m)
+                        <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.08);color:#2563eb;border:1px solid rgba(37,99,235,0.2);white-space:nowrap;">
+                            {{ $m->name }}
+                        </span>
+                    @endforeach
+                    @if($item->compatibleMotors->count() > 3)
+                        <span style="font-size:9.5px;color:var(--muted);font-weight:500;">+{{ $item->compatibleMotors->count() - 3 }} lainnya</span>
+                    @endif
+                </div>
+            @endif
+
             @if($item->stock_status === 'indent')
                 <span class="stock-badge indent">Indent</span>
             @elseif($item->stock_status === 'ready')

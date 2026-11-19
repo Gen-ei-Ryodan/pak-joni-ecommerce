@@ -25,8 +25,43 @@
                 </p>
             </div>
 
-            {{-- Category Filter --}}
-            @if($categories->isNotEmpty() && $type->slug !== 'sparepart')
+            {{-- Filter untuk Sparepart (Kategori & Motor Kompatibel) --}}
+            @if($type->slug === 'sparepart')
+                <form method="get" action="{{ route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => $brandModel?->slug ?? 'all']) }}" style="margin-bottom:28px;">
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center;background:rgba(255,255,255,0.7);padding:14px 18px;border-radius:14px;border:1px solid var(--line);box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label style="font-size:12.5px;font-weight:600;color:var(--text);">Kategori:</label>
+                            <select name="category" onchange="this.form.submit()" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text);font-family:inherit;font-size:13px;min-width:180px;">
+                                <option value="">Semua Kategori</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->slug }}" {{ $selectedCategory === $cat->slug ? 'selected' : '' }}>
+                                        {{ $cat->name }} ({{ $cat->items_count }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <label style="font-size:12.5px;font-weight:600;color:var(--text);">Motor Kompatibel:</label>
+                            <select name="motor" onchange="this.form.submit()" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text);font-family:inherit;font-size:13px;min-width:200px;">
+                                <option value="">Semua Motor</option>
+                                @foreach($compatibleMotors as $m)
+                                    <option value="{{ $m->slug }}" {{ (isset($selectedMotor) && $selectedMotor === $m->slug) ? 'selected' : '' }}>
+                                        {{ $m->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        @if($selectedCategory || (isset($selectedMotor) && $selectedMotor))
+                            <a href="{{ route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => $brandModel?->slug ?? 'all']) }}" 
+                               class="btn btn-outline" style="padding:7px 16px;border-radius:8px;font-size:12.5px;text-decoration:none;">
+                                Reset Filter
+                            </a>
+                        @endif
+                    </div>
+                </form>
+            @elseif($categories->isNotEmpty())
                 <div class="brand-filter" style="margin-bottom:24px;" id="categoryFilter">
                     <a href="{{ route('buyer.category-brand', ['categoryType' => $type->slug, 'brand' => $brandModel?->slug ?? 'all']) }}"
                        class="filter-tag filter-tag-sm {{ !$selectedCategory ? 'active' : '' }}"

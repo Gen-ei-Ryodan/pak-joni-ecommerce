@@ -674,18 +674,31 @@ $result = DB::transaction(function () use ($request, $cart, $address, $shipping,
             return $order;
         });
 
-        // Send sales order email. Email gagal (mis. SMTP 550 recipient tidak ada)
-        // tidak boleh menghapus/me-return 500 — order sudah tersimpan.
-        try {
-            Mail::to($result->user->email)
-                ->send(new SalesOrderMail($result));
-        } catch (\Throwable $e) {
-            Log::error('Sales order email failed', [
-                'order_id' => $result->id,
-                'order_no' => $result->order_no,
-                'recipient' => $result->user->email,
-                'exception' => $e,
-            ]);
+        // Send sales order email via shutdown callback so it doesn't block HTTP response & avoids browser timeout.
+        $recipientEmail = $result->user?->email;
+        if ($recipientEmail && ! app()->environment('testing')) {
+            register_shutdown_function(function () use ($result, $recipientEmail) {
+                try {
+                    if (function_exists('fastcgi_finish_request')) {
+                        fastcgi_finish_request();
+                    }
+                    Mail::to($recipientEmail)
+                        ->send(new SalesOrderMail($result));
+                } catch (\Throwable $e) {
+                    Log::error('Sales order email failed', [
+                        'order_id' => $result->id,
+                        'order_no' => $result->order_no,
+                        'recipient' => $recipientEmail,
+                        'exception' => $e,
+                    ]);
+                }
+            });
+        } elseif ($recipientEmail && app()->environment('testing')) {
+            try {
+                Mail::to($recipientEmail)->send(new SalesOrderMail($result));
+            } catch (\Throwable $e) {
+                // Ignore in tests
+            }
         }
 
         return redirect('/checkout/finish/'.$result->id);

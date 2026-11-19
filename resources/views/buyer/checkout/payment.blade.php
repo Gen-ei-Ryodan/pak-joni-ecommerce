@@ -182,8 +182,22 @@
                             @endif
                         </div>
 
-                        <button class="btn btn-primary" type="submit" style="width:100%;padding:12px;font-size:15px;font-weight:600;">Place Order</button>
+                        <button class="btn btn-primary" id="btn-place-order" type="submit" style="width:100%;padding:12px;font-size:15px;font-weight:600;">Place Order</button>
                     </form>
+
+                    <script>
+                        (function() {
+                            var form = document.getElementById('checkout-form');
+                            var btn = document.getElementById('btn-place-order');
+                            if (!form || !btn) return;
+                            form.addEventListener('submit', function() {
+                                btn.disabled = true;
+                                btn.innerText = 'Memproses Pesanan...';
+                                btn.style.opacity = '0.7';
+                                btn.style.cursor = 'not-allowed';
+                            });
+                        })();
+                    </script>
                 </div>
 
                 {{-- RIGHT COLUMN: SUMMARY --}}

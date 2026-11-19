@@ -383,18 +383,39 @@ class PageController extends Controller
             ->get();
 
         $selectedCategory = $request->query('category');
+        $selectedMotor = $request->query('motor');
 
         // Items
-        $items = Item::query()
+        $itemsQuery = Item::query()
             ->with(['brand', 'category', 'images', 'colors', 'type'])
             ->where('category_type_id', $type->id)
             ->where('status', 'active')
             ->where('is_active', true)
             ->when($brandModel, fn($q) => $q->where('brand_id', $brandModel->id))
-            ->when($selectedCategory, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $selectedCategory)))
-            ->orderByDesc('id')
+            ->when($selectedCategory, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $selectedCategory)));
+
+        if ($type->slug === 'sparepart') {
+            $itemsQuery->with(['compatibleMotors.brand', 'compatibleMotors.type']);
+            if ($selectedMotor) {
+                $itemsQuery->whereHas('compatibleMotors', fn($mq) => $mq->where('items.slug', $selectedMotor)->orWhere('items.id', $selectedMotor));
+            }
+        }
+
+        $items = $itemsQuery->orderByDesc('id')
             ->paginate(12)
             ->withQueryString();
+
+        // Daftar motor kompatibel untuk filter sparepart (hanya motor aktif yang memiliki relasi kompatibel dengan sparepart)
+        $compatibleMotors = collect();
+        if ($type->slug === 'sparepart') {
+            $compatibleMotors = Item::query()
+                ->whereHas('compatibleSpareparts')
+                ->where('status', 'active')
+                ->where('is_active', true)
+                ->when($brandModel, fn($q) => $q->where('brand_id', $brandModel->id))
+                ->orderBy('name')
+                ->get();
+        }
 
         // Spareparts compatible with items from this brand (regardless of part's own category_type)
         $parts = Part::query()
@@ -429,7 +450,7 @@ class PageController extends Controller
         return view('buyer.category-brand', compact(
             'type', 'brandModel', 'allBrands',
             'categories', 'selectedCategory',
-            'items', 'parts'
+            'items', 'parts', 'compatibleMotors', 'selectedMotor'
         ));
     }
 
@@ -438,10 +459,11 @@ class PageController extends Controller
         $q = trim((string) $request->query('q', ''));
         $category = $request->query('category');
         $group = $request->query('group');
+        $motorSlug = $request->query('motor');
         $brandSlug = $request->query('brand') ?: ($routeBrand !== 'all' ? $routeBrand : '');
 
         $parts = Part::query()
-            ->with(['category', 'defaultVariant'])
+            ->with(['category', 'defaultVariant', 'items.brand'])
             ->where('status', 'active')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($q2) use ($q) {
@@ -452,6 +474,7 @@ class PageController extends Controller
             })
             ->when($category, fn ($query) => $query->whereHas('category', fn ($q2) => $q2->where('slug', $category)))
             ->when($group, fn ($query) => $query->whereHas('category', fn ($q2) => $q2->where('group', $group)))
+            ->when($motorSlug, fn ($query) => $query->whereHas('items', fn ($q2) => $q2->where('slug', $motorSlug)->orWhere('id', $motorSlug)))
             ->when($brandSlug !== '' && $brandSlug !== 'all', fn ($query) => $query->whereHas('items.brand', fn ($q2) => $q2->where('slug', $brandSlug)))
             ->orderByDesc('id')
             ->paginate(12)
@@ -460,6 +483,13 @@ class PageController extends Controller
         $categories = PartCategory::query()->orderBy('group')->orderBy('sort_order')->orderBy('name')->get();
         $brands = Brand::whereHas('items.parts')->where('is_active', true)->orderBy('sort_order')->get();
         $groups = PartCategory::query()->select('group')->distinct()->orderBy('group')->pluck('group');
+        $compatibleMotors = Item::query()
+            ->whereHas('parts')
+            ->where('status', 'active')
+            ->where('is_active', true)
+            ->when($brandSlug !== '' && $brandSlug !== 'all', fn ($q) => $q->whereHas('brand', fn ($b) => $b->where('slug', $brandSlug)))
+            ->orderBy('name')
+            ->get();
 
         $selectedCategoryName = '';
         if ($category) {
@@ -469,7 +499,7 @@ class PageController extends Controller
 
         return view('buyer.parts.index', compact(
             'parts', 'categories', 'brands', 'groups',
-            'q', 'category', 'group',
+            'q', 'category', 'group', 'motorSlug', 'compatibleMotors',
             'brandSlug', 'selectedCategoryName'
         ));
     }

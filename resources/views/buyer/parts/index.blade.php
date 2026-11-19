@@ -33,8 +33,15 @@
                         @endforeach
                     </select>
 
+                    <select name="motor" style="padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font-family:inherit;font-size:13px;min-width:160px;">
+                        <option value="">Semua Motor</option>
+                        @foreach($compatibleMotors as $m)
+                            <option value="{{ $m->slug }}" {{ (isset($motorSlug) && $motorSlug === $m->slug) ? 'selected' : '' }}>{{ $m->name }}</option>
+                        @endforeach
+                    </select>
+
                     <button type="submit" class="btn btn-primary" style="padding:10px 24px;border-radius:10px;">Filter</button>
-                    @if($q || $selectedBrand || $category || $group)
+                    @if($q || $selectedBrand || $category || $group || (isset($motorSlug) && $motorSlug))
                         <a href="{{ route('buyer.category-brand', ['categoryType' => 'sparepart', 'brand' => 'all']) }}" class="btn btn-outline" style="padding:10px 24px;border-radius:10px;">Reset</a>
                     @endif
                 </div>
@@ -91,6 +98,20 @@
                             @if($p->category)
                                 <div class="card-meta" style="font-size:10px;text-transform:none;letter-spacing:0;margin-top:2px;">
                                     {{ $p->category->group }} &rsaquo; {{ $p->category->name }}
+                                </div>
+                            @endif
+                            @php $compatibles = $p->items; @endphp
+                            @if($compatibles && $compatibles->isNotEmpty())
+                                <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
+                                    <span style="font-size:10px;color:var(--muted);font-weight:600;">Cocok untuk:</span>
+                                    @foreach($compatibles->take(3) as $cm)
+                                        <span style="font-size:9.5px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.08);color:#2563eb;border:1px solid rgba(37,99,235,0.2);white-space:nowrap;">
+                                            {{ $cm->name }}
+                                        </span>
+                                    @endforeach
+                                    @if($compatibles->count() > 3)
+                                        <span style="font-size:9px;color:var(--muted);">+{{ $compatibles->count() - 3 }}</span>
+                                    @endif
                                 </div>
                             @endif
                             @if($p->defaultVariant)
